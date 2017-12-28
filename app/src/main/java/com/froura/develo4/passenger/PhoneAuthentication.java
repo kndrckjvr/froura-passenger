@@ -43,6 +43,7 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
     private FirebaseAuth.AuthStateListener mAuthListener;
 
     private TextView requestCode;
+    private TextView mob_num;
     private Button verify;
     private EditText verifCode;
 
@@ -67,6 +68,7 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
         requestCode = findViewById(R.id.txtVw_request_code);
         verify = findViewById(R.id.btn_verify);
         verifCode = findViewById(R.id.et_verif_code);
+        mob_num = findViewById(R.id.txtVw_mob_num);
 
         mobNum = getIntent().getStringExtra("mobNum");
         email = getIntent().getStringExtra("email");
@@ -78,18 +80,13 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 if(mAuth.getCurrentUser() != null) {
-                    Intent intent = new Intent(PhoneAuthentication.this, LandingActivity.class);
+                    Intent intent = new Intent(PhoneAuthentication.this, HomeActivity.class);
                     startActivity(intent);
                     finish();
                     return;
                 }
             }
         };
-        
-        if(phoneReg) {
-            requestCode();
-            phoneReg = false;
-        }
 
         verify.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -127,6 +124,17 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
                         });
                     }
                 };
+
+        if(mobNum.matches("^(09)\\d{9}$")) {
+            mob_num.setText("+63 " + mobNum.substring(1));
+        } else if(mobNum.matches("^(\\+639)\\d{9}$")) {
+            mob_num.setText("+63 " + mobNum.substring(3));
+        }
+
+        if(phoneReg) {
+            requestCode();
+            phoneReg = false;
+        }
     }
 
     private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
@@ -135,14 +143,42 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            FirebaseUser user = task.getResult().getUser();
-                            userExist(user.getUid());
-                        } else {
-                            Log.w("PhoneAuth", "signInWithCredential:failure", task.getException());
-                            if (task.getException() instanceof FirebaseAuthInvalidCredentialsException) {
-                                Toast.makeText(PhoneAuthentication.this, "There is an error logging in.", Toast.LENGTH_SHORT).show();
-                            }
+                            userExist(mAuth.getCurrentUser().getUid());
                         }
+                    }
+                });
+    }
+    
+    private void requestCode() {
+        PhoneAuthProvider.getInstance().verifyPhoneNumber(
+                mobNum,
+                60,
+                TimeUnit.SECONDS,
+                PhoneAuthentication.this,
+                new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+                    @Override
+                    public void onVerificationCompleted(PhoneAuthCredential phoneAuthCredential) {
+                        signInWithPhoneAuthCredential(phoneAuthCredential);
+                    }
+
+                    @Override
+                    public void onVerificationFailed(FirebaseException e) {
+                        Log.w(TAG, "onVerificationFailed", e);
+                        if (e instanceof FirebaseAuthInvalidCredentialsException) {
+                            //Phone number is incorrect
+                            Toast.makeText(PhoneAuthentication.this, "Phone number is incorrect!", Toast.LENGTH_SHORT).show();
+                        } else if (e instanceof FirebaseTooManyRequestsException) {
+                            //Quota has been reached
+                            Toast.makeText(PhoneAuthentication.this, "Server Overload! A request has been sent.", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onCodeSent(String s, PhoneAuthProvider.ForceResendingToken forceResendingToken) {
+                        super.onCodeSent(s, forceResendingToken);
+                        mVerificationId = s;
+                        requestCode.setOnClickListener(null);
+                        requestCodeTimer.start();
                     }
                 });
     }
@@ -179,45 +215,17 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
     private void registerToPhp() {
         new CheckUserTasks(PhoneAuthentication.this).execute();
     }
-    
-    private void requestCode() {
-        requestCode.setOnClickListener(null);
-        requestCodeTimer.start();
-        PhoneAuthProvider.getInstance().verifyPhoneNumber(
-                mobNum,
-                60,
-                TimeUnit.SECONDS,
-                PhoneAuthentication.this,
-                new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
-                    @Override
-                    public void onVerificationCompleted(PhoneAuthCredential phoneAuthCredential) {
-                        signInWithPhoneAuthCredential(phoneAuthCredential);
-                    }
 
-                    @Override
-                    public void onVerificationFailed(FirebaseException e) {
-                        Log.w(TAG, "onVerificationFailed", e);
-                        if (e instanceof FirebaseAuthInvalidCredentialsException) {
-                            //Phone number is incorrect
-                            Toast.makeText(PhoneAuthentication.this, "Phone number is incorrect!", Toast.LENGTH_SHORT).show();
-                        } else if (e instanceof FirebaseTooManyRequestsException) {
-                            //Quota has been reached
-                            Toast.makeText(PhoneAuthentication.this, "Server Overload! A request has been sent.", Toast.LENGTH_SHORT).show();
-                        }
-                    }
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mAuth.addAuthStateListener(mAuthListener);
+    }
 
-                    @Override
-                    public void onCodeSent(String s, PhoneAuthProvider.ForceResendingToken forceResendingToken) {
-                        super.onCodeSent(s, forceResendingToken);
-                        mVerificationId = s;
-                    }
-
-                    @Override
-                    public void onCodeAutoRetrievalTimeOut(String s) {
-                        super.onCodeAutoRetrievalTimeOut(s);
-                        Toast.makeText(PhoneAuthentication.this, "Something: " + s, Toast.LENGTH_SHORT).show();
-                    }
-                });
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mAuth.removeAuthStateListener(mAuthListener);
     }
 
     @Override

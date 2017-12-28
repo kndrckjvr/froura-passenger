@@ -239,7 +239,7 @@ public class PhoneRegistration extends AppCompatActivity {
                 onBackPressed();
                 break;
             case R.id.next:
-                Intent intent = new Intent(PhoneRegistration.this, PhoneRegistration.class);
+                Intent intent = new Intent(PhoneRegistration.this, PhoneAuthentication.class);
                 intent.putExtra("mobNum", mobNum);
                 intent.putExtra("name", name);
                 intent.putExtra("email", email);
