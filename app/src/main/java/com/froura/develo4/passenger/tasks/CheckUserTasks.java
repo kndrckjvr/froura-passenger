@@ -1,5 +1,6 @@
 package com.froura.develo4.passenger.tasks;
 
+import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.os.AsyncTask;
@@ -89,8 +90,6 @@ public class CheckUserTasks extends AsyncTask<Void, Void, String> {
     @Override
     protected void onPostExecute(String jsonString) {
         super.onPostExecute(jsonString);
-        try {
-            ((OnLoginDriverTasksListener)context).parseCheckUserJSONString(jsonString);
-        } catch (Exception e) {}
+        ((OnLoginDriverTasksListener)context).parseCheckUserJSONString(jsonString);
     }
 }

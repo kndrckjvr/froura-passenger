@@ -5,7 +5,7 @@ package com.froura.develo4.passenger.config;
  */
 
 public final class TaskConfig {
-    public static final String HTTP_HOST = "http://192.168.1.9/";
+    public static final String HTTP_HOST = "http://192.168.1.9";
     public static final String DIR_URL = "/froura-web/mobile";
 //    public static final String HTTP_HOST = "";
 //    public static final String DIR_URL = "";

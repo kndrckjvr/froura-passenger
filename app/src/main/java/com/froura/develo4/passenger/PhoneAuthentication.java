@@ -1,5 +1,6 @@
 package com.froura.develo4.passenger;
 
+import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.os.CountDownTimer;
@@ -46,14 +47,12 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
     private TextView mob_num;
     private Button verify;
     private EditText verifCode;
+    private ProgressDialog progressDialog;
 
     private String mobNum;
     private String email;
     private String name;
     private boolean phoneReg;
-    private int register = 0;
-    private int login = 0;
-    private int phpId = -1;
     private CountDownTimer requestCodeTimer;
 
     private String TAG = "PhoneAuth";
@@ -69,6 +68,12 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
         verify = findViewById(R.id.btn_verify);
         verifCode = findViewById(R.id.et_verif_code);
         mob_num = findViewById(R.id.txtVw_mob_num);
+
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setTitle("Login");
+        progressDialog.setMessage("Logging in...");
+        progressDialog.setIndeterminate(false);
+        progressDialog.setCancelable(true);
 
         mobNum = getIntent().getStringExtra("mobNum");
         email = getIntent().getStringExtra("email");
@@ -133,6 +138,8 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
 
         if(phoneReg) {
             requestCode();
+            requestCode.setOnClickListener(null);
+            requestCodeTimer.start();
             phoneReg = false;
         }
     }
@@ -158,6 +165,7 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
                 new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
                     @Override
                     public void onVerificationCompleted(PhoneAuthCredential phoneAuthCredential) {
+                        progressDialog.show();
                         signInWithPhoneAuthCredential(phoneAuthCredential);
                     }
 
@@ -177,8 +185,6 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
                     public void onCodeSent(String s, PhoneAuthProvider.ForceResendingToken forceResendingToken) {
                         super.onCodeSent(s, forceResendingToken);
                         mVerificationId = s;
-                        requestCode.setOnClickListener(null);
-                        requestCodeTimer.start();
                     }
                 });
     }
@@ -190,9 +196,6 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
             public void onDataChange(DataSnapshot snapshot) {
                 if (!snapshot.exists()) {
                     registerUser();
-                    register = 1;
-                } else {
-                    login = 1;
                 }
             }
 
@@ -209,10 +212,6 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
         current_user_db.setValue(email);
         current_user_db = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(user_id).child("mobnum");
         current_user_db.setValue(mobNum);
-        registerToPhp();
-    }
-
-    private void registerToPhp() {
         new CheckUserTasks(PhoneAuthentication.this).execute();
     }
 
@@ -230,30 +229,16 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
 
     @Override
     public void parseCheckUserJSONString(String jsonString) {
-        try {
-            JSONObject jsonObject = new JSONObject(jsonString);
-            int login = jsonObject.getInt("login");
-            int register = jsonObject.getInt("register");
-            phpId = jsonObject.getInt("u_id");
 
-            if(login == 1) {
-                Toast.makeText(this, "Sucess logging in.", Toast.LENGTH_SHORT).show();
-            } else if(register == 1) {
-                Toast.makeText(this, "Sucess registering.", Toast.LENGTH_SHORT).show();
-            }
-
-        } catch (Exception ignored) {}
     }
 
     @Override
     public String createCheckUserPostString(ContentValues contentValues) throws UnsupportedEncodingException {
-        contentValues.put("register", register);
-        contentValues.put("login", login);
+        contentValues.put("android", 1);
         contentValues.put("name", name);
         contentValues.put("email", email);
         contentValues.put("mobile", mobNum);
         contentValues.put("firebase_id", mAuth.getCurrentUser().getUid());
-
         return RequestPostString.create(contentValues);
     }
 }
