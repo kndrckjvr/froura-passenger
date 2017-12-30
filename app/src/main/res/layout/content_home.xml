@@ -13,7 +13,7 @@
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
-    
+
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
@@ -29,7 +29,7 @@
                 android:name="com.froura.develo4.passenger.libraries.PickUpAutoCompleteFragment"
                 />
             <fragment
-                android:id="@+id/destination"
+                android:id="@+id/dropoff"
                 android:layout_below="@+id/pickup"
                 android:layout_marginTop="50dp"
                 android:name="com.froura.develo4.passenger.libraries.DropOffAutoCompleteFragment"

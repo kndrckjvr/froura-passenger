@@ -60,12 +60,15 @@ public class HomeActivity extends AppCompatActivity
     private CameraPosition cameraPosition;
     private SupportMapFragment mapFragment;
     private PlaceAutocompleteFragment pickup;
+    private PlaceAutocompleteFragment dropoff;
     private LocationRequest mLocationRequest;
     private Location mLastLocation;
     private LatLng pickup_coordinates;
+    private LatLng dropoff_coordinates;
 
     private String uid;
     private String pickup_location;
+    private String dropoff_location;
     final int LOCATION_REQUEST_CODE = 1;
 
     @Override
@@ -117,7 +120,9 @@ public class HomeActivity extends AppCompatActivity
                 .build();
 
         pickup = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.pickup);
+        dropoff = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.dropoff);
         pickup.setFilter(typeFilter);
+        dropoff.setFilter(typeFilter);
         pickup.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
@@ -132,6 +137,18 @@ public class HomeActivity extends AppCompatActivity
         });
 
 
+        dropoff.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+            @Override
+            public void onPlaceSelected(Place place) {
+                dropoff_location = place.getName().toString();
+                dropoff_coordinates = place.getLatLng();
+            }
+
+            @Override
+            public void onError(Status status) {
+
+            }
+        });
     }
 
     protected synchronized void buildGoogleApiClient() {
