@@ -17,6 +17,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -26,6 +27,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
@@ -51,6 +53,8 @@ public class HomeActivity extends AppCompatActivity
     private DatabaseReference mPassengerDB;
     private GoogleMap mMap;
     private GoogleApiClient mGoogleApiClient;
+    private CameraPosition cameraPosition;
+    private SupportMapFragment mapFragment;
     private LocationRequest mLocationRequest;
     private Location mLastLocation;
 
@@ -66,7 +70,7 @@ public class HomeActivity extends AppCompatActivity
 
         drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-             this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
@@ -91,13 +95,19 @@ public class HomeActivity extends AppCompatActivity
             }
         });
 
+        LatLng latLng = new LatLng(14.6091, 121.0223);
 
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+        cameraPosition = new CameraPosition.Builder()
+                .target(latLng)
+                .zoom(10)
+                .bearing(0)
+                .build();
+        mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
     }
 
-    protected synchronized void buildGoogleApiClient(){
+    protected synchronized void buildGoogleApiClient() {
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
@@ -115,6 +125,7 @@ public class HomeActivity extends AppCompatActivity
 
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(HomeActivity.this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST_CODE);
+            return;
         }
         LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
     }
@@ -131,13 +142,16 @@ public class HomeActivity extends AppCompatActivity
 
     @Override
     public void onLocationChanged(Location location) {
-        if(getApplicationContext()!=null){
+        if (getApplicationContext() != null) {
             mLastLocation = location;
+            LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+            cameraPosition = new CameraPosition.Builder()
+                    .target(latLng)
+                    .zoom(17)
+                    .bearing(0)
+                    .build();
 
-            LatLng latLng = new LatLng(location.getLatitude(),location.getLongitude());
-
-            mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-            mMap.animateCamera(CameraUpdateFactory.zoomTo(16));
+            mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
         }
     }
 
@@ -146,7 +160,9 @@ public class HomeActivity extends AppCompatActivity
         mMap = googleMap;
         mMap.getUiSettings().setTiltGesturesEnabled(false);
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
             ActivityCompat.requestPermissions(HomeActivity.this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST_CODE);
+            return;
         }
         buildGoogleApiClient();
         mMap.setMyLocationEnabled(true);
@@ -178,5 +194,23 @@ public class HomeActivity extends AppCompatActivity
         drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case LOCATION_REQUEST_CODE: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    mapFragment.getMapAsync(this);
+
+
+                } else {
+                    Toast.makeText(getApplicationContext(), "Please provide the permission", Toast.LENGTH_LONG).show();
+                }
+                break;
+            }
+        }
     }
 }
