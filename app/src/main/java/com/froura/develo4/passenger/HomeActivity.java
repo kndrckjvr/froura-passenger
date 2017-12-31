@@ -7,6 +7,7 @@ import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.GravityCompat;
@@ -22,6 +23,7 @@ import android.widget.Toast;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.AutocompleteFilter;
@@ -33,8 +35,10 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -53,6 +57,8 @@ public class HomeActivity extends AppCompatActivity
 
     private DrawerLayout drawer;
     private TextView name;
+    private FloatingActionButton bookFab;
+    private FloatingActionButton rsrvFab;
 
     private DatabaseReference mPassengerDB;
     private GoogleMap mMap;
@@ -105,18 +111,27 @@ public class HomeActivity extends AppCompatActivity
             }
         });
 
-        LatLng latLng = new LatLng(14.6091, 121.0223);
-        cameraPosition = new CameraPosition.Builder()
-                .target(latLng)
-                .zoom(10)
-                .bearing(0)
-                .build();
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(5000);
+        mLocationRequest.setFastestInterval(1000);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+        if(!locationRequestEnabled()) {
+            LatLng latLng = new LatLng(14.6091, 121.0223);
+            cameraPosition = new CameraPosition.Builder()
+                    .target(latLng)
+                    .zoom(10)
+                    .bearing(0)
+                    .build();
+        }
+
         mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
         AutocompleteFilter typeFilter = new AutocompleteFilter.Builder()
                 .setCountry("PH")
+                .setTypeFilter(AutocompleteFilter.TYPE_FILTER_ADDRESS)
                 .build();
 
         pickup = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.pickup);
@@ -151,22 +166,8 @@ public class HomeActivity extends AppCompatActivity
         });
     }
 
-    protected synchronized void buildGoogleApiClient() {
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
-                .build();
-        mGoogleApiClient.connect();
-    }
-
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(1000);
-        mLocationRequest.setFastestInterval(1000);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-
         if (ActivityCompat.checkSelfPermission(this,
                 android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                     ActivityCompat.checkSelfPermission(this,
@@ -214,7 +215,6 @@ public class HomeActivity extends AppCompatActivity
                 android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this,
                         android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
             ActivityCompat.requestPermissions(HomeActivity.this,
                     new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
                     LOCATION_REQUEST_CODE);
@@ -252,6 +252,7 @@ public class HomeActivity extends AppCompatActivity
         return true;
     }
 
+    @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         switch (requestCode) {
             case LOCATION_REQUEST_CODE: {
@@ -268,5 +269,33 @@ public class HomeActivity extends AppCompatActivity
                 break;
             }
         }
+    }
+
+    protected synchronized void buildGoogleApiClient() {
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
+        mGoogleApiClient.connect();
+    }
+
+    private boolean locationRequestEnabled() {
+        return ActivityCompat.checkSelfPermission(this,
+                android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this,
+                        android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void setPickupPoint() {
+        mMap.addMarker(new MarkerOptions()
+                .position(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()))
+                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.pickup_point)));
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
     }
 }
