@@ -3,6 +3,8 @@ package com.froura.develo4.passenger;
 import android.*;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -17,6 +19,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -46,6 +49,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class HomeActivity extends AppCompatActivity
@@ -61,12 +67,15 @@ public class HomeActivity extends AppCompatActivity
     private FloatingActionButton rsrvFab;
 
     private DatabaseReference mPassengerDB;
+
     private GoogleMap mMap;
-    private GoogleApiClient mGoogleApiClient;
     private CameraPosition cameraPosition;
     private SupportMapFragment mapFragment;
+
     private PlaceAutocompleteFragment pickup;
     private PlaceAutocompleteFragment dropoff;
+
+    private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
     private Location mLastLocation;
     private LatLng pickup_coordinates;
@@ -75,6 +84,7 @@ public class HomeActivity extends AppCompatActivity
     private String uid;
     private String pickup_location;
     private String dropoff_location;
+    private boolean autoMarkerSet = false;
     final int LOCATION_REQUEST_CODE = 1;
 
     @Override
@@ -131,7 +141,6 @@ public class HomeActivity extends AppCompatActivity
 
         AutocompleteFilter typeFilter = new AutocompleteFilter.Builder()
                 .setCountry("PH")
-                .setTypeFilter(AutocompleteFilter.TYPE_FILTER_ADDRESS)
                 .build();
 
         pickup = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.pickup);
@@ -143,6 +152,7 @@ public class HomeActivity extends AppCompatActivity
             public void onPlaceSelected(Place place) {
                 pickup_location = place.getName().toString();
                 pickup_coordinates = place.getLatLng();
+                setMarkers();
             }
 
             @Override
@@ -151,12 +161,25 @@ public class HomeActivity extends AppCompatActivity
             }
         });
 
+        pickup.getView().findViewById(R.id.clear)
+                .setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        view.setVisibility(View.GONE);
+                        EditText pickup = findViewById(R.id.et_pickup);
+                        pickup.setText("");
+                        pickup_coordinates = null;
+                        pickup_location = null; 
+                        setMarkers();
+                    }
+                });
 
         dropoff.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
                 dropoff_location = place.getName().toString();
                 dropoff_coordinates = place.getLatLng();
+                setMarkers();
             }
 
             @Override
@@ -164,6 +187,19 @@ public class HomeActivity extends AppCompatActivity
 
             }
         });
+
+        dropoff.getView().findViewById(R.id.clear)
+                .setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        view.setVisibility(View.GONE);
+                        EditText dropoff = findViewById(R.id.et_dropoff);
+                        dropoff.setText("");
+                        dropoff_coordinates = null;
+                        dropoff_location = null;
+                        setMarkers();
+                    }
+                });
     }
 
     @Override
@@ -203,6 +239,7 @@ public class HomeActivity extends AppCompatActivity
                     .build();
 
             mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+            setMarkers();
         }
     }
 
@@ -287,10 +324,45 @@ public class HomeActivity extends AppCompatActivity
                         android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED;
     }
 
-    private void setPickupPoint() {
-        mMap.addMarker(new MarkerOptions()
-                .position(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()))
-                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.pickup_point)));
+    public void setMarkers() {
+        mMap.clear();
+        if(autoMarkerSet) {
+            if(pickup_coordinates != null) {
+                mMap.addMarker(new MarkerOptions()
+                        .position(new LatLng(pickup_coordinates.latitude, pickup_coordinates.longitude))
+                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.pickup_point)));
+            } else if(mLastLocation != null) {
+                mMap.addMarker(new MarkerOptions()
+                        .position(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()))
+                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.pickup_point)));
+            }
+            if(dropoff_coordinates != null) {
+                mMap.addMarker(new MarkerOptions()
+                        .position(new LatLng(dropoff_coordinates.latitude, dropoff_coordinates.longitude))
+                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.dropoff_point)));
+            }
+        } else {
+            mMap.addMarker(new MarkerOptions()
+                    .position(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()))
+                    .icon(BitmapDescriptorFactory.fromResource(R.mipmap.pickup_point)));
+            getAddress();
+            autoMarkerSet = true;
+        }
+    }
+
+    private void getAddress() {
+        Geocoder geocoder;
+        List<Address> addresses;
+        geocoder = new Geocoder(this, Locale.getDefault());
+
+        try {
+            addresses = geocoder.getFromLocation(mLastLocation.getLatitude(), mLastLocation.getLongitude(), 1);
+            pickup_location = addresses.get(0).getAddressLine(0);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        pickup.setText(pickup_location);
     }
 
     @Override
