@@ -8,7 +8,9 @@
 
     <string name="registration_note">Please enter your details. Only drivers assigned to you will see them.</string>
 
-    <!-- HINTS -->
+    <string name="ok">Ok</string>
+    <string name="cancel">Cancel</string>
+
     <string name="et_hint_name"><i>Name</i></string>
     <string name="et_hint_mobNum"><i>Mobile Number</i></string>
     <string name="et_hint_verification_code">Verification Code</string>

@@ -1,12 +1,14 @@
 package com.froura.develo4.passenger;
 
-import android.*;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -17,21 +19,21 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.froura.develo4.passenger.libraries.DialogCreator;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Status;
-import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.AutocompleteFilter;
 import com.google.android.gms.location.places.Place;
-import com.google.android.gms.location.places.ui.PlaceAutocomplete;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -55,7 +57,8 @@ import java.util.Locale;
 import java.util.Map;
 
 public class HomeActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener,
+        implements DialogCreator.DialogActionListener,
+        NavigationView.OnNavigationItemSelectedListener,
         OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
@@ -105,6 +108,8 @@ public class HomeActivity extends AppCompatActivity
         navigationView.getMenu().getItem(0).setChecked(true);
         View v = navigationView.getHeaderView(0);
         name = v.findViewById(R.id.txtVw_name);
+        bookFab = findViewById(R.id.bookFab);
+        rsrvFab = findViewById(R.id.rsrvFab);
 
         uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
         mPassengerDB = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(uid);
@@ -121,19 +126,18 @@ public class HomeActivity extends AppCompatActivity
             }
         });
 
+        if(!locationEnabled()) {
+            DialogCreator.create(this, "requestLocation")
+                    .setTitle("Access Location")
+                    .setMessage("Turn on your location settings to be able to get location data.")
+                    .setPositiveButton("Go to Settings")
+                    .show();
+        }
+
         mLocationRequest = new LocationRequest();
         mLocationRequest.setInterval(5000);
         mLocationRequest.setFastestInterval(1000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-
-        if(!locationRequestEnabled()) {
-            LatLng latLng = new LatLng(14.6091, 121.0223);
-            cameraPosition = new CameraPosition.Builder()
-                    .target(latLng)
-                    .zoom(10)
-                    .bearing(0)
-                    .build();
-        }
 
         mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -166,10 +170,8 @@ public class HomeActivity extends AppCompatActivity
                     @Override
                     public void onClick(View view) {
                         view.setVisibility(View.GONE);
-                        EditText pickup = findViewById(R.id.et_pickup);
-                        pickup.setText("");
                         pickup_coordinates = null;
-                        pickup_location = null; 
+                        getAddress();
                         setMarkers();
                     }
                 });
@@ -248,6 +250,7 @@ public class HomeActivity extends AppCompatActivity
         mMap = googleMap;
         mMap.getUiSettings().setMyLocationButtonEnabled(false);
         mMap.getUiSettings().setTiltGesturesEnabled(false);
+        buildGoogleApiClient();
         if (ActivityCompat.checkSelfPermission(this,
                 android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this,
@@ -257,7 +260,6 @@ public class HomeActivity extends AppCompatActivity
                     LOCATION_REQUEST_CODE);
             return;
         }
-        buildGoogleApiClient();
         mMap.setMyLocationEnabled(true);
     }
 
@@ -293,20 +295,53 @@ public class HomeActivity extends AppCompatActivity
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         switch (requestCode) {
             case LOCATION_REQUEST_CODE: {
-                // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
                     mapFragment.getMapAsync(this);
-
-
                 } else {
+                    LatLng latLng = new LatLng(14.6091, 121.0223);
+                    cameraPosition = new CameraPosition.Builder()
+                            .target(latLng)
+                            .zoom(10)
+                            .bearing(0)
+                            .build();
+                    mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+                    disableButtons();
                     Toast.makeText(getApplicationContext(), "Please provide the permission", Toast.LENGTH_LONG).show();
                 }
                 break;
             }
         }
     }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+    }
+
+    @Override
+    public void onClickPositiveButton(String actionId) {
+        switch (actionId) {
+            case "requestLocation":
+                Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                startActivity(intent);
+                break;
+        }
+    }
+
+    @Override
+    public void onClickNegativeButton(String actionId) {
+    }
+
+    @Override
+    public void onClickNeutralButton(String actionId) {}
+
+    @Override
+    public void onClickMultiChoiceItem(String actionId, int which, boolean isChecked) {}
+
+    @Override
+    public void onCreateDialogView(String actionId, View view) {}
 
     protected synchronized void buildGoogleApiClient() {
         mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -315,13 +350,6 @@ public class HomeActivity extends AppCompatActivity
                 .addApi(LocationServices.API)
                 .build();
         mGoogleApiClient.connect();
-    }
-
-    private boolean locationRequestEnabled() {
-        return ActivityCompat.checkSelfPermission(this,
-                android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this,
-                        android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED;
     }
 
     public void setMarkers() {
@@ -365,9 +393,41 @@ public class HomeActivity extends AppCompatActivity
         pickup.setText(pickup_location);
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-        LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+    private boolean locationEnabled() {
+        int locationMode = 0;
+        String locationProviders;
+        boolean isAvailable = false;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
+            try {
+                locationMode = Settings.Secure.getInt(getContentResolver(), Settings.Secure.LOCATION_MODE);
+            } catch (Settings.SettingNotFoundException e) {
+                e.printStackTrace();
+            }
+
+            isAvailable = (locationMode != Settings.Secure.LOCATION_MODE_OFF);
+        } else {
+            locationProviders = Settings.Secure.getString(getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
+            isAvailable = !TextUtils.isEmpty(locationProviders);
+        }
+
+        return isAvailable;
+    }
+
+    private void askPermissions() {
+        if (ActivityCompat.checkSelfPermission(this,
+                android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this,
+                        android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(HomeActivity.this,
+                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                    LOCATION_REQUEST_CODE);
+        } else {
+            Toast.makeText(this, "All Permissions granted.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void disableButtons() {
+
     }
 }
