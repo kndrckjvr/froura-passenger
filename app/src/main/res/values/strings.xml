@@ -14,6 +14,7 @@
     <string name="et_hint_name"><i>Name</i></string>
     <string name="et_hint_mobNum"><i>Mobile Number</i></string>
     <string name="et_hint_verification_code">Verification Code</string>
+    <string name="et_hint_pickup">Enter pick-up point</string>
 
     <string name="txtVw_enter_code">Enter the code sent to:</string>
     <string name="txtVw_mobNum_placeholder">+63 9123456789</string>

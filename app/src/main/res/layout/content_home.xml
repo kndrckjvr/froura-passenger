@@ -31,7 +31,7 @@
             <fragment
                 android:id="@+id/dropoff"
                 android:layout_below="@+id/pickup"
-                android:layout_marginTop="50dp"
+                android:layout_marginTop="40dp"
                 android:name="com.froura.develo4.passenger.libraries.DropOffAutoCompleteFragment"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />

@@ -1,19 +1,24 @@
 package com.froura.develo4.passenger;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
+import com.froura.develo4.passenger.libraries.DialogCreator;
 import com.froura.develo4.passenger.libraries.SnackBarCreator;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements DialogCreator.DialogActionListener {
 
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
@@ -45,6 +50,15 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }, 10);
                 } else {
+                    if(!haveNetworkConnection()) {
+                        DialogCreator.create(MainActivity.this, "internetDisabled")
+                                .setTitle("No Internet Connection")
+                                .setMessage("This application needs internet connection.")
+                                .setPositiveButton("EXIT")
+                                .setCancelable(false)
+                                .show();
+                        return;
+                    }
                     Intent intent = new Intent(MainActivity.this, HomeActivity.class);
                     startActivity(intent);
                     finish();
@@ -52,6 +66,23 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         };
+    }
+
+    private boolean haveNetworkConnection() {
+        boolean haveConnectedWifi = false;
+        boolean haveConnectedMobile = false;
+
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo[] netInfo = cm.getAllNetworkInfo();
+        for (NetworkInfo ni : netInfo) {
+            if (ni.getTypeName().equalsIgnoreCase("WIFI"))
+                if (ni.isConnected())
+                    haveConnectedWifi = true;
+            if (ni.getTypeName().equalsIgnoreCase("MOBILE"))
+                if (ni.isConnected())
+                    haveConnectedMobile = true;
+        }
+        return haveConnectedWifi || haveConnectedMobile;
     }
 
     public int getImage(String imageName) {
@@ -71,5 +102,34 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         mAuth.removeAuthStateListener(mAuthListener);
+    }
+
+    @Override
+    public void onClickPositiveButton(String actionId) {
+        switch (actionId) {
+            case "internetDisabled":
+                finish();
+                break;
+        }
+    }
+
+    @Override
+    public void onClickNegativeButton(String actionId) {
+
+    }
+
+    @Override
+    public void onClickNeutralButton(String actionId) {
+
+    }
+
+    @Override
+    public void onClickMultiChoiceItem(String actionId, int which, boolean isChecked) {
+
+    }
+
+    @Override
+    public void onCreateDialogView(String actionId, View view) {
+
     }
 }

@@ -66,11 +66,6 @@ public class PhoneRegistration extends AppCompatActivity {
         nameTL = findViewById(R.id.nameTL);
         emailTL = findViewById(R.id.emailTL);
 
-        //debugging
-        /*mobET.setText("09167983610");
-        nameET.setText("Ken Cosca");
-        emailET.setText("kendrickjaviercosca@gmail.com");*/
-
         mobET.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {

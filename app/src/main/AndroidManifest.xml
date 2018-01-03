@@ -23,6 +23,7 @@
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
+            android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar.Fullscreen">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -33,20 +34,25 @@
         <activity
             android:name=".HomeActivity"
             android:label=""
+            android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".LandingActivity"
+            android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar.Fullscreen" />
         <activity
             android:name=".PhoneRegistration"
+            android:screenOrientation="portrait"
             android:label=""
             android:theme="@style/RegistrationTheme" />
         <activity
             android:name=".PhoneAuthentication"
+            android:screenOrientation="portrait"
             android:label=""
             android:theme="@style/RegistrationTheme" />
         <activity
             android:name=".BookingActivity"
+            android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar.Fullscreen"/>
 
         <meta-data

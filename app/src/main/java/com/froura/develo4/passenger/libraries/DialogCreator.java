@@ -39,6 +39,11 @@ public final class DialogCreator {
         return this;
     }
 
+    public DialogCreator setCancelable(boolean cancelable) {
+        builder.setCancelable(cancelable);
+        return this;
+    }
+
     public DialogCreator setPositiveButton(int textId) {
         builder.setPositiveButton(textId, new DialogInterface.OnClickListener() {
             @Override

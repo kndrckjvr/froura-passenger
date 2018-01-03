@@ -87,9 +87,7 @@ public class HomeActivity extends AppCompatActivity
     private PlaceAutocompleteFragment dropoff;
 
     private GoogleApiClient mGoogleApiClient;
-    private LocationRequest mLocationRequest;
     private Location mLastLocation;
-    private Location mCurrentLocation;
     private LatLng pickup_coordinates;
     private LatLng dropoff_coordinates;
 
@@ -97,8 +95,7 @@ public class HomeActivity extends AppCompatActivity
     private String pickup_location;
     private String dropoff_location;
     private boolean autoMarkerSet = false;
-    private boolean lastLocSet = false;
-    private boolean dropoffSet = false;
+    private boolean cameraUpdated = false;
     final int LOCATION_REQUEST_CODE = 1;
 
     @Override
@@ -146,11 +143,6 @@ public class HomeActivity extends AppCompatActivity
                     .show();
         }
 
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(5000);
-        mLocationRequest.setFastestInterval(1000);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-
         mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -161,13 +153,28 @@ public class HomeActivity extends AppCompatActivity
 
         pickup = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.pickup);
         dropoff = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.dropoff);
+
         pickup.setFilter(typeFilter);
         dropoff.setFilter(typeFilter);
+
         pickup.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
                 pickup_location = place.getName().toString();
                 pickup_coordinates = place.getLatLng();
+                setMarkers();
+            }
+
+            @Override
+            public void onError(Status status) {
+
+            }
+        });
+        dropoff.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+            @Override
+            public void onPlaceSelected(Place place) {
+                dropoff_location = place.getName().toString();
+                dropoff_coordinates = place.getLatLng();
                 setMarkers();
             }
 
@@ -183,50 +190,36 @@ public class HomeActivity extends AppCompatActivity
                     public void onClick(View view) {
                         view.setVisibility(View.GONE);
                         pickup_coordinates = null;
-                        getAddress();
+                        autoMarkerSet = false;
                         setMarkers();
                     }
                 });
-
-        dropoff.setOnPlaceSelectedListener(new PlaceSelectionListener() {
-            @Override
-            public void onPlaceSelected(Place place) {
-                dropoff_location = place.getName().toString();
-                dropoff_coordinates = place.getLatLng();
-                setMarkers();
-                dropoffSet = true;
-            }
-
-            @Override
-            public void onError(Status status) {
-
-            }
-        });
-
         dropoff.getView().findViewById(R.id.clear)
                 .setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
                         view.setVisibility(View.GONE);
-                        EditText dropoff = findViewById(R.id.et_dropoff);
                         dropoff.setText("");
                         dropoff_coordinates = null;
                         dropoff_location = null;
                         setMarkers();
-                        dropoffSet = false;
                     }
                 });
 
         bookFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                setBookingDetails();
+                prepareBooking();
             }
         });
     }
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
+        LocationRequest mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(5000);
+        mLocationRequest.setFastestInterval(1000);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         if (ActivityCompat.checkSelfPermission(this,
                 android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                     ActivityCompat.checkSelfPermission(this,
@@ -236,49 +229,32 @@ public class HomeActivity extends AppCompatActivity
                     LOCATION_REQUEST_CODE);
             return;
         }
+        mMap.setMyLocationEnabled(true);
         LocationServices.FusedLocationApi
                 .requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
     }
 
     @Override
-    public void onConnectionSuspended(int i) {
-
-    }
+    public void onConnectionSuspended(int i) { }
 
     @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-
-    }
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) { }
 
     @Override
     public void onLocationChanged(Location location) {
-        if (getApplicationContext() != null && !dropoffSet) {
-            if(!lastLocSet) {
-                mLastLocation = location;
-                lastLocSet = true;
-            } else { mCurrentLocation = location; }
-
-            LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-            cameraPosition = new CameraPosition.Builder()
-                    .target(latLng)
-                    .zoom(17)
-                    .bearing(0)
-                    .build();
-
-            mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+        if(getApplicationContext()!=null){
+            mLastLocation = location;
             setMarkers();
-        } else {
-            LatLngBounds bounds;
-            if(pickup_coordinates == null) {
-                bounds = new LatLngBounds.Builder()
-                        .include(new LatLng(dropoff_coordinates.latitude, dropoff_coordinates.longitude))
-                        .include(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()))
+            if(!cameraUpdated) {
+                LatLng latLng = new LatLng(location.getLatitude(),location.getLongitude());
+                cameraPosition = new CameraPosition.Builder()
+                        .target(latLng)
+                        .zoom(14)
+                        .bearing(0)
                         .build();
-                mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 50));
-            } else
-                mMap.setLatLngBoundsForCameraTarget(
-                    new LatLngBounds(new LatLng(pickup_coordinates.latitude, pickup_coordinates.longitude),
-                            new LatLng(dropoff_coordinates.latitude, dropoff_coordinates.longitude)));
+                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+                cameraUpdated = true;
+            }
         }
     }
 
@@ -288,16 +264,6 @@ public class HomeActivity extends AppCompatActivity
         mMap.getUiSettings().setMyLocationButtonEnabled(false);
         mMap.getUiSettings().setTiltGesturesEnabled(false);
         buildGoogleApiClient();
-        if (ActivityCompat.checkSelfPermission(this,
-                android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this,
-                        android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(HomeActivity.this,
-                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                    LOCATION_REQUEST_CODE);
-            return;
-        }
-        mMap.setMyLocationEnabled(true);
     }
 
     @Override
@@ -336,14 +302,9 @@ public class HomeActivity extends AppCompatActivity
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     mapFragment.getMapAsync(this);
                 } else {
-                    LatLng latLng = new LatLng(14.6091, 121.0223);
-                    cameraPosition = new CameraPosition.Builder()
-                            .target(latLng)
-                            .zoom(10)
-                            .bearing(0)
-                            .build();
-                    mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-                    Toast.makeText(getApplicationContext(), "Please provide the permission", Toast.LENGTH_LONG).show();
+                    SnackBarCreator.set("Permissions denied.");
+                    SnackBarCreator.show(viewFab);
+                    permissionDenied();
                 }
                 break;
             }
@@ -367,17 +328,16 @@ public class HomeActivity extends AppCompatActivity
     }
 
     @Override
-    public void onClickNegativeButton(String actionId) {
-    }
+    public void onClickNegativeButton(String actionId) { }
 
     @Override
-    public void onClickNeutralButton(String actionId) {}
+    public void onClickNeutralButton(String actionId) { }
 
     @Override
-    public void onClickMultiChoiceItem(String actionId, int which, boolean isChecked) {}
+    public void onClickMultiChoiceItem(String actionId, int which, boolean isChecked) { }
 
     @Override
-    public void onCreateDialogView(String actionId, View view) {}
+    public void onCreateDialogView(String actionId, View view) { }
 
     protected synchronized void buildGoogleApiClient() {
         mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -394,21 +354,21 @@ public class HomeActivity extends AppCompatActivity
             if(pickup_coordinates != null) {
                 mMap.addMarker(new MarkerOptions()
                         .position(new LatLng(pickup_coordinates.latitude, pickup_coordinates.longitude))
-                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.pickup_point)));
+                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.yellow_marker)));
             } else if(mLastLocation != null) {
                 mMap.addMarker(new MarkerOptions()
                         .position(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()))
-                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.pickup_point)));
+                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.yellow_marker)));
             }
             if(dropoff_coordinates != null) {
                 mMap.addMarker(new MarkerOptions()
                         .position(new LatLng(dropoff_coordinates.latitude, dropoff_coordinates.longitude))
-                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.dropoff_point)));
+                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.black_marker)));
             }
         } else {
             mMap.addMarker(new MarkerOptions()
                     .position(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()))
-                    .icon(BitmapDescriptorFactory.fromResource(R.mipmap.pickup_point)));
+                    .icon(BitmapDescriptorFactory.fromResource(R.mipmap.yellow_marker)));
             getAddress();
             autoMarkerSet = true;
         }
@@ -432,7 +392,7 @@ public class HomeActivity extends AppCompatActivity
     private boolean locationEnabled() {
         int locationMode = 0;
         String locationProviders;
-        boolean isAvailable = false;
+        boolean isAvailable;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
             try {
@@ -463,6 +423,34 @@ public class HomeActivity extends AppCompatActivity
         }
     }
 
+    private void permissionDenied() {
+        LatLng latLng = new LatLng(14.6091, 121.0223);
+        cameraPosition = new CameraPosition.Builder()
+                .target(latLng)
+                .zoom(11)
+                .bearing(0)
+                .build();
+        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+        bookFab.setImageResource(R.mipmap.book_disabled);
+        rsrvFab.setImageResource(R.mipmap.rsrv_disabled);
+
+        bookFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                SnackBarCreator.set("Permissions denied.");
+                SnackBarCreator.show(view);
+            }
+        });
+
+        rsrvFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                SnackBarCreator.set("Permissions denied.");
+                SnackBarCreator.show(view);
+            }
+        });
+    }
+
     private boolean permissionStatus() {
         return ActivityCompat.checkSelfPermission(this,
                 android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
@@ -470,7 +458,7 @@ public class HomeActivity extends AppCompatActivity
                         android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
 
-    private void setBookingDetails() {
+    private void prepareBooking() {
         if(permissionStatus()) {
             if(pickup_location != null && dropoff_location != null) {
                 Intent intent = new Intent(this, BookingActivity.class);
@@ -490,34 +478,8 @@ public class HomeActivity extends AppCompatActivity
                 SnackBarCreator.show(viewFab);
             }
         } else {
-            ActivityCompat.requestPermissions(HomeActivity.this,
-                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                    LOCATION_REQUEST_CODE);
-        }
-
-    }
-
-    private void something() {
-        if(permissionStatus()) {
-            if(pickup_location != null && dropoff_location != null) {
-                String user_id = FirebaseAuth.getInstance().getCurrentUser().getUid();
-                DatabaseReference dbRef = FirebaseDatabase.getInstance()
-                        .getReference()
-                        .child("services")
-                        .child("booking");
-                GeoFire geoFire = new GeoFire(dbRef);
-                if(pickup_coordinates != null) {
-                    geoFire.setLocation(user_id, new GeoLocation(pickup_coordinates.latitude, pickup_coordinates.longitude));
-                } else {
-                    geoFire.setLocation(user_id, new GeoLocation(mLastLocation.getLatitude(), mLastLocation.getLongitude()));
-                }
-                dbRef.child("pickup").setValue(pickup_location);
-                dbRef.child("dropoff").setValue(dropoff_location);
-            } else {
-                SnackBarCreator.set("Set a Drop-off point.");
-                SnackBarCreator.show(viewFab);
-            }
-        } else {
+            SnackBarCreator.set("Permissions denied.");
+            SnackBarCreator.show(viewFab);
         }
     }
 }
