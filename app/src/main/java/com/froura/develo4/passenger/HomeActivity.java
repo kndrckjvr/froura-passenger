@@ -26,7 +26,12 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.firebase.geofire.GeoFire;
+import com.firebase.geofire.GeoLocation;
 import com.froura.develo4.passenger.libraries.DialogCreator;
+import com.froura.develo4.passenger.libraries.RandomString;
+import com.froura.develo4.passenger.libraries.SnackBarCreator;
+import com.froura.develo4.passenger.tasks.CheckUserTasks;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Status;
@@ -36,6 +41,7 @@ import com.google.android.gms.location.places.AutocompleteFilter;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -43,6 +49,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -68,6 +75,7 @@ public class HomeActivity extends AppCompatActivity
     private TextView name;
     private FloatingActionButton bookFab;
     private FloatingActionButton rsrvFab;
+    private View viewFab;
 
     private DatabaseReference mPassengerDB;
 
@@ -81,6 +89,7 @@ public class HomeActivity extends AppCompatActivity
     private GoogleApiClient mGoogleApiClient;
     private LocationRequest mLocationRequest;
     private Location mLastLocation;
+    private Location mCurrentLocation;
     private LatLng pickup_coordinates;
     private LatLng dropoff_coordinates;
 
@@ -88,6 +97,8 @@ public class HomeActivity extends AppCompatActivity
     private String pickup_location;
     private String dropoff_location;
     private boolean autoMarkerSet = false;
+    private boolean lastLocSet = false;
+    private boolean dropoffSet = false;
     final int LOCATION_REQUEST_CODE = 1;
 
     @Override
@@ -110,6 +121,7 @@ public class HomeActivity extends AppCompatActivity
         name = v.findViewById(R.id.txtVw_name);
         bookFab = findViewById(R.id.bookFab);
         rsrvFab = findViewById(R.id.rsrvFab);
+        viewFab = findViewById(R.id.viewFab);
 
         uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
         mPassengerDB = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(uid);
@@ -182,6 +194,7 @@ public class HomeActivity extends AppCompatActivity
                 dropoff_location = place.getName().toString();
                 dropoff_coordinates = place.getLatLng();
                 setMarkers();
+                dropoffSet = true;
             }
 
             @Override
@@ -200,8 +213,16 @@ public class HomeActivity extends AppCompatActivity
                         dropoff_coordinates = null;
                         dropoff_location = null;
                         setMarkers();
+                        dropoffSet = false;
                     }
                 });
+
+        bookFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                setBookingDetails();
+            }
+        });
     }
 
     @Override
@@ -231,8 +252,12 @@ public class HomeActivity extends AppCompatActivity
 
     @Override
     public void onLocationChanged(Location location) {
-        if (getApplicationContext() != null) {
-            mLastLocation = location;
+        if (getApplicationContext() != null && !dropoffSet) {
+            if(!lastLocSet) {
+                mLastLocation = location;
+                lastLocSet = true;
+            } else { mCurrentLocation = location; }
+
             LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
             cameraPosition = new CameraPosition.Builder()
                     .target(latLng)
@@ -242,6 +267,18 @@ public class HomeActivity extends AppCompatActivity
 
             mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
             setMarkers();
+        } else {
+            LatLngBounds bounds;
+            if(pickup_coordinates == null) {
+                bounds = new LatLngBounds.Builder()
+                        .include(new LatLng(dropoff_coordinates.latitude, dropoff_coordinates.longitude))
+                        .include(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()))
+                        .build();
+                mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 50));
+            } else
+                mMap.setLatLngBoundsForCameraTarget(
+                    new LatLngBounds(new LatLng(pickup_coordinates.latitude, pickup_coordinates.longitude),
+                            new LatLng(dropoff_coordinates.latitude, dropoff_coordinates.longitude)));
         }
     }
 
@@ -306,7 +343,6 @@ public class HomeActivity extends AppCompatActivity
                             .bearing(0)
                             .build();
                     mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-                    disableButtons();
                     Toast.makeText(getApplicationContext(), "Please provide the permission", Toast.LENGTH_LONG).show();
                 }
                 break;
@@ -427,7 +463,61 @@ public class HomeActivity extends AppCompatActivity
         }
     }
 
-    private void disableButtons() {
+    private boolean permissionStatus() {
+        return ActivityCompat.checkSelfPermission(this,
+                android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this,
+                        android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+    }
 
+    private void setBookingDetails() {
+        if(permissionStatus()) {
+            if(pickup_location != null && dropoff_location != null) {
+                Intent intent = new Intent(this, BookingActivity.class);
+                intent.putExtra("user_id", FirebaseAuth.getInstance().getCurrentUser().getUid());
+                if(pickup_coordinates != null) {
+                    intent.putExtra("pickupLat", pickup_coordinates.latitude);
+                    intent.putExtra("pickupLng", pickup_coordinates.longitude);
+                } else {
+                    intent.putExtra("pickupLat", mLastLocation.getLatitude());
+                    intent.putExtra("pickupLng", mLastLocation.getLongitude());
+                }
+                intent.putExtra("pickupLoc", pickup_location);
+                intent.putExtra("dropoffLoc", dropoff_location);
+                startActivity(intent);
+            } else {
+                SnackBarCreator.set("Set a Drop-off point.");
+                SnackBarCreator.show(viewFab);
+            }
+        } else {
+            ActivityCompat.requestPermissions(HomeActivity.this,
+                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                    LOCATION_REQUEST_CODE);
+        }
+
+    }
+
+    private void something() {
+        if(permissionStatus()) {
+            if(pickup_location != null && dropoff_location != null) {
+                String user_id = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                DatabaseReference dbRef = FirebaseDatabase.getInstance()
+                        .getReference()
+                        .child("services")
+                        .child("booking");
+                GeoFire geoFire = new GeoFire(dbRef);
+                if(pickup_coordinates != null) {
+                    geoFire.setLocation(user_id, new GeoLocation(pickup_coordinates.latitude, pickup_coordinates.longitude));
+                } else {
+                    geoFire.setLocation(user_id, new GeoLocation(mLastLocation.getLatitude(), mLastLocation.getLongitude()));
+                }
+                dbRef.child("pickup").setValue(pickup_location);
+                dbRef.child("dropoff").setValue(dropoff_location);
+            } else {
+                SnackBarCreator.set("Set a Drop-off point.");
+                SnackBarCreator.show(viewFab);
+            }
+        } else {
+        }
     }
 }

@@ -23,7 +23,7 @@
     <include layout="@layout/content_home" />
 
     <android.support.constraint.ConstraintLayout
-        android:id="@+id/fabCon"
+        android:id="@+id/viewFab"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end">

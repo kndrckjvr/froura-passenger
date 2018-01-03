@@ -206,12 +206,10 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
 
     private void registerUser() {
         String user_id = mAuth.getCurrentUser().getUid();
-        DatabaseReference current_user_db = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(user_id).child("name");
-        current_user_db.setValue(name);
-        current_user_db = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(user_id).child("email");
-        current_user_db.setValue(email);
-        current_user_db = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(user_id).child("mobnum");
-        current_user_db.setValue(mobNum);
+        DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(user_id);
+        dbRef.child("name").setValue(name);
+        dbRef.child("email").setValue(email);
+        dbRef.child("mobnum").setValue(mobNum);
         new CheckUserTasks(PhoneAuthentication.this).execute();
     }
 
