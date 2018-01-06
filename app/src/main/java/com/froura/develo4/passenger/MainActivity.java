@@ -17,6 +17,13 @@ import com.froura.develo4.passenger.libraries.DialogCreator;
 import com.froura.develo4.passenger.libraries.SnackBarCreator;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements DialogCreator.DialogActionListener {
 
@@ -59,7 +66,19 @@ public class MainActivity extends AppCompatActivity implements DialogCreator.Dia
                                 .show();
                         return;
                     }
-                    Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+                    final Intent intent = new Intent(MainActivity.this, HomeActivity.class);
+                    DatabaseReference mPassengerDB = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(FirebaseAuth.getInstance().getCurrentUser().getUid());
+                    mPassengerDB.addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            Map<String, Object> map = (Map<String, Object>) dataSnapshot.getValue();
+                            intent.putExtra("name", map.get("name").toString());
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) { }
+                    });
+
                     startActivity(intent);
                     finish();
                     return;

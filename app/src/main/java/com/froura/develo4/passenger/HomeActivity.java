@@ -5,7 +5,6 @@ import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
-import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
@@ -22,16 +21,11 @@ import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.firebase.geofire.GeoFire;
-import com.firebase.geofire.GeoLocation;
 import com.froura.develo4.passenger.libraries.DialogCreator;
-import com.froura.develo4.passenger.libraries.RandomString;
 import com.froura.develo4.passenger.libraries.SnackBarCreator;
-import com.froura.develo4.passenger.tasks.CheckUserTasks;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Status;
@@ -41,7 +35,6 @@ import com.google.android.gms.location.places.AutocompleteFilter;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
-import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -49,19 +42,12 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 public class HomeActivity extends AppCompatActivity
         implements DialogCreator.DialogActionListener,
@@ -77,8 +63,6 @@ public class HomeActivity extends AppCompatActivity
     private FloatingActionButton rsrvFab;
     private View viewFab;
 
-    private DatabaseReference mPassengerDB;
-
     private GoogleMap mMap;
     private CameraPosition cameraPosition;
     private SupportMapFragment mapFragment;
@@ -88,12 +72,12 @@ public class HomeActivity extends AppCompatActivity
 
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation;
-    private LatLng pickup_coordinates;
-    private LatLng dropoff_coordinates;
+    private LatLng pickupLocation;
+    private LatLng dropoffLocation;
 
     private String uid;
-    private String pickup_location;
-    private String dropoff_location;
+    private String pickupName;
+    private String dropoffName;
     private boolean autoMarkerSet = false;
     private boolean cameraUpdated = false;
     final int LOCATION_REQUEST_CODE = 1;
@@ -121,27 +105,13 @@ public class HomeActivity extends AppCompatActivity
         viewFab = findViewById(R.id.viewFab);
 
         uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        mPassengerDB = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(uid);
-        mPassengerDB.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                Map<String, Object> map = (Map<String, Object>) dataSnapshot.getValue();
-                name.setText(map.get("name").toString());
-            }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-
-        if(!locationEnabled()) {
+        if(!locationEnabled())
             DialogCreator.create(this, "requestLocation")
                     .setTitle("Access Location")
                     .setMessage("Turn on your location settings to be able to get location data.")
                     .setPositiveButton("Go to Settings")
                     .show();
-        }
 
         mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -160,28 +130,24 @@ public class HomeActivity extends AppCompatActivity
         pickup.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
-                pickup_location = place.getName().toString();
-                pickup_coordinates = place.getLatLng();
+                pickupName = place.getName().toString();
+                pickupLocation = place.getLatLng();
                 setMarkers();
             }
 
             @Override
-            public void onError(Status status) {
-
-            }
+            public void onError(Status status) { }
         });
         dropoff.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
-                dropoff_location = place.getName().toString();
-                dropoff_coordinates = place.getLatLng();
+                dropoffName = place.getName().toString();
+                dropoffLocation = place.getLatLng();
                 setMarkers();
             }
 
             @Override
-            public void onError(Status status) {
-
-            }
+            public void onError(Status status) { }
         });
 
         pickup.getView().findViewById(R.id.clear)
@@ -189,7 +155,7 @@ public class HomeActivity extends AppCompatActivity
                     @Override
                     public void onClick(View view) {
                         view.setVisibility(View.GONE);
-                        pickup_coordinates = null;
+                        pickupLocation = null;
                         autoMarkerSet = false;
                         setMarkers();
                     }
@@ -200,8 +166,8 @@ public class HomeActivity extends AppCompatActivity
                     public void onClick(View view) {
                         view.setVisibility(View.GONE);
                         dropoff.setText("");
-                        dropoff_coordinates = null;
-                        dropoff_location = null;
+                        dropoffLocation = null;
+                        dropoffName = null;
                         setMarkers();
                     }
                 });
@@ -212,6 +178,11 @@ public class HomeActivity extends AppCompatActivity
                 prepareBooking();
             }
         });
+
+        if(getIntent().getIntExtra("bookAct", -1) == 1) {
+            pickup.setText(getIntent().getStringExtra("pickupLoc"));
+            dropoff.setText(getIntent().getStringExtra("dropoffLoc"));
+        }
     }
 
     @Override
@@ -244,7 +215,8 @@ public class HomeActivity extends AppCompatActivity
     public void onLocationChanged(Location location) {
         if(getApplicationContext()!=null){
             mLastLocation = location;
-            setMarkers();
+            if(!autoMarkerSet)
+                setMarkers();
             if(!cameraUpdated) {
                 LatLng latLng = new LatLng(location.getLatitude(),location.getLongitude());
                 cameraPosition = new CameraPosition.Builder()
@@ -351,18 +323,18 @@ public class HomeActivity extends AppCompatActivity
     public void setMarkers() {
         mMap.clear();
         if(autoMarkerSet) {
-            if(pickup_coordinates != null) {
+            if(pickupLocation != null) {
                 mMap.addMarker(new MarkerOptions()
-                        .position(new LatLng(pickup_coordinates.latitude, pickup_coordinates.longitude))
+                        .position(new LatLng(pickupLocation.latitude, pickupLocation.longitude))
                         .icon(BitmapDescriptorFactory.fromResource(R.mipmap.yellow_marker)));
             } else if(mLastLocation != null) {
                 mMap.addMarker(new MarkerOptions()
                         .position(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()))
                         .icon(BitmapDescriptorFactory.fromResource(R.mipmap.yellow_marker)));
             }
-            if(dropoff_coordinates != null) {
+            if(dropoffLocation != null) {
                 mMap.addMarker(new MarkerOptions()
-                        .position(new LatLng(dropoff_coordinates.latitude, dropoff_coordinates.longitude))
+                        .position(new LatLng(dropoffLocation.latitude, dropoffLocation.longitude))
                         .icon(BitmapDescriptorFactory.fromResource(R.mipmap.black_marker)));
             }
         } else {
@@ -381,12 +353,12 @@ public class HomeActivity extends AppCompatActivity
 
         try {
             addresses = geocoder.getFromLocation(mLastLocation.getLatitude(), mLastLocation.getLongitude(), 1);
-            pickup_location = addresses.get(0).getAddressLine(0);
+            pickupName = addresses.get(0).getAddressLine(0);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        pickup.setText(pickup_location);
+        pickup.setText(pickupName);
     }
 
     private boolean locationEnabled() {
@@ -460,19 +432,20 @@ public class HomeActivity extends AppCompatActivity
 
     private void prepareBooking() {
         if(permissionStatus()) {
-            if(pickup_location != null && dropoff_location != null) {
+            if(pickupName != null && dropoffName != null) {
                 Intent intent = new Intent(this, BookingActivity.class);
-                intent.putExtra("user_id", FirebaseAuth.getInstance().getCurrentUser().getUid());
-                if(pickup_coordinates != null) {
-                    intent.putExtra("pickupLat", pickup_coordinates.latitude);
-                    intent.putExtra("pickupLng", pickup_coordinates.longitude);
+                intent.putExtra("user_id", uid);
+                if(pickupLocation != null) {
+                    intent.putExtra("pickupLat", pickupLocation.latitude);
+                    intent.putExtra("pickupLng", pickupLocation.longitude);
                 } else {
                     intent.putExtra("pickupLat", mLastLocation.getLatitude());
                     intent.putExtra("pickupLng", mLastLocation.getLongitude());
                 }
-                intent.putExtra("pickupLoc", pickup_location);
-                intent.putExtra("dropoffLoc", dropoff_location);
+                intent.putExtra("pickupName", pickupName);
+                intent.putExtra("dropoffName", dropoffName);
                 startActivity(intent);
+                finish();
             } else {
                 SnackBarCreator.set("Set a Drop-off point.");
                 SnackBarCreator.show(viewFab);
