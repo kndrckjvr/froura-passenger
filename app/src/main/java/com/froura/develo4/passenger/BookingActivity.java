@@ -51,11 +51,7 @@ public class BookingActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 timer.cancel();
-                Intent intent = new Intent();
-                intent.putExtra("pickupName", pickupName);
-                intent.putExtra("dropoffName", dropoffName);
-                finish();
-                startActivity(intent);
+                returnHome();
             }
         });
 
@@ -75,8 +71,24 @@ public class BookingActivity extends AppCompatActivity {
         timer.start();
     }
 
-    private void setBookingDetails() {
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        returnHome();
+    }
 
+    private void returnHome() {
+        Intent intent = new Intent(this, HomeActivity.class);
+        intent.putExtra("pickupName", pickupName);
+        intent.putExtra("dropoffName", dropoffName);
+        intent.putExtra("pickupLat", pickupLat);
+        intent.putExtra("pickupLng", pickupLng);
+        intent.putExtra("bookAct", 1);
+        finish();
+        startActivity(intent);
+    }
+
+    private void setBookingDetails() {
         DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference()
                 .child("services").child("booking");
         GeoFire geoFire = new GeoFire(dbRef);

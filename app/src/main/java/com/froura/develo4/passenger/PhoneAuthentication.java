@@ -73,7 +73,7 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
         progressDialog.setTitle("Login");
         progressDialog.setMessage("Logging in...");
         progressDialog.setIndeterminate(false);
-        progressDialog.setCancelable(true);
+        progressDialog.setCancelable(false);
 
         mobNum = getIntent().getStringExtra("mobNum");
         email = getIntent().getStringExtra("email");

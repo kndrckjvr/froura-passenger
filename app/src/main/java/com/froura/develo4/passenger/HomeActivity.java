@@ -33,6 +33,10 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.AutocompleteFilter;
 import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.PlaceDetectionClient;
+import com.google.android.gms.location.places.PlaceLikelihood;
+import com.google.android.gms.location.places.PlaceLikelihoodBufferResponse;
+import com.google.android.gms.location.places.Places;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -43,6 +47,8 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.io.IOException;
@@ -178,11 +184,6 @@ public class HomeActivity extends AppCompatActivity
                 prepareBooking();
             }
         });
-
-        if(getIntent().getIntExtra("bookAct", -1) == 1) {
-            pickup.setText(getIntent().getStringExtra("pickupLoc"));
-            dropoff.setText(getIntent().getStringExtra("dropoffLoc"));
-        }
     }
 
     @Override
@@ -226,6 +227,14 @@ public class HomeActivity extends AppCompatActivity
                         .build();
                 mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
                 cameraUpdated = true;
+            }
+
+            if(getIntent().getIntExtra("bookAct", -1) == 1) {
+                pickup.setText(getIntent().getStringExtra("pickupLoc"));
+                dropoff.setText(getIntent().getStringExtra("dropoffLoc"));
+                pickupLocation = new LatLng(getIntent().getDoubleExtra("pickupLat", 0.0), getIntent().getDoubleExtra("pickupLng", 0.0) );
+                autoMarkerSet = true;
+                setMarkers();
             }
         }
     }
@@ -341,24 +350,9 @@ public class HomeActivity extends AppCompatActivity
             mMap.addMarker(new MarkerOptions()
                     .position(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()))
                     .icon(BitmapDescriptorFactory.fromResource(R.mipmap.yellow_marker)));
-            getAddress();
+            showCurrentPlace();
             autoMarkerSet = true;
         }
-    }
-
-    private void getAddress() {
-        Geocoder geocoder;
-        List<Address> addresses;
-        geocoder = new Geocoder(this, Locale.getDefault());
-
-        try {
-            addresses = geocoder.getFromLocation(mLastLocation.getLatitude(), mLastLocation.getLongitude(), 1);
-            pickupName = addresses.get(0).getAddressLine(0);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        pickup.setText(pickupName);
     }
 
     private boolean locationEnabled() {
@@ -454,5 +448,46 @@ public class HomeActivity extends AppCompatActivity
             SnackBarCreator.set("Permissions denied.");
             SnackBarCreator.show(viewFab);
         }
+    }
+
+    private void showCurrentPlace() {
+        if (locationEnabled()) {
+            PlaceDetectionClient mPlaceDetectionClient = Places.getPlaceDetectionClient(this, null);
+            @SuppressWarnings("MissingPermission") final Task<PlaceLikelihoodBufferResponse> placeResult =
+                    mPlaceDetectionClient.getCurrentPlace(null);
+            placeResult.addOnCompleteListener
+                    (new OnCompleteListener<PlaceLikelihoodBufferResponse>() {
+                        @Override
+                        public void onComplete(@NonNull Task<PlaceLikelihoodBufferResponse> task) {
+                            if (task.isSuccessful() && task.getResult() != null) {
+                                PlaceLikelihoodBufferResponse likelyPlaces = task.getResult();
+
+                                for (PlaceLikelihood placeLikelihood : likelyPlaces) {
+                                    pickupName = (String) placeLikelihood.getPlace().getName();
+                                    pickupLocation = placeLikelihood.getPlace().getLatLng();
+                                    pickup.setText(pickupName);
+                                }
+
+                                likelyPlaces.release();
+
+                            }
+                        }
+                    });
+        }
+    }
+
+    private void getAddress() {
+        Geocoder geocoder;
+        List<Address> addresses;
+        geocoder = new Geocoder(this, Locale.getDefault());
+
+        try {
+            addresses = geocoder.getFromLocation(mLastLocation.getLatitude(), mLastLocation.getLongitude(), 1);
+            pickupName = addresses.get(0).getAddressLine(0);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        pickup.setText(pickupName);
     }
 }
