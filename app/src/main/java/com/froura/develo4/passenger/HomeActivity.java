@@ -17,6 +17,7 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.MenuItem;
@@ -68,6 +69,7 @@ public class HomeActivity extends AppCompatActivity
     private FloatingActionButton bookFab;
     private FloatingActionButton rsrvFab;
     private View viewFab;
+    private CardView viewDetails;
 
     private GoogleMap mMap;
     private CameraPosition cameraPosition;
@@ -109,6 +111,7 @@ public class HomeActivity extends AppCompatActivity
         bookFab = findViewById(R.id.bookFab);
         rsrvFab = findViewById(R.id.rsrvFab);
         viewFab = findViewById(R.id.viewFab);
+        viewDetails = findViewById(R.id.details);
 
         uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
@@ -453,13 +456,14 @@ public class HomeActivity extends AppCompatActivity
     private void showCurrentPlace() {
         if (locationEnabled()) {
             PlaceDetectionClient mPlaceDetectionClient = Places.getPlaceDetectionClient(this, null);
-            @SuppressWarnings("MissingPermission") final Task<PlaceLikelihoodBufferResponse> placeResult =
+            @SuppressWarnings("MissingPermission")
+            final Task<PlaceLikelihoodBufferResponse> placeResult =
                     mPlaceDetectionClient.getCurrentPlace(null);
             placeResult.addOnCompleteListener
                     (new OnCompleteListener<PlaceLikelihoodBufferResponse>() {
                         @Override
                         public void onComplete(@NonNull Task<PlaceLikelihoodBufferResponse> task) {
-                            if (task.isSuccessful() && task.getResult() != null) {
+                            if (task.isSuccessful() && task.getResult() != null && pickup != null) {
                                 PlaceLikelihoodBufferResponse likelyPlaces = task.getResult();
 
                                 for (PlaceLikelihood placeLikelihood : likelyPlaces) {

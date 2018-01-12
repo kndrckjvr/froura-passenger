@@ -51,7 +51,7 @@
         android:textColor="#000000"
         android:textSize="15sp" />
 
-    <Button
+    <com.facebook.login.widget.LoginButton
         android:id="@+id/faceLogin"
         style="@style/Widget.AppCompat.Button.Colored"
         android:layout_width="300dp"
