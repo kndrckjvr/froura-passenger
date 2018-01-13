@@ -1,5 +1,7 @@
 package com.froura.develo4.passenger;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Address;
@@ -112,6 +114,17 @@ public class HomeActivity extends AppCompatActivity
         rsrvFab = findViewById(R.id.rsrvFab);
         viewFab = findViewById(R.id.viewFab);
         viewDetails = findViewById(R.id.details);
+        viewDetails.animate()
+                .translationY(viewDetails.getHeight())
+                .alpha(0.0f)
+                .setDuration(300)
+                .setListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        super.onAnimationEnd(animation);
+                        viewDetails.setVisibility(View.GONE);
+                    }
+                });
 
         uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
