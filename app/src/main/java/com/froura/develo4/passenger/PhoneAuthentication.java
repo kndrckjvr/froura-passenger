@@ -71,7 +71,7 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
 
         progressDialog = new ProgressDialog(this);
         progressDialog.setTitle("Login");
-        progressDialog.setMessage("Logging in...");
+        progressDialog.setMessage("Logging in with Mobile...");
         progressDialog.setIndeterminate(false);
         progressDialog.setCancelable(false);
 

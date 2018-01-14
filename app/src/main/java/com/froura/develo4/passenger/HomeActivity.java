@@ -53,6 +53,11 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.io.IOException;
 import java.util.List;
@@ -441,6 +446,18 @@ public class HomeActivity extends AppCompatActivity
     }
 
     private void prepareBooking() {
+        DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(uid).child("");
+        rootRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                if (!snapshot.exists()) {
+
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {}
+        });
         if(permissionStatus()) {
             if(pickupName != null && dropoffName != null) {
                 Intent intent = new Intent(this, BookingActivity.class);
@@ -491,20 +508,5 @@ public class HomeActivity extends AppCompatActivity
                         }
                     });
         }
-    }
-
-    private void getAddress() {
-        Geocoder geocoder;
-        List<Address> addresses;
-        geocoder = new Geocoder(this, Locale.getDefault());
-
-        try {
-            addresses = geocoder.getFromLocation(mLastLocation.getLatitude(), mLastLocation.getLongitude(), 1);
-            pickupName = addresses.get(0).getAddressLine(0);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        pickup.setText(pickupName);
     }
 }

@@ -2,6 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:facebook="http://schemas.android.com/apk/res-auto"
     android:id="@+id/loginView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -24,9 +25,9 @@
         style="@style/Widget.AppCompat.Button.Colored"
         android:layout_width="300dp"
         android:layout_height="60dp"
-        android:layout_alignLeft="@+id/faceLogin"
+        android:layout_alignLeft="@+id/frameFb"
         android:layout_alignParentBottom="true"
-        android:layout_alignStart="@+id/faceLogin"
+        android:layout_alignStart="@+id/frameFb"
         android:layout_marginBottom="38dp"
         android:background="@drawable/mobile_background"
         android:drawableLeft="@drawable/ic_phone_android_black_24dp"
@@ -41,9 +42,9 @@
         android:layout_width="300dp"
         android:layout_height="60dp"
         android:layout_above="@+id/mobLogin"
-        android:layout_alignLeft="@+id/faceLogin"
-        android:layout_alignStart="@+id/faceLogin"
-        android:layout_marginBottom="12dp"
+        android:layout_alignLeft="@+id/frameFb"
+        android:layout_alignStart="@+id/frameFb"
+        android:layout_marginBottom="10dp"
         android:background="@drawable/google_background"
         android:drawableLeft="@mipmap/google"
         android:paddingLeft="8dp"
@@ -51,18 +52,31 @@
         android:textColor="#000000"
         android:textSize="15sp" />
 
-    <com.facebook.login.widget.LoginButton
-        android:id="@+id/faceLogin"
-        style="@style/Widget.AppCompat.Button.Colored"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingTop="20dp"
-        android:paddingBottom="20dp"
-        android:layout_marginLeft="25dp"
+    <FrameLayout
+        android:id="@+id/frameFb"
+        android:layout_width="300dp"
+        android:layout_height="60dp"
         android:layout_above="@+id/googLogin"
-        android:layout_marginBottom="12dp"
-        android:background="@drawable/facebook_background"
-        android:text="CONTINUE WITH FACEBOOK"
-        android:textColor="#FFFFFF"
-        android:textSize="15sp" />
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="10dp" >
+
+        <com.facebook.login.widget.LoginButton
+            android:id="@+id/login_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/faceLogin"
+            style="@style/Widget.AppCompat.Button.Colored"
+            android:layout_width="300dp"
+            android:layout_height="60dp"
+            android:layout_above="@+id/googLogin"
+            android:background="@drawable/facebook_background"
+            android:drawableLeft="@mipmap/facebook"
+            android:paddingLeft="8dp"
+            android:text="CONTINUE WITH FACEBOOK"
+            android:textColor="#FFFFFF"
+            android:textSize="15sp" />
+    </FrameLayout>
 </RelativeLayout>

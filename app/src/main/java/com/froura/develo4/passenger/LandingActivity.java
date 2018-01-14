@@ -1,10 +1,10 @@
 package com.froura.develo4.passenger;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
@@ -16,12 +16,18 @@ import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
+import com.froura.develo4.passenger.tasks.CheckUserTasks;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import org.json.JSONObject;
 
@@ -29,14 +35,16 @@ public class LandingActivity extends AppCompatActivity {
 
     private Button mobLogin;
     private Button googLogin;
+    private Button faceLogin;
+    private LoginButton loginButton;
+    private ProgressDialog progressDialog;
 
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
 
     private String email;
-    private String profpic;
     private String name;
-    private String number;
+    private String profpic;
 
     private CallbackManager mCallbackManager;
 
@@ -47,6 +55,12 @@ public class LandingActivity extends AppCompatActivity {
         //Landing Components
         mobLogin = findViewById(R.id.mobLogin);
         googLogin = findViewById(R.id.googLogin);
+        faceLogin = findViewById(R.id.faceLogin);
+
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setTitle("Login");
+        progressDialog.setIndeterminate(false);
+        progressDialog.setCancelable(false);
 
         mobLogin.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -65,11 +79,19 @@ public class LandingActivity extends AppCompatActivity {
             }
         });
 
+        faceLogin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                loginButton.performClick();
+            }
+        });
+
         mAuth = FirebaseAuth.getInstance();
         mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 if(mAuth.getCurrentUser() != null) {
+                    progressDialog.dismiss();
                     Intent intent = new Intent(LandingActivity.this, HomeActivity.class);
                     startActivity(intent);
                     finish();
@@ -80,13 +102,15 @@ public class LandingActivity extends AppCompatActivity {
 
         // Initialize Facebook Login button
         mCallbackManager = CallbackManager.Factory.create();
-        LoginButton loginButton = findViewById(R.id.faceLogin);
+        loginButton = findViewById(R.id.login_button);
 
         loginButton.setReadPermissions("email", "public_profile");
         loginButton.registerCallback(mCallbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
                 facebookSignin(loginResult.getAccessToken());
+                progressDialog.setMessage("Logging in with Facebook...");
+                progressDialog.show();
             }
 
             @Override
@@ -122,9 +146,32 @@ public class LandingActivity extends AppCompatActivity {
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
-
+                        userExist(mAuth.getCurrentUser().getUid());
                     }
                 });
+    }
+
+    private void userExist(String user_id) {
+        DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(user_id);
+        rootRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                if (!snapshot.exists()) {
+                    registerUser();
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {}
+        });
+    }
+
+    private void registerUser() {
+        String user_id = mAuth.getCurrentUser().getUid();
+        DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(user_id);
+        dbRef.child("name").setValue(name);
+        dbRef.child("email").setValue(email);
+        dbRef.child("profile_pic").setValue(profpic);
     }
 
     @Override
