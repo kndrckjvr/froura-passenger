@@ -27,6 +27,8 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.facebook.AccessToken;
+import com.facebook.login.LoginManager;
 import com.froura.develo4.passenger.libraries.DialogCreator;
 import com.froura.develo4.passenger.libraries.SnackBarCreator;
 import com.google.android.gms.common.ConnectionResult;
@@ -62,6 +64,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class HomeActivity extends AppCompatActivity
         implements DialogCreator.DialogActionListener,
@@ -284,6 +287,9 @@ public class HomeActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         switch (item.getItemId()) {
             case R.id.logout:
+                if(AccessToken.getCurrentAccessToken() != null) {
+                    LoginManager.getInstance().logOut();
+                }
                 FirebaseAuth.getInstance().signOut();
                 Intent intent = new Intent(HomeActivity.this, MainActivity.class);
                 startActivity(intent);
@@ -446,12 +452,21 @@ public class HomeActivity extends AppCompatActivity
     }
 
     private void prepareBooking() {
-        DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(uid).child("");
+        DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(uid);
         rootRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 if (!snapshot.exists()) {
-
+                    Map<String, Object> map = (Map<String, Object>) snapshot.getValue();
+                    if(map.get("email") == null && map.get("mobnum") == null) {
+                        SnackBarCreator.set("Please set your email and mobile number before booking.");
+                    } else if(map.get("mobnum") == null) {
+                        SnackBarCreator.set("Please set your mobile number before booking.");
+                    } else if(map.get("email") == null) {
+                        SnackBarCreator.set("Please set your email before booking.");
+                    }
+                    SnackBarCreator.show(viewFab);
+                    return;
                 }
             }
 
