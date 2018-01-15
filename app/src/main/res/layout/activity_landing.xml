@@ -36,6 +36,7 @@
         android:textColor="#000000"
         android:textSize="15sp" />
 
+
     <Button
         android:id="@+id/googLogin"
         style="@style/Widget.AppCompat.Button.Colored"

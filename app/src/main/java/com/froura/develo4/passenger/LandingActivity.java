@@ -1,7 +1,9 @@
 package com.froura.develo4.passenger;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -16,6 +18,8 @@ import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
+import com.google.android.gms.common.SignInButton;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
@@ -35,18 +39,22 @@ public class LandingActivity extends AppCompatActivity {
     private Button mobLogin;
     private Button googLogin;
     private Button faceLogin;
+    private SignInButton mGoogleBtn;
+    private GoogleApiClient mGoogleApiClient;
     private LoginButton loginButton;
     private ProgressDialog progressDialog;
 
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
 
-    private String email;
-    private String name;
-    private String profpic;
+    private String email = "null";
+    private String name = "null";
+    private String profpic = "null";
+    private String mobnum = "null";
 
     private CallbackManager mCallbackManager;
 
+    private SharedPreferences sharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +69,26 @@ public class LandingActivity extends AppCompatActivity {
         progressDialog.setTitle("Login");
         progressDialog.setIndeterminate(false);
         progressDialog.setCancelable(false);
+
+        // Initialize Facebook Login button
+        mCallbackManager = CallbackManager.Factory.create();
+        loginButton = findViewById(R.id.login_button);
+
+        loginButton.setReadPermissions("email", "public_profile");
+        loginButton.registerCallback(mCallbackManager, new FacebookCallback<LoginResult>() {
+            @Override
+            public void onSuccess(LoginResult loginResult) {
+                facebookSignin(loginResult.getAccessToken());
+                progressDialog.setMessage("Logging in with Facebook...");
+                progressDialog.show();
+            }
+
+            @Override
+            public void onCancel() { }
+
+            @Override
+            public void onError(FacebookException error) { }
+        });
 
         mobLogin.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -99,26 +127,6 @@ public class LandingActivity extends AppCompatActivity {
                 }
             }
         };
-
-        // Initialize Facebook Login button
-        mCallbackManager = CallbackManager.Factory.create();
-        loginButton = findViewById(R.id.login_button);
-
-        loginButton.setReadPermissions("email", "public_profile");
-        loginButton.registerCallback(mCallbackManager, new FacebookCallback<LoginResult>() {
-            @Override
-            public void onSuccess(LoginResult loginResult) {
-                facebookSignin(loginResult.getAccessToken());
-                progressDialog.setMessage("Logging in with Facebook...");
-                progressDialog.show();
-            }
-
-            @Override
-            public void onCancel() { }
-
-            @Override
-            public void onError(FacebookException error) { }
-        });
     }
 
     private void facebookSignin(AccessToken token) {
@@ -172,6 +180,12 @@ public class LandingActivity extends AppCompatActivity {
         dbRef.child("name").setValue(name);
         dbRef.child("email").setValue(email);
         dbRef.child("profile_pic").setValue(profpic);
+    }
+
+    private void saveUserDetails() {
+        sharedPreferences = getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        String jsonDetails = "{ \"name\" : " + name + ", \"email\" : " + email + ", \"mobnum\" : "+ mobnum +", \"profile_pic\" : " + profpic + "}";
     }
 
     @Override
