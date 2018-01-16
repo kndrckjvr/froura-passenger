@@ -210,6 +210,7 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
         dbRef.child("name").setValue(name);
         dbRef.child("email").setValue(email);
         dbRef.child("mobnum").setValue(mobNum);
+        dbRef.child("auth").setValue("mobile");
         new CheckUserTasks(PhoneAuthentication.this).execute();
     }
 

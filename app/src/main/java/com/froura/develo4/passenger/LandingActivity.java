@@ -18,14 +18,19 @@ import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.SignInButton;
-import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -39,8 +44,7 @@ public class LandingActivity extends AppCompatActivity {
     private Button mobLogin;
     private Button googLogin;
     private Button faceLogin;
-    private SignInButton mGoogleBtn;
-    private GoogleApiClient mGoogleApiClient;
+    private GoogleSignInClient mGoogleSignInClient;
     private LoginButton loginButton;
     private ProgressDialog progressDialog;
 
@@ -51,6 +55,8 @@ public class LandingActivity extends AppCompatActivity {
     private String name = "null";
     private String profpic = "null";
     private String mobnum = "null";
+    private String auth;
+    private static final int RC_SIGN_IN = 1;
 
     private CallbackManager mCallbackManager;
 
@@ -90,6 +96,13 @@ public class LandingActivity extends AppCompatActivity {
             public void onError(FacebookException error) { }
         });
 
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+
+        mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
+
         mobLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -103,7 +116,7 @@ public class LandingActivity extends AppCompatActivity {
         googLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                signIn();
             }
         });
 
@@ -129,6 +142,11 @@ public class LandingActivity extends AppCompatActivity {
         };
     }
 
+    private void signIn() {
+        Intent signInIntent = mGoogleSignInClient.getSignInIntent();
+        startActivityForResult(signInIntent, RC_SIGN_IN);
+    }
+
     private void facebookSignin(AccessToken token) {
         GraphRequest request = GraphRequest.newMeRequest(
                 token,
@@ -142,6 +160,7 @@ public class LandingActivity extends AppCompatActivity {
                             if(object.has("id")) profpic = "https://graph.facebook.com/"
                                     + object.getString("id") + "/picture?width=500&height=500";
                             if(object.has("name")) name = object.getString("name");
+                            auth = "facebook";
                         } catch (Exception ignored) { }
                     }
                 });
@@ -179,6 +198,8 @@ public class LandingActivity extends AppCompatActivity {
         DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(user_id);
         dbRef.child("name").setValue(name);
         dbRef.child("email").setValue(email);
+        dbRef.child("mobnum").setValue(mobnum);
+        dbRef.child("auth").setValue(auth);
         dbRef.child("profile_pic").setValue(profpic);
     }
 
@@ -187,6 +208,18 @@ public class LandingActivity extends AppCompatActivity {
         SharedPreferences.Editor editor = sharedPreferences.edit();
         String jsonDetails = "{ \"name\" : " + name + ", \"email\" : " + email + ", \"mobnum\" : "+ mobnum +", \"profile_pic\" : " + profpic + "}";
     }
+
+    private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
+        AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
+        mAuth.signInWithCredential(credential)
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        userExist(FirebaseAuth.getInstance().getCurrentUser().getUid());
+                    }
+                });
+    }
+
 
     @Override
     protected void onStart() {
@@ -204,6 +237,22 @@ public class LandingActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        if (requestCode == RC_SIGN_IN) {
+            progressDialog.setMessage("Logging in with Google...");
+            progressDialog.show();
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            try {
+                // Google Sign In was successful, authenticate with Firebase
+                GoogleSignInAccount account = task.getResult(ApiException.class);
+                name = account.getDisplayName();
+                email = account.getEmail();
+                profpic = account.getPhotoUrl().toString();
+                auth = "google";
+                firebaseAuthWithGoogle(account);
+            } catch (ApiException e) {
+
+            }
+        }
         // Pass the activity result back to the Facebook SDK
         mCallbackManager.onActivityResult(requestCode, resultCode, data);
     }
