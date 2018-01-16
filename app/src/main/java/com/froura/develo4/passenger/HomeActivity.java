@@ -31,8 +31,10 @@ import com.facebook.AccessToken;
 import com.facebook.login.LoginManager;
 import com.froura.develo4.passenger.libraries.DialogCreator;
 import com.froura.develo4.passenger.libraries.SnackBarCreator;
+import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
@@ -289,7 +291,10 @@ public class HomeActivity extends AppCompatActivity
             case R.id.logout:
                 if(AccessToken.getCurrentAccessToken() != null) {
                     LoginManager.getInstance().logOut();
+                } else {
+                    //insert bug fix for googlesignout
                 }
+
                 FirebaseAuth.getInstance().signOut();
                 Intent intent = new Intent(HomeActivity.this, MainActivity.class);
                 startActivity(intent);

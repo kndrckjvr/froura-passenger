@@ -220,7 +220,6 @@ public class LandingActivity extends AppCompatActivity {
                 });
     }
 
-
     @Override
     protected void onStart() {
         super.onStart();
