@@ -27,6 +27,7 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.facebook.AccessToken;
 import com.facebook.login.LoginManager;
 import com.froura.develo4.passenger.libraries.DialogCreator;
@@ -72,6 +73,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import de.hdodenhof.circleimageview.CircleImageView;
+
 public class HomeActivity extends AppCompatActivity
         implements DialogCreator.DialogActionListener,
         NavigationView.OnNavigationItemSelectedListener,
@@ -86,6 +89,7 @@ public class HomeActivity extends AppCompatActivity
     private FloatingActionButton rsrvFab;
     private View viewFab;
     private CardView viewDetails;
+    private CircleImageView prof_pic;
 
     private GoogleMap mMap;
     private CameraPosition cameraPosition;
@@ -125,6 +129,12 @@ public class HomeActivity extends AppCompatActivity
         navigationView.getMenu().getItem(0).setChecked(true);
         View v = navigationView.getHeaderView(0);
         name = v.findViewById(R.id.txtVw_name);
+        prof_pic = v.findViewById(R.id.imgVw_profile_pic);
+
+        Glide.with(this)
+                .load(getImage("placeholder"))
+                .into(prof_pic);
+
         bookFab = findViewById(R.id.bookFab);
         rsrvFab = findViewById(R.id.rsrvFab);
         viewFab = findViewById(R.id.viewFab);
@@ -365,6 +375,13 @@ public class HomeActivity extends AppCompatActivity
 
     @Override
     public void onCreateDialogView(String actionId, View view) { }
+
+    public int getImage(String imageName) {
+        int drawableResourceId = this.getResources()
+                .getIdentifier(imageName, "drawable", this.getPackageName());
+
+        return drawableResourceId;
+    }
 
     protected synchronized void buildGoogleApiClient() {
         mGoogleApiClient = new GoogleApiClient.Builder(this)
