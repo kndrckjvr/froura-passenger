@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
@@ -21,7 +22,6 @@ import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -66,7 +66,7 @@ public class LandingActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_landing);
-        //Landing Components
+
         mobLogin = findViewById(R.id.mobLogin);
         googLogin = findViewById(R.id.googLogin);
         faceLogin = findViewById(R.id.faceLogin);
@@ -76,7 +76,6 @@ public class LandingActivity extends AppCompatActivity {
         progressDialog.setIndeterminate(false);
         progressDialog.setCancelable(false);
 
-        // Initialize Facebook Login button
         mCallbackManager = CallbackManager.Factory.create();
         loginButton = findViewById(R.id.login_button);
 
@@ -90,10 +89,14 @@ public class LandingActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onCancel() { }
+            public void onCancel() {
+                Log.e("fbLogin", "facebookLoginCancel");
+            }
 
             @Override
-            public void onError(FacebookException error) { }
+            public void onError(FacebookException error) {
+                Log.e("fbLogin", "facebookLoginError: " + error.getMessage());
+            }
         });
 
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -116,7 +119,7 @@ public class LandingActivity extends AppCompatActivity {
         googLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                signIn();
+                googleSignin();
             }
         });
 
@@ -142,7 +145,7 @@ public class LandingActivity extends AppCompatActivity {
         };
     }
 
-    private void signIn() {
+    private void googleSignin() {
         Intent signInIntent = mGoogleSignInClient.getSignInIntent();
         startActivityForResult(signInIntent, RC_SIGN_IN);
     }
@@ -189,7 +192,9 @@ public class LandingActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {}
+            public void onCancelled(DatabaseError databaseError) {
+                Log.d("firebaseDB", "userExistError: "+databaseError.getMessage());
+            }
         });
     }
 
@@ -237,8 +242,6 @@ public class LandingActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == RC_SIGN_IN) {
-            progressDialog.setMessage("Logging in with Google...");
-            progressDialog.show();
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
             try {
                 // Google Sign In was successful, authenticate with Firebase
@@ -247,10 +250,10 @@ public class LandingActivity extends AppCompatActivity {
                 email = account.getEmail();
                 profpic = account.getPhotoUrl().toString();
                 auth = "google";
+                progressDialog.setMessage("Logging in with Google...");
+                progressDialog.show();
                 firebaseAuthWithGoogle(account);
-            } catch (ApiException e) {
-
-            }
+            } catch (ApiException e) { Log.d("ApiError", e.getMessage()); }
         }
         // Pass the activity result back to the Facebook SDK
         mCallbackManager.onActivityResult(requestCode, resultCode, data);

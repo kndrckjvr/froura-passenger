@@ -29,14 +29,15 @@
         android:textColor="@color/place_autocomplete_search_text"
         android:textColorHint="@color/place_autocomplete_search_hint"
         android:textSize="14sp"
-        android:paddingLeft="4dp"
+        android:paddingLeft="14dp"
+        android:paddingRight="4dp"
         android:singleLine="true"
-        android:lines="1"
-        android:maxLines="1"
         android:inputType="textNoSuggestions"
-        android:hint="@string/et_hint_pickup"
+        android:hint="Enter pickup point"
         android:focusable="false"
-        android:focusableInTouchMode="false"/>
+        android:focusableInTouchMode="false" />
+        <!--android:scrollHorizontally="true"
+        android:ellipsize="marquee" />-->
 
     <ImageButton
         android:id="@+id/clear"

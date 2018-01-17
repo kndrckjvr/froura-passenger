@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -17,7 +18,6 @@
         android:layout_marginTop="16dp"
         android:layout_weight="0"
         android:background="@null"
-        android:contentDescription="@string/place_autocomplete_search_hint"
         android:src="@drawable/ic_point_black_24dp"
         />
 
@@ -30,7 +30,8 @@
         android:textColor="@color/place_autocomplete_search_text"
         android:textColorHint="@color/place_autocomplete_search_hint"
         android:textSize="14sp"
-        android:paddingLeft="4dp"
+        android:paddingLeft="14dp"
+        android:paddingRight="4dp"
         android:singleLine="true"
         android:lines="1"
         android:maxLines="1"

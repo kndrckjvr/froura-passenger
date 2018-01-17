@@ -32,6 +32,9 @@ import com.facebook.login.LoginManager;
 import com.froura.develo4.passenger.libraries.DialogCreator;
 import com.froura.develo4.passenger.libraries.SnackBarCreator;
 import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
@@ -57,6 +60,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.UserInfo;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -91,6 +95,7 @@ public class HomeActivity extends AppCompatActivity
     private PlaceAutocompleteFragment dropoff;
 
     private GoogleApiClient mGoogleApiClient;
+    private GoogleApiClient mGoogleSignInApiClient;
     private Location mLastLocation;
     private LatLng pickupLocation;
     private LatLng dropoffLocation;
@@ -289,12 +294,22 @@ public class HomeActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         switch (item.getItemId()) {
             case R.id.logout:
-                if(AccessToken.getCurrentAccessToken() != null) {
-                    LoginManager.getInstance().logOut();
-                } else {
-                    //insert bug fix for googlesignout
+                String providerid = "";
+                for(UserInfo user: FirebaseAuth.getInstance().getCurrentUser().getProviderData()) {
+                    providerid = user.getProviderId();
                 }
+                if(AccessToken.getCurrentAccessToken() != null && providerid.equals("facebook.com")) {
+                    LoginManager.getInstance().logOut();
+                } else if(providerid.equals("google.com")) {
+                    GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                            .requestIdToken(getString(R.string.default_web_client_id))
+                            .requestEmail()
+                            .build();
 
+                    GoogleSignInClient mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
+
+                    mGoogleSignInClient.signOut();
+                }
                 FirebaseAuth.getInstance().signOut();
                 Intent intent = new Intent(HomeActivity.this, MainActivity.class);
                 startActivity(intent);
@@ -310,7 +325,7 @@ public class HomeActivity extends AppCompatActivity
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         switch (requestCode) {
-            case LOCATION_REQUEST_CODE: {
+            case LOCATION_REQUEST_CODE:
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     mapFragment.getMapAsync(this);
@@ -320,7 +335,6 @@ public class HomeActivity extends AppCompatActivity
                     permissionDenied();
                 }
                 break;
-            }
         }
     }
 
