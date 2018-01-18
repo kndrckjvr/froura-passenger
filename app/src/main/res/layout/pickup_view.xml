@@ -20,7 +20,7 @@
         android:contentDescription="@string/place_autocomplete_search_hint"
         android:src="@drawable/ic_point_yellow_24dp" />
 
-    <EditText
+    <!--<EditText
         android:id="@+id/et_pickup"
         android:layout_width="0dp"
         android:layout_height="match_parent"
@@ -35,9 +35,26 @@
         android:inputType="textNoSuggestions"
         android:hint="Enter pickup point"
         android:focusable="false"
-        android:focusableInTouchMode="false" />
+        android:focusableInTouchMode="false" />-->
         <!--android:scrollHorizontally="true"
         android:ellipsize="marquee" />-->
+
+    <TextView
+        android:id="@+id/txtVw_pickup"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:background="@null"
+        android:textColor="@color/place_autocomplete_search_hint"
+        android:textSize="16sp"
+        android:paddingLeft="10dp"
+        android:paddingRight="4dp"
+        android:paddingTop="17dp"
+        android:text="Enter pick-up point"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:ellipsize="marquee"
+        android:scrollHorizontally="true" />
 
     <ImageButton
         android:id="@+id/clear"

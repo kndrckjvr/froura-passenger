@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import com.froura.develo4.passenger.HomeActivity;
 import com.froura.develo4.passenger.R;
@@ -28,11 +29,10 @@ import com.google.android.gms.maps.model.LatLngBounds;
 
 public class PickUpAutoCompleteFragment extends PlaceAutocompleteFragment {
 
-    private EditText editSearch;
+    private TextView editSearch;
 
     private View zzaRh;
     private View zzaRi;
-    private EditText zzaRj;
     @Nullable
     private LatLngBounds zzaRk;
     @Nullable
@@ -40,8 +40,7 @@ public class PickUpAutoCompleteFragment extends PlaceAutocompleteFragment {
     @Nullable
     private PlaceSelectionListener zzaRm;
 
-    public PickUpAutoCompleteFragment() {
-    }
+    public PickUpAutoCompleteFragment() { }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -49,7 +48,7 @@ public class PickUpAutoCompleteFragment extends PlaceAutocompleteFragment {
 
         zzaRh = var4.findViewById(R.id.icon);
         zzaRi = var4.findViewById(R.id.clear);
-        editSearch = var4.findViewById(R.id.et_pickup);
+        editSearch = var4.findViewById(R.id.txtVw_pickup);
         editSearch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -87,15 +86,12 @@ public class PickUpAutoCompleteFragment extends PlaceAutocompleteFragment {
     public void setFilter(@Nullable AutocompleteFilter filter) {
         this.zzaRl = filter;
     }
+    
 
     public void setText(CharSequence text) {
         this.editSearch.setText(text);
+        this.editSearch.setTextColor(getResources().getColor(R.color.place_autocomplete_search_text));
         this.zzzF();
-    }
-
-    public void setHint(CharSequence hint) {
-        this.editSearch.setHint(hint);
-        this.zzaRh.setContentDescription(hint);
     }
 
     public void setOnPlaceSelectedListener(PlaceSelectionListener listener) {

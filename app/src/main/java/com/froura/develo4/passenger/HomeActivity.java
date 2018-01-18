@@ -268,6 +268,8 @@ public class HomeActivity extends AppCompatActivity
                         .build();
                 mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
                 cameraUpdated = true;
+
+                //update lang to hehehe
             }
 
             if(getIntent().getIntExtra("bookAct", -1) == 1) {
@@ -487,6 +489,7 @@ public class HomeActivity extends AppCompatActivity
                         android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
 
+    public static boolean detailsComplete = true;
     private void prepareBooking() {
         DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(uid);
         rootRef.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -494,22 +497,25 @@ public class HomeActivity extends AppCompatActivity
             public void onDataChange(DataSnapshot snapshot) {
                 if (!snapshot.exists()) {
                     Map<String, Object> map = (Map<String, Object>) snapshot.getValue();
-                    if(map.get("email") == null && map.get("mobnum") == null) {
+                    if(map.get("email").equals("null") && map.get("mobnum").equals("null")) {
                         SnackBarCreator.set("Please set your email and mobile number before booking.");
-                    } else if(map.get("mobnum") == null) {
+                    } else if(map.get("mobnum").equals("null")) {
                         SnackBarCreator.set("Please set your mobile number before booking.");
-                    } else if(map.get("email") == null) {
+                    } else if(map.get("email").equals("null")) {
                         SnackBarCreator.set("Please set your email before booking.");
                     }
-                    SnackBarCreator.show(viewFab);
-                    return;
+
+                    if(map.get("email").equals("null") || map.get("mobnum").equals("null")) {
+                        SnackBarCreator.show(viewFab);
+                        detailsComplete = false;
+                    }
                 }
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {}
         });
-        if(permissionStatus()) {
+        if(permissionStatus() && detailsComplete) {
             if(pickupName != null && dropoffName != null) {
                 Intent intent = new Intent(this, BookingActivity.class);
                 intent.putExtra("user_id", uid);
@@ -546,15 +552,12 @@ public class HomeActivity extends AppCompatActivity
                         public void onComplete(@NonNull Task<PlaceLikelihoodBufferResponse> task) {
                             if (task.isSuccessful() && task.getResult() != null && pickup != null) {
                                 PlaceLikelihoodBufferResponse likelyPlaces = task.getResult();
-
                                 for (PlaceLikelihood placeLikelihood : likelyPlaces) {
                                     pickupName = (String) placeLikelihood.getPlace().getName();
                                     pickupLocation = placeLikelihood.getPlace().getLatLng();
                                     pickup.setText(pickupName);
                                 }
-
                                 likelyPlaces.release();
-
                             }
                         }
                     });
