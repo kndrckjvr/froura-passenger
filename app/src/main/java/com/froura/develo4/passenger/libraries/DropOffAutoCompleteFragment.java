@@ -61,7 +61,7 @@ public class DropOffAutoCompleteFragment extends PlaceAutocompleteFragment {
             @Override
             public void onClick(View view) {
                 textView.setText("Where are you going?");
-                textView.setTextColor(getResources().getColor(R.color.place_autocomplete_search_text));
+                textView.setTextColor(getResources().getColor(R.color.place_autocomplete_search_hint));
                 setClear();
             }
         });
@@ -89,7 +89,6 @@ public class DropOffAutoCompleteFragment extends PlaceAutocompleteFragment {
     public void setFilter(@Nullable AutocompleteFilter filter) {
         this.autocompleteFilter = filter;
     }
-
 
     public void setText(CharSequence text) {
         this.textView.setText(text);

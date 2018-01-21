@@ -211,7 +211,8 @@ public class HomeActivity extends AppCompatActivity
                     @Override
                     public void onClick(View view) {
                         view.setVisibility(View.GONE);
-                        dropoff.setText("");
+                        dropoff.setText("Where are you going?");
+                        ((TextView) findViewById(R.id.txtVw_dropoff) ).setTextColor(getResources().getColor(R.color.place_autocomplete_search_hint));
                         dropoffLocation = null;
                         dropoffName = null;
                         setMarkers();
@@ -351,7 +352,6 @@ public class HomeActivity extends AppCompatActivity
     protected void onStop() {
         super.onStop();
         LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
-
     }
 
     @Override
@@ -393,8 +393,8 @@ public class HomeActivity extends AppCompatActivity
     }
 
     public void setMarkers() {
-        mMap.clear();
         if(autoMarkerSet) {
+            mMap.clear();
             if(pickupLocation != null) {
                 mMap.addMarker(new MarkerOptions()
                         .position(new LatLng(pickupLocation.latitude, pickupLocation.longitude))
@@ -410,9 +410,6 @@ public class HomeActivity extends AppCompatActivity
                         .icon(BitmapDescriptorFactory.fromResource(R.mipmap.black_marker)));
             }
         } else {
-            mMap.addMarker(new MarkerOptions()
-                    .position(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()))
-                    .icon(BitmapDescriptorFactory.fromResource(R.mipmap.yellow_marker)));
             showCurrentPlace();
             autoMarkerSet = true;
         }
@@ -562,6 +559,12 @@ public class HomeActivity extends AppCompatActivity
                                     pickupName = (String) placeLikelihood.getPlace().getName();
                                     pickupLocation = placeLikelihood.getPlace().getLatLng();
                                     pickup.setText(pickupName);
+                                    if(autoMarkerSet) {
+                                        mMap.clear();
+                                        mMap.addMarker(new MarkerOptions()
+                                                .position(new LatLng(pickupLocation.latitude, pickupLocation.longitude))
+                                                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.yellow_marker)));
+                                    }
                                 }
                                 likelyPlaces.release();
                             }
