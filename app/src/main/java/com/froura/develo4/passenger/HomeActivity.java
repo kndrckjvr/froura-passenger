@@ -268,8 +268,6 @@ public class HomeActivity extends AppCompatActivity
                         .build();
                 mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
                 cameraUpdated = true;
-
-                //update lang to hehehe
             }
 
             if(getIntent().getIntExtra("bookAct", -1) == 1) {
