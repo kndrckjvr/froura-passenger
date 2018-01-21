@@ -99,7 +99,6 @@ public class HomeActivity extends AppCompatActivity
     private PlaceAutocompleteFragment dropoff;
 
     private GoogleApiClient mGoogleApiClient;
-    private GoogleApiClient mGoogleSignInApiClient;
     private Location mLastLocation;
     private LatLng pickupLocation;
     private LatLng dropoffLocation;
@@ -352,6 +351,7 @@ public class HomeActivity extends AppCompatActivity
     protected void onStop() {
         super.onStop();
         LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+
     }
 
     @Override
@@ -540,8 +540,16 @@ public class HomeActivity extends AppCompatActivity
 
     private void showCurrentPlace() {
         if (locationEnabled()) {
+            if (ActivityCompat.checkSelfPermission(this,
+                    android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                    ActivityCompat.checkSelfPermission(this,
+                            android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(HomeActivity.this,
+                        new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                        LOCATION_REQUEST_CODE);
+                return;
+            }
             PlaceDetectionClient mPlaceDetectionClient = Places.getPlaceDetectionClient(this, null);
-            @SuppressWarnings("MissingPermission")
             final Task<PlaceLikelihoodBufferResponse> placeResult =
                     mPlaceDetectionClient.getCurrentPlace(null);
             placeResult.addOnCompleteListener

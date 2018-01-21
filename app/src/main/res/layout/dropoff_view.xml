@@ -13,7 +13,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
-        android:layout_marginLeft="5dp"
+        android:layout_marginLeft="15dp"
         android:layout_marginRight="5dp"
         android:layout_marginTop="16dp"
         android:layout_weight="0"
@@ -21,24 +21,25 @@
         android:src="@drawable/ic_point_black_24dp"
         />
 
-    <EditText
-        android:id="@+id/et_dropoff"
+    <TextView
+        android:id="@+id/txtVw_dropoff"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:background="@null"
-        android:textColor="@color/place_autocomplete_search_text"
-        android:textColorHint="@color/place_autocomplete_search_hint"
-        android:textSize="14sp"
-        android:paddingLeft="14dp"
+        android:textColor="@color/place_autocomplete_search_hint"
+        android:textSize="16sp"
+        android:paddingLeft="10dp"
         android:paddingRight="4dp"
-        android:singleLine="true"
-        android:lines="1"
-        android:maxLines="1"
-        android:inputType="textNoSuggestions"
-        android:hint="Where are you going?"
+        android:paddingTop="17dp"
+        android:text="Where are you going?"
         android:focusable="false"
-        android:focusableInTouchMode="false" />
+        android:focusableInTouchMode="false"
+        android:ellipsize="marquee"
+        android:marqueeRepeatLimit="marquee_forever"
+        android:singleLine="true"
+        android:scrollHorizontally="true" />
+
 
     <ImageButton
         android:id="@+id/clear"

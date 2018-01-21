@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.froura.develo4.passenger.HomeActivity;
@@ -29,92 +30,94 @@ import com.google.android.gms.maps.model.LatLngBounds;
 
 public class PickUpAutoCompleteFragment extends PlaceAutocompleteFragment {
 
-    private TextView editSearch;
+    private TextView textView;
+    private ImageButton iconBtn;
+    private ImageButton clearBtn;
 
-    private View zzaRh;
-    private View zzaRi;
     @Nullable
-    private LatLngBounds zzaRk;
+    private LatLngBounds latLngBounds;
     @Nullable
-    private AutocompleteFilter zzaRl;
+    private AutocompleteFilter autocompleteFilter;
     @Nullable
-    private PlaceSelectionListener zzaRm;
+    private PlaceSelectionListener placeSelectionListener;
 
     public PickUpAutoCompleteFragment() { }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View var4 = inflater.inflate(R.layout.pickup_view, container, false);
+        View view = inflater.inflate(R.layout.pickup_view, container, false);
 
-        zzaRh = var4.findViewById(R.id.icon);
-        zzaRi = var4.findViewById(R.id.clear);
-        editSearch = var4.findViewById(R.id.txtVw_pickup);
-        editSearch.setOnClickListener(new View.OnClickListener() {
+        iconBtn = view.findViewById(R.id.icon);
+        clearBtn = view.findViewById(R.id.clear);
+        textView = view.findViewById(R.id.txtVw_pickup);
+        textView.setSelected(true);
+        textView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                zzzG();
+                showIntent();
             }
         });
-        zzaRi.setOnClickListener(new View.OnClickListener() {
+        clearBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                editSearch.setText("");
-                zzzF();
+                textView.setText("Enter pick-up point");
+                textView.setTextColor(getResources().getColor(R.color.place_autocomplete_search_text));
+                setClear();
             }
         });
-        zzaRh.setOnClickListener(new View.OnClickListener() {
+        iconBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                zzzG();
+                showIntent();
             }
         });
-        this.zzzF();
-        return var4;
+        this.setClear();
+        return view;
     }
 
     public void onDestroyView() {
-        this.zzaRh = null;
-        this.zzaRi = null;
-        this.editSearch = null;
+        this.iconBtn = null;
+        this.clearBtn = null;
+        this.textView = null;
         super.onDestroyView();
     }
 
     public void setBoundsBias(@Nullable LatLngBounds bounds) {
-        this.zzaRk = bounds;
+        this.latLngBounds = bounds;
     }
 
     public void setFilter(@Nullable AutocompleteFilter filter) {
-        this.zzaRl = filter;
+        this.autocompleteFilter = filter;
     }
     
 
     public void setText(CharSequence text) {
-        this.editSearch.setText(text);
-        this.editSearch.setTextColor(getResources().getColor(R.color.place_autocomplete_search_text));
-        this.zzzF();
+        this.textView.setText(text);
+        this.textView.setTextColor(getResources().getColor(R.color.place_autocomplete_search_text));
+        this.setClear();
     }
 
     public void setOnPlaceSelectedListener(PlaceSelectionListener listener) {
-        this.zzaRm = listener;
+        this.placeSelectionListener = listener;
     }
 
-    private void zzzF() {
-        boolean var1 = !this.editSearch.getText().toString().isEmpty();
-        this.zzaRi.setVisibility(var1?View.VISIBLE:View.GONE);
+    private void setClear() {
+        boolean var1 = !this.textView.getText().toString().isEmpty();
+        this.clearBtn.setVisibility(var1?View.VISIBLE:View.GONE);
     }
 
-    private void zzzG() {
+    private void showIntent() {
         int var1 = -1;
 
         try {
-            Intent var2 = (new PlaceAutocomplete.IntentBuilder(2)).setBoundsBias(this.zzaRk).setFilter(this.zzaRl).zzih(this.editSearch.getText().toString()).zzea(1).build(this.getActivity());
+            Intent var2 = (new PlaceAutocomplete.IntentBuilder(2)).setBoundsBias(this.latLngBounds).setFilter(this.autocompleteFilter).zzih(this.textView.getText().toString()).zzea(1).build(this.getActivity());
             this.startActivityForResult(var2, 1);
         } catch (GooglePlayServicesRepairableException var3) {
             var1 = var3.getConnectionStatusCode();
             Log.e("Places", "Could not open autocomplete activity", var3);
-        } catch (GooglePlayServicesNotAvailableException var4) {
-            var1 = var4.errorCode;
-            Log.e("Places", "Could not open autocomplete activity", var4);
+        } catch (GooglePlayServicesNotAvailableException view) {
+            var1 = view.errorCode;
+            Log.e("Places", "Could not open autocomplete activity", view);
         }
 
         if (var1 != -1) {
@@ -127,16 +130,16 @@ public class PickUpAutoCompleteFragment extends PlaceAutocompleteFragment {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == 1) {
             if (resultCode == -1) {
-                Place var4 = PlaceAutocomplete.getPlace(this.getActivity(), data);
-                if (this.zzaRm != null) {
-                    this.zzaRm.onPlaceSelected(var4);
+                Place view = PlaceAutocomplete.getPlace(this.getActivity(), data);
+                if (this.placeSelectionListener != null) {
+                    this.placeSelectionListener.onPlaceSelected(view);
                 }
 
-                this.setText(var4.getName().toString());
+                this.setText(view.getName().toString());
             } else if (resultCode == 2) {
                 Status var5 = PlaceAutocomplete.getStatus(this.getActivity(), data);
-                if (this.zzaRm != null) {
-                    this.zzaRm.onError(var5);
+                if (this.placeSelectionListener != null) {
+                    this.placeSelectionListener.onError(var5);
                 }
             }
         }
