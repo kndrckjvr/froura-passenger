@@ -47,20 +47,19 @@
                     android:layout_gravity="right|center_vertical"
                     android:padding="16dp"
                     android:visibility="gone"/>
+
+                <android.support.v7.widget.RecyclerView
+                    android:id="@+id/list_search"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_alignParentTop="true"
+                    android:layout_centerHorizontal="true"
+                    android:background="#FFFFFF" />
             </RelativeLayout>
 
 
         </LinearLayout>
 
-
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/list_search"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_below="@+id/search_layout"
-            android:layout_above="@+id/powered_by_google"
-            android:background="#FFFFFF"
-            android:layout_marginTop="10dp"/>
 
         <ImageView
             android:id="@+id/powered_by_google"
