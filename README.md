@@ -1,7 +1,7 @@
 # Frourá (PASSENGER)
 A taxi hailing/booking/reservation mobile application for Royal HM Taxi Services Inc. (Thesis)
 ## Libraries & Tools
-- CircleImageViewe by hdodenhof (https://github.com/hdodenhof/CircleImageView)
+- CircleImageView by hdodenhof (https://github.com/hdodenhof/CircleImageView)
 - Facebook SDK (https://developers.facebook.com/)
 - Glide by Bumptech (https://github.com/bumptech/glide)
 - GeoFire (https://github.com/firebase/geofire-java)
