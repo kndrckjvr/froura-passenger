@@ -1,9 +1,11 @@
 # Frourá (PASSENGER)
 A taxi hailing/booking/reservation mobile application for Royal HM Taxi Services Inc. (Thesis)
 ## Libraries & Tools
-- Google Firebase (Firebase Authentication, Firebase Storage and Firebase Database)
-- Google Maps
-- Google Locations Services
-- Google Play Services
-- GeoFire (https://github.com/firebase/geofire-java)
+- CircleImageViewe by hdodenhof (https://github.com/hdodenhof/CircleImageView)
+- Facebook SDK (https://developers.facebook.com/)
 - Glide by Bumptech (https://github.com/bumptech/glide)
+- GeoFire (https://github.com/firebase/geofire-java)
+- Google Firebase (https://firebase.google.com/)
+- Google Location (https://developers.google.com/location-context/)
+- Google Maps (https://developers.google.com/maps/)
+- Google Places (https://developers.google.com/places/)
