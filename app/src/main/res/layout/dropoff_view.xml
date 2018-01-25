@@ -40,16 +40,4 @@
         android:singleLine="true"
         android:scrollHorizontally="true" />
 
-
-    <ImageButton
-        android:id="@+id/clear"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_weight="0"
-        android:padding="@dimen/place_autocomplete_button_padding"
-        android:src="@drawable/places_ic_clear"
-        android:background="@null"
-        android:contentDescription="@string/place_autocomplete_clear_button"
-        />
-
 </LinearLayout>

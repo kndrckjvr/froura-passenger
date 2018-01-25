@@ -90,13 +90,12 @@ public class HomeActivity extends AppCompatActivity
     private View viewFab;
     private CardView viewDetails;
     private CircleImageView prof_pic;
+    private TextView pickupTxtVw;
+    private TextView dropoffTxtVw;
 
     private GoogleMap mMap;
     private CameraPosition cameraPosition;
     private SupportMapFragment mapFragment;
-
-    private PlaceAutocompleteFragment pickup;
-    private PlaceAutocompleteFragment dropoff;
 
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation;
@@ -105,7 +104,6 @@ public class HomeActivity extends AppCompatActivity
 
     private String uid;
     private String pickupName;
-    private String dropoffName;
     private boolean autoMarkerSet = false;
     private boolean cameraUpdated = false;
     final int LOCATION_REQUEST_CODE = 1;
@@ -138,6 +136,8 @@ public class HomeActivity extends AppCompatActivity
         rsrvFab = findViewById(R.id.rsrvFab);
         viewFab = findViewById(R.id.viewFab);
         viewDetails = findViewById(R.id.details);
+        pickupTxtVw = findViewById(R.id.txtVw_pickup);
+        dropoffTxtVw = findViewById(R.id.txtVw_dropoff);
 
         uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
@@ -151,62 +151,6 @@ public class HomeActivity extends AppCompatActivity
         mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
-        AutocompleteFilter typeFilter = new AutocompleteFilter.Builder()
-                .setCountry("PH")
-                .build();
-
-        pickup = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.pickup);
-        dropoff = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.dropoff);
-
-        pickup.setFilter(typeFilter);
-        dropoff.setFilter(typeFilter);
-
-        pickup.setOnPlaceSelectedListener(new PlaceSelectionListener() {
-            @Override
-            public void onPlaceSelected(Place place) {
-                pickupName = place.getName().toString();
-                pickupLocation = place.getLatLng();
-                setMarkers();
-            }
-
-            @Override
-            public void onError(Status status) { }
-        });
-        dropoff.setOnPlaceSelectedListener(new PlaceSelectionListener() {
-            @Override
-            public void onPlaceSelected(Place place) {
-                dropoffName = place.getName().toString();
-                dropoffLocation = place.getLatLng();
-                setMarkers();
-            }
-
-            @Override
-            public void onError(Status status) { }
-        });
-
-        pickup.getView().findViewById(R.id.clear)
-                .setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        view.setVisibility(View.GONE);
-                        pickupLocation = null;
-                        autoMarkerSet = false;
-                        setMarkers();
-                    }
-                });
-        dropoff.getView().findViewById(R.id.clear)
-                .setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        view.setVisibility(View.GONE);
-                        dropoff.setText("Where are you going?");
-                        ((TextView) findViewById(R.id.txtVw_dropoff) ).setTextColor(getResources().getColor(R.color.place_autocomplete_search_hint));
-                        dropoffLocation = null;
-                        dropoffName = null;
-                        setMarkers();
-                    }
-                });
 
         bookFab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -257,14 +201,6 @@ public class HomeActivity extends AppCompatActivity
                         .build();
                 mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
                 cameraUpdated = true;
-            }
-
-            if(getIntent().getIntExtra("bookAct", -1) == 1) {
-                pickup.setText(getIntent().getStringExtra("pickupLoc"));
-                dropoff.setText(getIntent().getStringExtra("dropoffLoc"));
-                pickupLocation = new LatLng(getIntent().getDoubleExtra("pickupLat", 0.0), getIntent().getDoubleExtra("pickupLng", 0.0) );
-                autoMarkerSet = true;
-                setMarkers();
             }
         }
     }
@@ -500,7 +436,7 @@ public class HomeActivity extends AppCompatActivity
             public void onCancelled(DatabaseError databaseError) {}
         });
         if(permissionStatus() && detailsComplete) {
-            if(pickupName != null && dropoffName != null) {
+            /*if(pickupName != null && dropoffName != null) {
                 Intent intent = new Intent(this, BookingActivity.class);
                 intent.putExtra("user_id", uid);
                 if(pickupLocation != null) {
@@ -517,7 +453,7 @@ public class HomeActivity extends AppCompatActivity
             } else {
                 SnackBarCreator.set("Set a Drop-off point.");
                 SnackBarCreator.show(viewFab);
-            }
+            }*/
         } else {
             SnackBarCreator.set("Permissions denied.");
             SnackBarCreator.show(viewFab);
@@ -542,17 +478,18 @@ public class HomeActivity extends AppCompatActivity
                     (new OnCompleteListener<PlaceLikelihoodBufferResponse>() {
                         @Override
                         public void onComplete(@NonNull Task<PlaceLikelihoodBufferResponse> task) {
-                            if (task.isSuccessful() && task.getResult() != null && pickup != null) {
+                            if (task.isSuccessful() && task.getResult() != null) {
                                 PlaceLikelihoodBufferResponse likelyPlaces = task.getResult();
                                 for (PlaceLikelihood placeLikelihood : likelyPlaces) {
                                     pickupName = (String) placeLikelihood.getPlace().getName();
                                     pickupLocation = placeLikelihood.getPlace().getLatLng();
-                                    pickup.setText(pickupName);
+                                    setText(pickupTxtVw, pickupName);
                                     if(autoMarkerSet) {
                                         mMap.clear();
                                         mMap.addMarker(new MarkerOptions()
                                                 .position(new LatLng(pickupLocation.latitude, pickupLocation.longitude))
                                                 .icon(BitmapDescriptorFactory.fromResource(R.mipmap.yellow_marker)));
+                                        autoMarkerSet = true;
                                     }
                                 }
                                 likelyPlaces.release();
@@ -560,5 +497,15 @@ public class HomeActivity extends AppCompatActivity
                         }
                     });
         }
+    }
+
+    private void setText(TextView txtVw, String str) {
+        txtVw.setText(str);
+        txtVw.setTextColor(getResources().getColor(R.color.place_autocomplete_search_text));
+    }
+
+    private void setHint(TextView txtVw, String str) {
+        txtVw.setText(str);
+        txtVw.setTextColor(getResources().getColor(R.color.place_autocomplete_search_hint));
     }
 }
