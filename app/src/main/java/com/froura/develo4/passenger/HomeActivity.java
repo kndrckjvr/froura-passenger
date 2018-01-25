@@ -152,6 +152,14 @@ public class HomeActivity extends AppCompatActivity
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        pickupTxtVw.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(HomeActivity.this, SearchActivity.class);
+                startActivity(intent);
+            }
+        });
+
         bookFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

@@ -57,9 +57,9 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 if(i1 > 0) {
-                    clearImgVw.setVisibility(View.VISIBLE);
-                } else {
                     clearImgVw.setVisibility(View.GONE);
+                } else {
+                    clearImgVw.setVisibility(View.VISIBLE);
                 }
 
                 if(!charSequence.toString().isEmpty()) {
