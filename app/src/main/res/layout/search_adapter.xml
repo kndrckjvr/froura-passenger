@@ -28,6 +28,10 @@
         android:layout_marginTop="15dp"
         android:layout_marginLeft="20dp"
         android:layout_marginRight="20dp"
+        android:ellipsize="marquee"
+        android:marqueeRepeatLimit="marquee_forever"
+        android:singleLine="true"
+        android:scrollHorizontally="true"
         />
 
     <TextView
@@ -38,7 +42,11 @@
         android:layout_alignStart="@+id/placesTxtVw"
         android:layout_below="@+id/placesTxtVw"
         android:text="PLACE ADDRESS GOES HERE"
-        android:textSize="12sp" />
+        android:textSize="12sp"
+        android:ellipsize="marquee"
+        android:marqueeRepeatLimit="marquee_forever"
+        android:singleLine="true"
+        android:scrollHorizontally="true" />
 
     <View
         android:layout_width="match_parent"

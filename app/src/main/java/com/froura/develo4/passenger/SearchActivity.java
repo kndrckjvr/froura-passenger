@@ -49,21 +49,26 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
                 .build();
 
         mAdapter = new PlaceAutocompleteAdapter(this, mGeoDataClient, typeFilter);
+        listRecVw.setAdapter(mAdapter);
 
         searchET.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) { }
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                if(!charSequence.toString().isEmpty()) {
+                    mAdapter.getFilter().filter(charSequence);
+                    clearImgVw.setVisibility(View.VISIBLE);
+                } else {
+                    clearImgVw.setVisibility(View.GONE);
+                }
+            }
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                if(i1 > 0) {
-                    clearImgVw.setVisibility(View.GONE);
-                } else {
-                    clearImgVw.setVisibility(View.VISIBLE);
-                }
-
                 if(!charSequence.toString().isEmpty()) {
                     mAdapter.getFilter().filter(charSequence);
+                    clearImgVw.setVisibility(View.VISIBLE);
+                } else {
+                    clearImgVw.setVisibility(View.GONE);
                 }
             }
 

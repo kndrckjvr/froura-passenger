@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.text.style.CharacterStyle;
 import android.text.style.StyleSpan;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -90,7 +91,7 @@ public class PlaceAutocompleteAdapter extends RecyclerView.Adapter<PlaceAutocomp
 
     @Override
     public Filter getFilter() {
-        Filter filter = new Filter() {
+        return new Filter() {
             @Override
             protected FilterResults performFiltering(CharSequence constraint) {
                 FilterResults results = new FilterResults();
@@ -111,7 +112,6 @@ public class PlaceAutocompleteAdapter extends RecyclerView.Adapter<PlaceAutocomp
                 } else {  }
             }
         };
-        return filter;
     }
 
     private ArrayList<PlaceAutocompleteObject> getPredictions(CharSequence s) {
@@ -145,7 +145,10 @@ public class PlaceAutocompleteAdapter extends RecyclerView.Adapter<PlaceAutocomp
                 autocompletePredictions.release();
                 return resultList;
             }
-        } catch (RuntimeExecutionException e) { return null; }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
