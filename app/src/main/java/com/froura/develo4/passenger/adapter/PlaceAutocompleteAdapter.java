@@ -6,7 +6,6 @@ import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.text.style.CharacterStyle;
 import android.text.style.StyleSpan;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,7 +23,6 @@ import com.google.android.gms.location.places.GeoDataClient;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.RuntimeExecutionException;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 
@@ -67,7 +65,7 @@ public class PlaceAutocompleteAdapter extends RecyclerView.Adapter<PlaceAutocomp
     @Override
     public PlaceAutocompleteAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LayoutInflater layoutInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View convertView = layoutInflater.inflate(R.layout.search_adapter, parent, false);
+        View convertView = layoutInflater.inflate(R.layout.place_adapter, parent, false);
         ViewHolder mPredictionHolder = new ViewHolder(convertView);
         return mPredictionHolder;
     }
