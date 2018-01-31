@@ -2,6 +2,7 @@ package com.froura.develo4.passenger;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -35,7 +36,9 @@ import com.bumptech.glide.Glide;
 import com.facebook.AccessToken;
 import com.facebook.login.LoginManager;
 import com.froura.develo4.passenger.libraries.DialogCreator;
+import com.froura.develo4.passenger.libraries.RequestPostString;
 import com.froura.develo4.passenger.libraries.SnackBarCreator;
+import com.froura.develo4.passenger.tasks.DistanceMatrixTask;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -74,9 +77,11 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -90,7 +95,8 @@ public class HomeActivity extends AppCompatActivity
         OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
-        com.google.android.gms.location.LocationListener {
+        com.google.android.gms.location.LocationListener,
+        DistanceMatrixTask.OnDistanceMatrixTasksListener {
 
     private DrawerLayout drawer;
     private TextView name;
@@ -107,6 +113,7 @@ public class HomeActivity extends AppCompatActivity
     private SupportMapFragment mapFragment;
 
     private GoogleApiClient mGoogleApiClient;
+    private GeoDataClient mGeoDataClient;
     private Location mLastLocation;
     private LatLng pickupLocation;
     private LatLng dropoffLocation;
@@ -114,9 +121,10 @@ public class HomeActivity extends AppCompatActivity
     private String uid;
     private String pickupName;
     private String dropoffName;
-    private String pickupPlaceID;
-    private String dropoffPlaceID;
-    private boolean autoMarkerSet = false;
+    private String pickupPlaceId;
+    private String dropoffPlaceId;
+    private int hasPickup = -1;
+    private int hasDropoff = -1;
     private boolean cameraUpdated = false;
     final int LOCATION_REQUEST_CODE = 1;
 
@@ -129,6 +137,8 @@ public class HomeActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+
+        mGeoDataClient = Places.getGeoDataClient(this, null);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -160,13 +170,24 @@ public class HomeActivity extends AppCompatActivity
         pickupTxtVw = findViewById(R.id.txtVw_pickup);
         dropoffTxtVw = findViewById(R.id.txtVw_dropoff);
 
-
         if(!locationEnabled())
             DialogCreator.create(this, "requestLocation")
                     .setTitle("Access Location")
                     .setMessage("Turn on your location settings to be able to get location data.")
                     .setPositiveButton("Go to Settings")
                     .show();
+
+        hasPickup = getIntent().getIntExtra("hasPickup", -1);
+        hasDropoff = getIntent().getIntExtra("hasDropoff", -1);
+
+        if(hasPickup == 1)
+            findPlaceById(getIntent().getStringExtra("pickupPlaceId"), 0);
+        
+        if(hasDropoff == 1) {
+            Log.d("distanceMatrix", "hasDropoffCheck");
+            findPlaceById(getIntent().getStringExtra("dropoffPlaceId"), 1);
+            setFare();
+        }
 
         mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -176,7 +197,34 @@ public class HomeActivity extends AppCompatActivity
         pickupTxtVw.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Intent intent = new Intent(HomeActivity.this, SearchActivity.class);
+                if(pickupPlaceId != null) {
+                    intent.putExtra("pickupPlaceId", pickupPlaceId);
+                    intent.putExtra("from", 0);
+                }
 
+                if(dropoffPlaceId != null) {
+                    intent.putExtra("dropoffPlaceId", dropoffPlaceId);
+                    intent.putExtra("from", 0);
+                }
+                startActivity(intent);
+            }
+        });
+
+        dropoffTxtVw.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(HomeActivity.this, SearchActivity.class);
+                if(pickupPlaceId != null) {
+                    intent.putExtra("pickupPlaceId", pickupPlaceId);
+                    intent.putExtra("from", 1);
+                }
+
+                if(dropoffPlaceId != null) {
+                    intent.putExtra("dropoffPlaceId", dropoffPlaceId);
+                    intent.putExtra("from", 1);
+                }
+                startActivity(intent);
             }
         });
 
@@ -186,24 +234,145 @@ public class HomeActivity extends AppCompatActivity
                 prepareBooking();
             }
         });
+    }
 
-        prof_pic.setOnClickListener(new View.OnClickListener() {
+    private void setFare() {
+        Log.d("distanceMatrix", "setFareCheck");
+        new DistanceMatrixTask(this).execute();
+    }
+
+    @Override
+    public void parseDistanceMatrixJSONString(String jsonString) {
+        Log.d("distanceMatrix", "parseCheck: " + jsonString);
+        int distance = 0;
+        int duration = 0;
+        try {
+            JSONObject jsonObject = new JSONObject(jsonString);
+            if(jsonObject.getString("status").equals("OK")) {
+                JSONArray jsonArray = jsonObject.getJSONArray("rows");
+                for(int i = 0; i < jsonArray.length(); i++) {
+                    jsonObject = jsonArray.getJSONObject(i);
+                    jsonArray = jsonObject.getJSONArray("elements");
+                    for(int j = 0; j < jsonArray.length(); j++) {
+                        jsonObject = jsonArray.getJSONObject(i);
+                        if(j == 0) {
+                            jsonArray = jsonObject.getJSONArray("distance");
+                            jsonObject = jsonArray.getJSONObject(0);
+                            distance = jsonObject.getInt("value");
+                        } else if(j == 1) {
+                            jsonArray = jsonObject.getJSONArray("duration");
+                            jsonObject = jsonArray.getJSONObject(0);
+                            duration = jsonObject.getInt("value");
+                        }
+                    }
+                }
+            }
+            Toast.makeText(this, "Duration: " + duration + " " + "Distance: " + distance, Toast.LENGTH_SHORT).show();
+            Log.d("distanceMatrix", "Duration: " + duration + " " + "Distance: " + distance);
+        } catch (Exception e) {
+            Log.e("distanceMatrix", "Eto problema mo: " ,e);
+        }
+    }
+
+    @Override
+    public String createDistanceMatrixPostString(ContentValues contentValues) throws UnsupportedEncodingException {
+        Log.d("distanceMatrix", "createPostringCheck");
+        contentValues.put("units", "metric");
+        contentValues.put("origins", pickupLocation.latitude + "," + pickupLocation.longitude);
+        contentValues.put("destinations", dropoffLocation.latitude + "," + dropoffLocation.longitude);
+        contentValues.put("key", getResources().getString(R.string.google_api_key));
+        return RequestPostString.create(contentValues);
+    }
+
+    private void findPlaceById(String placeId, int from) {
+        final int setTo = from;
+        mGeoDataClient.getPlaceById(placeId).addOnCompleteListener(new OnCompleteListener<PlaceBufferResponse>() {
             @Override
-            public void onClick(View view) {
-                setDetails();
+            public void onComplete(@NonNull Task<PlaceBufferResponse> task) {
+                if (task.isSuccessful()) {
+                    PlaceBufferResponse places = task.getResult();
+                    Place myPlace = places.get(0);
+                    if(setTo == 0) {
+                        pickupPlaceId = myPlace.getId();
+                        pickupName = myPlace.getName().toString();
+                        setText(pickupTxtVw, pickupName);
+                        pickupLocation = myPlace.getLatLng();
+                    } else {
+                        dropoffPlaceId = myPlace.getId();
+                        dropoffName = myPlace.getName().toString();
+                        setText(dropoffTxtVw, dropoffName);
+                        dropoffLocation = myPlace.getLatLng();
+                    }
+                    setMarkers(false);
+                    places.release();
+                }
             }
         });
+    }
+
+    private void setMarkers(boolean autoMarker) {
+        if(autoMarker) mMap.clear();
+
+        if(pickupLocation != null) {
+            mMap.addMarker(new MarkerOptions()
+                    .position(new LatLng(pickupLocation.latitude, pickupLocation.longitude))
+                    .icon(BitmapDescriptorFactory.fromResource(R.mipmap.yellow_marker)));
+        }
+        if(dropoffLocation != null) {
+            mMap.addMarker(new MarkerOptions()
+                    .position(new LatLng(dropoffLocation.latitude, dropoffLocation.longitude))
+                    .icon(BitmapDescriptorFactory.fromResource(R.mipmap.black_marker)));
+        }
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        LocationRequest mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(5000);
+        mLocationRequest.setFastestInterval(1000);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        if (ActivityCompat.checkSelfPermission(this,
+                android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this,
+                        android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(HomeActivity.this,
+                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                    LOCATION_REQUEST_CODE);
+            return;
+        }
+        mMap.setMyLocationEnabled(true);
+        LocationServices.FusedLocationApi
+                .requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+        if(hasPickup == -1) {
+            PlaceDetectionClient mPlaceDetectionClient = Places.getPlaceDetectionClient(this, null);
+            final Task<PlaceLikelihoodBufferResponse> placeResult =
+                    mPlaceDetectionClient.getCurrentPlace(null);
+            placeResult.addOnCompleteListener
+                    (new OnCompleteListener<PlaceLikelihoodBufferResponse>() {
+                        @Override
+                        public void onComplete(@NonNull Task<PlaceLikelihoodBufferResponse> task) {
+                            if (task.isSuccessful() && task.getResult() != null) {
+                                PlaceLikelihoodBufferResponse likelyPlaces = task.getResult();
+                                for (PlaceLikelihood placeLikelihood : likelyPlaces) {
+                                    pickupName = placeLikelihood.getPlace().getName().toString();
+                                    pickupLocation = placeLikelihood.getPlace().getLatLng();
+                                    pickupPlaceId = placeLikelihood.getPlace().getId();
+                                    setText(pickupTxtVw, pickupName);
+                                    setMarkers(true);
+                                }
+                                likelyPlaces.release();
+                            }
+                        }
+                    });
+        }
     }
 
     private void setDetails() {
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String JSON_DETAILS_KEY = "userDetails";
         String userDetails = sharedPref.getString(JSON_DETAILS_KEY, "{ \"name\" : NULL }");
-        Toast.makeText(this, userDetails, Toast.LENGTH_SHORT).show();
         try {
             JSONObject jsonObject = new JSONObject(userDetails);
-
-            Toast.makeText(this, jsonObject.getString("name"), Toast.LENGTH_SHORT).show();
             if(!jsonObject.getString("name").equals("NULL")) {
                 name.setText(jsonObject.getString("name"));
                 Glide.with(this)
@@ -213,9 +382,7 @@ public class HomeActivity extends AppCompatActivity
                 user_email = jsonObject.getString("email");
                 user_mobnum = jsonObject.getString("mobnum");
             }
-        } catch (Exception e) {
-            Log.e("details", "setDetails: ", e);
-        }
+        } catch (Exception e) { }
     }
 
     private boolean locationEnabled() {
@@ -255,52 +422,6 @@ public class HomeActivity extends AppCompatActivity
                 .addApi(LocationServices.API)
                 .build();
         mGoogleApiClient.connect();
-    }
-
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        LocationRequest mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(5000);
-        mLocationRequest.setFastestInterval(1000);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        if (ActivityCompat.checkSelfPermission(this,
-                android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                    ActivityCompat.checkSelfPermission(this,
-                        android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(HomeActivity.this,
-                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                    LOCATION_REQUEST_CODE);
-            return;
-        }
-        mMap.setMyLocationEnabled(true);
-        LocationServices.FusedLocationApi
-                .requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
-        if(!autoMarkerSet) {
-            PlaceDetectionClient mPlaceDetectionClient = Places.getPlaceDetectionClient(this, null);
-            final Task<PlaceLikelihoodBufferResponse> placeResult =
-                    mPlaceDetectionClient.getCurrentPlace(null);
-            placeResult.addOnCompleteListener
-                    (new OnCompleteListener<PlaceLikelihoodBufferResponse>() {
-                        @Override
-                        public void onComplete(@NonNull Task<PlaceLikelihoodBufferResponse> task) {
-                            if (task.isSuccessful() && task.getResult() != null) {
-                                PlaceLikelihoodBufferResponse likelyPlaces = task.getResult();
-                                for (PlaceLikelihood placeLikelihood : likelyPlaces) {
-                                    pickupName = placeLikelihood.getPlace().getName().toString();
-                                    pickupLocation = placeLikelihood.getPlace().getLatLng();
-                                    pickupPlaceID = placeLikelihood.getPlace().getId();
-                                    setText(pickupTxtVw, pickupName);
-                                    mMap.clear();
-                                    mMap.addMarker(new MarkerOptions()
-                                            .position(new LatLng(pickupLocation.latitude, pickupLocation.longitude))
-                                            .icon(BitmapDescriptorFactory.fromResource(R.mipmap.yellow_marker)));
-                                    autoMarkerSet = true;
-                                }
-                                likelyPlaces.release();
-                            }
-                        }
-                    });
-        }
     }
 
     @Override

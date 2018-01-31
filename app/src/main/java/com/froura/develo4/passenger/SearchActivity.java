@@ -30,6 +30,11 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
     private PlaceAutocompleteAdapter mAdapter;
 
     private GeoDataClient mGeoDataClient;
+    private String pickupPlaceId;
+    private String dropoffPlaceId;
+    private int hasPickup = -1;
+    private int hasDropoff = -1;
+    private int from;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +43,18 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
 
         Toolbar myToolbar = findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
+
+        if(getIntent().getStringExtra("pickupPlaceId") != null) {
+            hasPickup = 1;
+            pickupPlaceId = getIntent().getStringExtra("pickupPlaceId");
+        }
+
+        if(getIntent().getStringExtra("dropoffPlaceId") != null){
+            hasDropoff = 1;
+            dropoffPlaceId = getIntent().getStringExtra("dropoffPlaceId");
+        }
+
+        from = getIntent().getIntExtra("from", -1);
 
         searchET = findViewById(R.id.searchET);
         clearImgVw = findViewById(R.id.clearImgVw);
@@ -83,8 +100,30 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
     @Override
     public void onPlaceClick(ArrayList<PlaceAutocompleteObject> mResultList, int position) {
         Intent intent = new Intent(SearchActivity.this, HomeActivity.class);
-        intent.putExtra("PlaceID", mResultList.get(position).getPlaceId());
-        intent.putExtra("from", getIntent().getIntExtra("from", -1));
+        if(from == 0) {
+            if(hasPickup == 1) {
+                intent.putExtra("hasPickup", 1);
+                intent.putExtra("pickupPlaceId", mResultList.get(position).getPlaceId());
+            }
+
+            if(hasDropoff == 1) {
+                intent.putExtra("hasDropoff", 1);
+                intent.putExtra("dropoffPlaceId", dropoffPlaceId);
+            }
+        } else {
+            if(hasPickup == 1) {
+                intent.putExtra("hasPickup", 1);
+                intent.putExtra("pickupPlaceId", pickupPlaceId);
+            }
+
+            if(hasDropoff == 1) {
+                intent.putExtra("hasDropoff", 1);
+                intent.putExtra("dropoffPlaceId", mResultList.get(position).getPlaceId());
+            } else {
+                intent.putExtra("hasDropoff", 1);
+                intent.putExtra("dropoffPlaceId", mResultList.get(position).getPlaceId());
+            }
+        }
         startActivity(intent);
         finish();
     }
@@ -93,8 +132,14 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
     public void onBackPressed() {
         super.onBackPressed();
         Intent intent = new Intent(SearchActivity.this, HomeActivity.class);
-        intent.putExtra("PlaceID", getIntent().getStringExtra("PlaceID"));
-        intent.putExtra("from", getIntent().getIntExtra("from", -1));
+        if(hasPickup == 1) {
+            intent.putExtra("hasPickup", 1);
+            intent.putExtra("pickupPlaceId", pickupPlaceId);
+        }
+        if(hasDropoff == 1) {
+            intent.putExtra("hasDropoff", 1);
+            intent.putExtra("dropoffPlaceId", dropoffPlaceId);
+        }
         startActivity(intent);
         finish();
     }
