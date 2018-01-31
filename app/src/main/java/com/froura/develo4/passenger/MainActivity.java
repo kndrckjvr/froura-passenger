@@ -34,7 +34,6 @@ public class MainActivity extends AppCompatActivity implements DialogCreator.Dia
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         ImageView imageView = findViewById(R.id.loader);
 
         Glide.with(this).load(getImage("loader")).into(imageView);

@@ -4,6 +4,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -64,9 +65,9 @@ public class LandingActivity extends AppCompatActivity {
     private String auth;
     private static final int RC_SIGN_IN = 1;
 
-    private CallbackManager mCallbackManager;
+    private String FirebaseUserKeys[] = {"auth", "email", "mobnum", "name", "profile_pic"};
 
-    private SharedPreferences sharedPreferences;
+    private CallbackManager mCallbackManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -183,54 +184,53 @@ public class LandingActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if(task.isSuccessful()) {
-                            userExist(FirebaseAuth.getInstance().getCurrentUser().getUid(), "facebook");
+                            registerUser();
                         } else if(task.getException() instanceof FirebaseAuthUserCollisionException) {
                             progressDialog.dismiss();
                             LoginManager.getInstance().logOut();
-                            SnackBarCreator.set("YUN EMAIL NG FB MO MAY KAPAREHO NA. PLEASE YUN NA PAMLOGIN MO");
+                            SnackBarCreator.set("email is in-use");
                             SnackBarCreator.show(mobLogin);
                         }
                     }
                 });
     }
 
-    private void userExist(String user_id, String auth) {
-        final DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(user_id);
-        final String authNew = auth;
-        rootRef.addListenerForSingleValueEvent(new ValueEventListener() {
+    private void registerUser() {
+        String user_id = mAuth.getCurrentUser().getUid();
+        final DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(user_id);
+        dbRef.child("name").setValue(name);
+        dbRef.child("email").setValue(email);
+        dbRef.child("auth").setValue(auth);
+        dbRef.child("profile_pic").setValue(profpic);
+        dbRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onDataChange(DataSnapshot snapshot) {
-                if (!snapshot.exists()) {
-                    registerUser();
-                } else {
-                    Map<String, Object> map = (Map<String, Object>) snapshot.getValue();
-                    if(!map.get("auth").toString().equals(authNew)) {
-                        registerUser();
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if(dataSnapshot.exists()) {
+                    Map<String, Object> value = (Map<String, Object>) dataSnapshot.getValue();
+                    if(!value.get("mobnum").toString().equals("null")) {
+                        dbRef.child("mobnum").setValue(value.get("mobnum").toString());
+                        saveUserDetails(value.get("mobnum").toString());
+                    } else {
+                        saveUserDetails("null");
                     }
                 }
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                Log.d("firebaseDB", "userExistError: "+databaseError.getMessage());
+
             }
         });
     }
 
-    private void registerUser() {
-        String user_id = mAuth.getCurrentUser().getUid();
-        DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(user_id);
-        dbRef.child("name").setValue(name);
-        dbRef.child("email").setValue(email);
-        dbRef.child("mobnum").setValue(mobnum);
-        dbRef.child("auth").setValue(auth);
-        dbRef.child("profile_pic").setValue(profpic);
-    }
-
-    private void saveUserDetails() {
-        sharedPreferences = getPreferences(Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        String jsonDetails = "{ \"name\" : " + name + ", \"email\" : " + email + ", \"mobnum\" : "+ mobnum +", \"profile_pic\" : " + profpic + "}";
+    private void saveUserDetails(String mobnum) {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        SharedPreferences.Editor editor = sharedPref.edit();
+        String JSON_DETAILS_KEY = "userDetails";
+        String jsonDetails = "{ \"name\" : \"" + name + "\", \"email\" : \"" + email + "\", \"mobnum\" : \"" + mobnum + "\", \"profile_pic\" : \"" + profpic + "\", \"auth\" : \"" + auth + "\"}";
+        editor.putString(JSON_DETAILS_KEY, jsonDetails);
+        editor.apply();
+        Log.d("saveUser", "Saved String");
     }
 
     private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
@@ -240,7 +240,7 @@ public class LandingActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if(task.isSuccessful()) {
-                            userExist(FirebaseAuth.getInstance().getCurrentUser().getUid(), "google");
+                            registerUser();
                         }
                     }
                 });
@@ -265,7 +265,6 @@ public class LandingActivity extends AppCompatActivity {
         if (requestCode == RC_SIGN_IN) {
             Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
             try {
-                // Google Sign In was successful, authenticate with Firebase
                 GoogleSignInAccount account = task.getResult(ApiException.class);
                 name = account.getDisplayName();
                 email = account.getEmail();
@@ -276,7 +275,7 @@ public class LandingActivity extends AppCompatActivity {
                 firebaseAuthWithGoogle(account);
             } catch (ApiException e) { Log.d("ApiError", e.getMessage()); }
         }
-        // Pass the activity result back to the Facebook SDK
+
         mCallbackManager.onActivityResult(requestCode, resultCode, data);
     }
 }

@@ -2,13 +2,16 @@ package com.froura.develo4.passenger;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -22,6 +25,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
@@ -43,7 +47,9 @@ import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.AutocompleteFilter;
+import com.google.android.gms.location.places.GeoDataClient;
 import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.PlaceBufferResponse;
 import com.google.android.gms.location.places.PlaceDetectionClient;
 import com.google.android.gms.location.places.PlaceLikelihood;
 import com.google.android.gms.location.places.PlaceLikelihoodBufferResponse;
@@ -68,12 +74,15 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
+import me.grantland.widget.AutofitHelper;
 
 public class HomeActivity extends AppCompatActivity
         implements DialogCreator.DialogActionListener,
@@ -104,14 +113,23 @@ public class HomeActivity extends AppCompatActivity
 
     private String uid;
     private String pickupName;
+    private String dropoffName;
+    private String pickupPlaceID;
+    private String dropoffPlaceID;
     private boolean autoMarkerSet = false;
     private boolean cameraUpdated = false;
     final int LOCATION_REQUEST_CODE = 1;
+
+    //User Details
+    private String user_name;
+    private String user_mobnum;
+    private String user_email;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -127,10 +145,13 @@ public class HomeActivity extends AppCompatActivity
         View v = navigationView.getHeaderView(0);
         name = v.findViewById(R.id.txtVw_name);
         prof_pic = v.findViewById(R.id.imgVw_profile_pic);
-
+        AutofitHelper.create(name);
         Glide.with(this)
                 .load(getImage("placeholder"))
                 .into(prof_pic);
+
+        uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        setDetails();
 
         bookFab = findViewById(R.id.bookFab);
         rsrvFab = findViewById(R.id.rsrvFab);
@@ -139,7 +160,6 @@ public class HomeActivity extends AppCompatActivity
         pickupTxtVw = findViewById(R.id.txtVw_pickup);
         dropoffTxtVw = findViewById(R.id.txtVw_dropoff);
 
-        uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
         if(!locationEnabled())
             DialogCreator.create(this, "requestLocation")
@@ -150,13 +170,13 @@ public class HomeActivity extends AppCompatActivity
 
         mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
+
         mapFragment.getMapAsync(this);
 
         pickupTxtVw.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(HomeActivity.this, SearchActivity.class);
-                startActivity(intent);
+
             }
         });
 
@@ -166,6 +186,75 @@ public class HomeActivity extends AppCompatActivity
                 prepareBooking();
             }
         });
+
+        prof_pic.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                setDetails();
+            }
+        });
+    }
+
+    private void setDetails() {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        String JSON_DETAILS_KEY = "userDetails";
+        String userDetails = sharedPref.getString(JSON_DETAILS_KEY, "{ \"name\" : NULL }");
+        Toast.makeText(this, userDetails, Toast.LENGTH_SHORT).show();
+        try {
+            JSONObject jsonObject = new JSONObject(userDetails);
+
+            Toast.makeText(this, jsonObject.getString("name"), Toast.LENGTH_SHORT).show();
+            if(!jsonObject.getString("name").equals("NULL")) {
+                name.setText(jsonObject.getString("name"));
+                Glide.with(this)
+                        .load(jsonObject.getString("profile_pic"))
+                        .into(prof_pic);
+                user_name = jsonObject.getString("name");
+                user_email = jsonObject.getString("email");
+                user_mobnum = jsonObject.getString("mobnum");
+            }
+        } catch (Exception e) {
+            Log.e("details", "setDetails: ", e);
+        }
+    }
+
+    private boolean locationEnabled() {
+        int locationMode = 0;
+        String locationProviders;
+        boolean isAvailable;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
+            try {
+                locationMode = Settings.Secure.getInt(getContentResolver(), Settings.Secure.LOCATION_MODE);
+            } catch (Settings.SettingNotFoundException e) {
+                e.printStackTrace();
+            }
+
+            isAvailable = (locationMode != Settings.Secure.LOCATION_MODE_OFF);
+        } else {
+            locationProviders = Settings.Secure.getString(getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
+            isAvailable = !TextUtils.isEmpty(locationProviders);
+        }
+
+        return isAvailable;
+    }
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap;
+        mMap.getUiSettings().setMyLocationButtonEnabled(false);
+        mMap.getUiSettings().setTiltGesturesEnabled(false);
+        mMap.getUiSettings().setCompassEnabled(false);
+        buildGoogleApiClient();
+    }
+
+    protected synchronized void buildGoogleApiClient() {
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
+        mGoogleApiClient.connect();
     }
 
     @Override
@@ -186,6 +275,32 @@ public class HomeActivity extends AppCompatActivity
         mMap.setMyLocationEnabled(true);
         LocationServices.FusedLocationApi
                 .requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+        if(!autoMarkerSet) {
+            PlaceDetectionClient mPlaceDetectionClient = Places.getPlaceDetectionClient(this, null);
+            final Task<PlaceLikelihoodBufferResponse> placeResult =
+                    mPlaceDetectionClient.getCurrentPlace(null);
+            placeResult.addOnCompleteListener
+                    (new OnCompleteListener<PlaceLikelihoodBufferResponse>() {
+                        @Override
+                        public void onComplete(@NonNull Task<PlaceLikelihoodBufferResponse> task) {
+                            if (task.isSuccessful() && task.getResult() != null) {
+                                PlaceLikelihoodBufferResponse likelyPlaces = task.getResult();
+                                for (PlaceLikelihood placeLikelihood : likelyPlaces) {
+                                    pickupName = placeLikelihood.getPlace().getName().toString();
+                                    pickupLocation = placeLikelihood.getPlace().getLatLng();
+                                    pickupPlaceID = placeLikelihood.getPlace().getId();
+                                    setText(pickupTxtVw, pickupName);
+                                    mMap.clear();
+                                    mMap.addMarker(new MarkerOptions()
+                                            .position(new LatLng(pickupLocation.latitude, pickupLocation.longitude))
+                                            .icon(BitmapDescriptorFactory.fromResource(R.mipmap.yellow_marker)));
+                                    autoMarkerSet = true;
+                                }
+                                likelyPlaces.release();
+                            }
+                        }
+                    });
+        }
     }
 
     @Override
@@ -198,12 +313,10 @@ public class HomeActivity extends AppCompatActivity
     public void onLocationChanged(Location location) {
         if(getApplicationContext()!=null){
             mLastLocation = location;
-            if(!autoMarkerSet)
-                setMarkers();
+
             if(!cameraUpdated) {
-                LatLng latLng = new LatLng(location.getLatitude(),location.getLongitude());
                 cameraPosition = new CameraPosition.Builder()
-                        .target(latLng)
+                        .target(new LatLng(location.getLatitude(),location.getLongitude()))
                         .zoom(14)
                         .bearing(0)
                         .build();
@@ -213,12 +326,9 @@ public class HomeActivity extends AppCompatActivity
         }
     }
 
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
-        mMap = googleMap;
-        mMap.getUiSettings().setMyLocationButtonEnabled(false);
-        mMap.getUiSettings().setTiltGesturesEnabled(false);
-        buildGoogleApiClient();
+    private void setText(TextView txtVw, String str) {
+        txtVw.setText(str);
+        txtVw.setTextColor(getResources().getColor(R.color.place_autocomplete_search_text));
     }
 
     @Override
@@ -234,7 +344,6 @@ public class HomeActivity extends AppCompatActivity
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
-        // Handle navigation view item clicks here.
         switch (item.getItemId()) {
             case R.id.logout:
                 String providerid = "";
@@ -273,8 +382,6 @@ public class HomeActivity extends AppCompatActivity
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     mapFragment.getMapAsync(this);
                 } else {
-                    SnackBarCreator.set("Permissions denied.");
-                    SnackBarCreator.show(viewFab);
                     permissionDenied();
                 }
                 break;
@@ -312,61 +419,7 @@ public class HomeActivity extends AppCompatActivity
     public int getImage(String imageName) {
         int drawableResourceId = this.getResources()
                 .getIdentifier(imageName, "drawable", this.getPackageName());
-
         return drawableResourceId;
-    }
-
-    protected synchronized void buildGoogleApiClient() {
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
-                .build();
-        mGoogleApiClient.connect();
-    }
-
-    public void setMarkers() {
-        if(autoMarkerSet) {
-            mMap.clear();
-            if(pickupLocation != null) {
-                mMap.addMarker(new MarkerOptions()
-                        .position(new LatLng(pickupLocation.latitude, pickupLocation.longitude))
-                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.yellow_marker)));
-            } else if(mLastLocation != null) {
-                mMap.addMarker(new MarkerOptions()
-                        .position(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()))
-                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.yellow_marker)));
-            }
-            if(dropoffLocation != null) {
-                mMap.addMarker(new MarkerOptions()
-                        .position(new LatLng(dropoffLocation.latitude, dropoffLocation.longitude))
-                        .icon(BitmapDescriptorFactory.fromResource(R.mipmap.black_marker)));
-            }
-        } else {
-            showCurrentPlace();
-            autoMarkerSet = true;
-        }
-    }
-
-    private boolean locationEnabled() {
-        int locationMode = 0;
-        String locationProviders;
-        boolean isAvailable;
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
-            try {
-                locationMode = Settings.Secure.getInt(getContentResolver(), Settings.Secure.LOCATION_MODE);
-            } catch (Settings.SettingNotFoundException e) {
-                e.printStackTrace();
-            }
-
-            isAvailable = (locationMode != Settings.Secure.LOCATION_MODE_OFF);
-        } else {
-            locationProviders = Settings.Secure.getString(getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
-            isAvailable = !TextUtils.isEmpty(locationProviders);
-        }
-
-        return isAvailable;
     }
 
     private void askPermissions() {
@@ -396,16 +449,14 @@ public class HomeActivity extends AppCompatActivity
         bookFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                SnackBarCreator.set("Permissions denied.");
-                SnackBarCreator.show(view);
+                permissionDenied(viewFab);
             }
         });
 
         rsrvFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                SnackBarCreator.set("Permissions denied.");
-                SnackBarCreator.show(view);
+                permissionDenied(viewFab);
             }
         });
     }
@@ -417,103 +468,63 @@ public class HomeActivity extends AppCompatActivity
                         android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
 
-    public static boolean detailsComplete = true;
+
     private void prepareBooking() {
-        DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(uid);
-        rootRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot snapshot) {
-                if (!snapshot.exists()) {
-                    Map<String, Object> map = (Map<String, Object>) snapshot.getValue();
-                    if(map.get("email").equals("null") && map.get("mobnum").equals("null")) {
-                        SnackBarCreator.set("Please set your email and mobile number before booking.");
-                    } else if(map.get("mobnum").equals("null")) {
-                        SnackBarCreator.set("Please set your mobile number before booking.");
-                    } else if(map.get("email").equals("null")) {
-                        SnackBarCreator.set("Please set your email before booking.");
+        if(permissionStatus()) {
+            if(checkDetails() == 1) {
+                if(pickupName != null && dropoffName != null) {
+                    Intent intent = new Intent(this, BookingActivity.class);
+                    intent.putExtra("user_id", uid);
+                    if(pickupLocation != null) {
+                        intent.putExtra("pickupLat", pickupLocation.latitude);
+                        intent.putExtra("pickupLng", pickupLocation.longitude);
+                    } else {
+                        intent.putExtra("pickupLat", mLastLocation.getLatitude());
+                        intent.putExtra("pickupLng", mLastLocation.getLongitude());
                     }
-
-                    if(map.get("email").equals("null") || map.get("mobnum").equals("null")) {
-                        SnackBarCreator.show(viewFab);
-                        detailsComplete = false;
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {}
-        });
-        if(permissionStatus() && detailsComplete) {
-            /*if(pickupName != null && dropoffName != null) {
-                Intent intent = new Intent(this, BookingActivity.class);
-                intent.putExtra("user_id", uid);
-                if(pickupLocation != null) {
-                    intent.putExtra("pickupLat", pickupLocation.latitude);
-                    intent.putExtra("pickupLng", pickupLocation.longitude);
+                    intent.putExtra("pickupName", pickupName);
+                    intent.putExtra("dropoffName", dropoffName);
+                    startActivity(intent);
+                    finish();
                 } else {
-                    intent.putExtra("pickupLat", mLastLocation.getLatitude());
-                    intent.putExtra("pickupLng", mLastLocation.getLongitude());
+                    SnackBarCreator.set("Set a Drop-off point.");
+                    SnackBarCreator.show(viewFab);
                 }
-                intent.putExtra("pickupName", pickupName);
-                intent.putExtra("dropoffName", dropoffName);
-                startActivity(intent);
-                finish();
-            } else {
-                SnackBarCreator.set("Set a Drop-off point.");
+            } else if(checkDetails() == -1) {
+                SnackBarCreator.set("Please set your Mobile Number.");
                 SnackBarCreator.show(viewFab);
-            }*/
-        } else {
-            SnackBarCreator.set("Permissions denied.");
-            SnackBarCreator.show(viewFab);
-        }
-    }
-
-    private void showCurrentPlace() {
-        if (locationEnabled()) {
-            if (ActivityCompat.checkSelfPermission(this,
-                    android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                    ActivityCompat.checkSelfPermission(this,
-                            android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(HomeActivity.this,
-                        new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                        LOCATION_REQUEST_CODE);
-                return;
+            } else if(checkDetails() == 2) {
+                SnackBarCreator.set("Please set your Email Address.");
+                SnackBarCreator.show(viewFab);
+            } else {
+                SnackBarCreator.set("Please set your Mobile Number and Email Address.");
+                SnackBarCreator.show(viewFab);
             }
-            PlaceDetectionClient mPlaceDetectionClient = Places.getPlaceDetectionClient(this, null);
-            final Task<PlaceLikelihoodBufferResponse> placeResult =
-                    mPlaceDetectionClient.getCurrentPlace(null);
-            placeResult.addOnCompleteListener
-                    (new OnCompleteListener<PlaceLikelihoodBufferResponse>() {
-                        @Override
-                        public void onComplete(@NonNull Task<PlaceLikelihoodBufferResponse> task) {
-                            if (task.isSuccessful() && task.getResult() != null) {
-                                PlaceLikelihoodBufferResponse likelyPlaces = task.getResult();
-                                for (PlaceLikelihood placeLikelihood : likelyPlaces) {
-                                    pickupName = (String) placeLikelihood.getPlace().getName();
-                                    pickupLocation = placeLikelihood.getPlace().getLatLng();
-                                    setText(pickupTxtVw, pickupName);
-                                    if(autoMarkerSet) {
-                                        mMap.clear();
-                                        mMap.addMarker(new MarkerOptions()
-                                                .position(new LatLng(pickupLocation.latitude, pickupLocation.longitude))
-                                                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.yellow_marker)));
-                                        autoMarkerSet = true;
-                                    }
-                                }
-                                likelyPlaces.release();
-                            }
-                        }
-                    });
+        } else {
+            permissionDenied(viewFab);
         }
     }
 
-    private void setText(TextView txtVw, String str) {
-        txtVw.setText(str);
-        txtVw.setTextColor(getResources().getColor(R.color.place_autocomplete_search_text));
+    private int checkDetails() {
+        if(user_mobnum.equals("null") && user_email.equals("null")) {
+            return  -3;
+        }
+        if(user_mobnum.equals("null")) {
+            return -1;
+        }
+        if(user_email.equals("null")) {
+            return -2;
+        }
+        return 1;
     }
 
     private void setHint(TextView txtVw, String str) {
         txtVw.setText(str);
         txtVw.setTextColor(getResources().getColor(R.color.place_autocomplete_search_hint));
+    }
+
+    private void permissionDenied(View view) {
+        SnackBarCreator.set("Permissions denied.");
+        SnackBarCreator.show(viewFab);
     }
 }
