@@ -35,6 +35,7 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.facebook.AccessToken;
 import com.facebook.login.LoginManager;
+import com.froura.develo4.passenger.config.TaskConfig;
 import com.froura.develo4.passenger.libraries.DialogCreator;
 import com.froura.develo4.passenger.libraries.RequestPostString;
 import com.froura.develo4.passenger.libraries.SnackBarCreator;
@@ -96,7 +97,7 @@ public class HomeActivity extends AppCompatActivity
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         com.google.android.gms.location.LocationListener,
-        DistanceMatrixTask.OnDistanceMatrixTasksListener {
+        DistanceMatrixTask.TaskListener {
 
     private DrawerLayout drawer;
     private TextView name;
@@ -208,6 +209,7 @@ public class HomeActivity extends AppCompatActivity
                     intent.putExtra("from", 0);
                 }
                 startActivity(intent);
+                finish();
             }
         });
 
@@ -225,6 +227,7 @@ public class HomeActivity extends AppCompatActivity
                     intent.putExtra("from", 1);
                 }
                 startActivity(intent);
+                finish();
             }
         });
 
@@ -237,12 +240,12 @@ public class HomeActivity extends AppCompatActivity
     }
 
     private void setFare() {
-        Log.d("distanceMatrix", "setFareCheck");
-        new DistanceMatrixTask(this).execute();
+        Log.d("distanceMatrix", "setFareCheck: " + TaskConfig.DISTANCE_MATRIX_URL);
+        DistanceMatrixTask.execute(this, TaskConfig.DISTANCE_MATRIX_URL);
     }
 
     @Override
-    public void parseDistanceMatrixJSONString(String jsonString) {
+    public void onTaskRespond(String jsonString) {
         Log.d("distanceMatrix", "parseCheck: " + jsonString);
         int distance = 0;
         int duration = 0;
@@ -275,13 +278,14 @@ public class HomeActivity extends AppCompatActivity
     }
 
     @Override
-    public String createDistanceMatrixPostString(ContentValues contentValues) throws UnsupportedEncodingException {
-        Log.d("distanceMatrix", "createPostringCheck");
+    public ContentValues setRequestValues(ContentValues contentValues) {
+        contentValues.put("android", 1);
         contentValues.put("units", "metric");
         contentValues.put("origins", pickupLocation.latitude + "," + pickupLocation.longitude);
         contentValues.put("destinations", dropoffLocation.latitude + "," + dropoffLocation.longitude);
         contentValues.put("key", getResources().getString(R.string.google_api_key));
-        return RequestPostString.create(contentValues);
+        Log.d("distanceMatrix", "createPostringCheck");
+        return (contentValues);
     }
 
     private void findPlaceById(String placeId, int from) {

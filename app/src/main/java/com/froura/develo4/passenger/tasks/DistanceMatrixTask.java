@@ -3,8 +3,8 @@ package com.froura.develo4.passenger.tasks;
 import android.content.ContentValues;
 import android.content.Context;
 import android.os.AsyncTask;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.froura.develo4.passenger.config.TaskConfig;
 
@@ -19,46 +19,62 @@ import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.util.Map;
+import java.util.Set;
 
 /**
- * Created by KendrickAndrew on 01/02/2018.
+ * Created by User on 01/10.
  */
 
-public class DistanceMatrixTask extends AsyncTask<Void, Void, String> {
-    public static void execute(Context context) {
-        new CheckUserTasks(context).execute();
-    }
-
-    public interface OnDistanceMatrixTasksListener {
-        void parseDistanceMatrixJSONString(String jsonString);
-        String createDistanceMatrixPostString(ContentValues contentValues) throws UnsupportedEncodingException;
-    }
+public final class DistanceMatrixTask extends AsyncTask<Void, Void, String> {
 
     private final Context context;
+    private final String url;
 
-    public DistanceMatrixTask(Context context) {
+    private DistanceMatrixTask(Context context, String url) {
         this.context = context;
+        this.url = url;
+    }
+
+    public static void execute(Context context, String url) {
+        new DistanceMatrixTask(context, url).execute();
+    }
+
+    public interface TaskListener {
+        void onTaskRespond(String json);
+        ContentValues setRequestValues(ContentValues contentValues);
+    }
+
+    public static String createPostString(Set<Map.Entry<String, Object>> set) throws UnsupportedEncodingException {
+        StringBuilder stringBuilder = new StringBuilder();
+        boolean flag = true;
+
+        for (Map.Entry<String, Object> value : set) {
+            stringBuilder.append( flag ? "" : "&" );
+            flag = false;
+            stringBuilder.append(URLEncoder.encode(value.getKey(), "UTF-8"));
+            stringBuilder.append("=");
+            stringBuilder.append(URLEncoder.encode(value.getValue().toString(), "UTF-8"));
+        }
+        return stringBuilder.toString();
     }
 
     @Override
     protected String doInBackground(Void... params) {
         try {
-            // set form information
-
-            URL url = new URL(TaskConfig.DISTANCE_MATRIX_URL);
+            URL url = new URL(this.url);
             HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
-
-            httpURLConnection.setRequestMethod("GET");
+            httpURLConnection.setRequestMethod("POST");
             httpURLConnection.setDoInput(true);
             httpURLConnection.setDoOutput(true);
 
             OutputStream outputStream = new BufferedOutputStream(httpURLConnection.getOutputStream());
             BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream));
-
-            String postString = ((CheckUserTasks.OnLoginDriverTasksListener)context).createCheckUserPostString(new ContentValues());
+            Log.d("Error Tag", ((AppCompatActivity)context).getPackageName());
+            String postString = createPostString(((TaskListener)this.context).setRequestValues(new ContentValues()).valueSet());
             bufferedWriter.write(postString);
-            Log.d("distanceMatrix", postString);
-            Log.d("distanceMatrix", bufferedWriter.toString());
+
             // clear
             bufferedWriter.flush();
             bufferedWriter.close();
@@ -66,12 +82,12 @@ public class DistanceMatrixTask extends AsyncTask<Void, Void, String> {
 
             InputStream inputStream = new BufferedInputStream(httpURLConnection.getInputStream());
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-
             StringBuilder stringBuilder = new StringBuilder();
             String line = "";
 
-            while ((line = bufferedReader.readLine()) != null)
+            while ((line = bufferedReader.readLine()) != null){
                 stringBuilder.append(line);
+            }
 
             // clear
             bufferedReader.close();
@@ -79,20 +95,17 @@ public class DistanceMatrixTask extends AsyncTask<Void, Void, String> {
 
             httpURLConnection.disconnect();
 
+            Log.d("This is the return: ", stringBuilder.toString());
             return stringBuilder.toString();
-        } catch (Exception e) {}
+        } catch (Exception ignored) {
+            Log.e("Error here: ", "The error is: ", ignored);
+        }
         return null;
     }
 
     @Override
-    protected void onPreExecute() {
-        super.onPreExecute();
-    }
-
-
-    @Override
-    protected void onPostExecute(String jsonString) {
-        super.onPostExecute(jsonString);
-        ((DistanceMatrixTask.OnDistanceMatrixTasksListener)context).parseDistanceMatrixJSONString(jsonString);
+    protected void onPostExecute(String json) {
+        super.onPostExecute(json);
+        ((TaskListener)this.context).onTaskRespond(json);
     }
 }
