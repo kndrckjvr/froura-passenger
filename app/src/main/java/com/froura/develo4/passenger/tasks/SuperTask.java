@@ -1,5 +1,6 @@
 package com.froura.develo4.passenger.tasks;
 
+import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.os.AsyncTask;
@@ -31,14 +32,16 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
 
     private final Context context;
     private final String url;
+    private final ProgressDialog progressDialog;
 
-    private SuperTask(Context context, String url) {
+    public SuperTask(Context context, String url) {
         this.context = context;
         this.url = url;
+        progressDialog = new ProgressDialog(context);
     }
 
     public static void execute(Context context, String url) {
-        new SuperTask(context, url).execute();
+        new SuperTask(context,url).execute();
     }
 
     public interface TaskListener {
@@ -57,7 +60,18 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
             stringBuilder.append("=");
             stringBuilder.append(URLEncoder.encode(value.getValue().toString(), "UTF-8"));
         }
+
         return stringBuilder.toString();
+    }
+
+    @Override
+    protected void onPreExecute() {
+        super.onPreExecute();
+        progressDialog.setTitle("Estimated Fare");
+        progressDialog.setMessage("Loading Details...");
+        progressDialog.setIndeterminate(false);
+        progressDialog.setCancelable(true);
+        progressDialog.show();
     }
 
     @Override
@@ -106,6 +120,7 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
     @Override
     protected void onPostExecute(String json) {
         super.onPostExecute(json);
+        progressDialog.dismiss();
         ((TaskListener)this.context).onTaskRespond(json);
     }
 }

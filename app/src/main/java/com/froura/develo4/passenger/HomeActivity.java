@@ -1,14 +1,9 @@
 package com.froura.develo4.passenger;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.location.Address;
-import android.location.Geocoder;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
@@ -37,20 +32,15 @@ import com.facebook.AccessToken;
 import com.facebook.login.LoginManager;
 import com.froura.develo4.passenger.config.TaskConfig;
 import com.froura.develo4.passenger.libraries.DialogCreator;
-import com.froura.develo4.passenger.libraries.RequestPostString;
 import com.froura.develo4.passenger.libraries.SnackBarCreator;
 import com.froura.develo4.passenger.tasks.SuperTask;
-import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.places.AutocompleteFilter;
 import com.google.android.gms.location.places.GeoDataClient;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.PlaceBufferResponse;
@@ -58,8 +48,7 @@ import com.google.android.gms.location.places.PlaceDetectionClient;
 import com.google.android.gms.location.places.PlaceLikelihood;
 import com.google.android.gms.location.places.PlaceLikelihoodBufferResponse;
 import com.google.android.gms.location.places.Places;
-import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
-import com.google.android.gms.location.places.ui.PlaceSelectionListener;
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -67,25 +56,14 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.UserInfo;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
-
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 import me.grantland.widget.AutofitHelper;
@@ -108,6 +86,9 @@ public class HomeActivity extends AppCompatActivity
     private CircleImageView prof_pic;
     private TextView pickupTxtVw;
     private TextView dropoffTxtVw;
+    private TextView taxifareTxtVw;
+    private TextView distanceTxtVw;
+    private TextView durationTxtVw;
 
     private GoogleMap mMap;
     private CameraPosition cameraPosition;
@@ -133,9 +114,9 @@ public class HomeActivity extends AppCompatActivity
     private String user_name;
     private String user_mobnum;
     private String user_email;
-    private String taxi_fare;
-    private String duration;
-    private String distance;
+    private String taxi_fare = "0.00";
+    private String duration = "0KM";
+    private String distance = "0M";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -173,6 +154,13 @@ public class HomeActivity extends AppCompatActivity
         viewDetails = findViewById(R.id.details);
         pickupTxtVw = findViewById(R.id.txtVw_pickup);
         dropoffTxtVw = findViewById(R.id.txtVw_dropoff);
+        taxifareTxtVw = findViewById(R.id.txtVw_taxi_fare);
+        distanceTxtVw = findViewById(R.id.txtVw_distance);
+        durationTxtVw = findViewById(R.id.txtVw_duration);
+
+        taxifareTxtVw.setText("₱ " + taxi_fare);
+        distanceTxtVw.setText(distance);
+        durationTxtVw.setText(duration);
 
         if(!locationEnabled())
             DialogCreator.create(this, "requestLocation")
@@ -189,8 +177,8 @@ public class HomeActivity extends AppCompatActivity
         
         if(hasDropoff == 1) {
             Log.d("distanceMatrix", "hasDropoffCheck");
+            cameraUpdated = true;
             findPlaceById(getIntent().getStringExtra("dropoffPlaceId"), 1);
-            setFare();
         }
 
         mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -243,20 +231,30 @@ public class HomeActivity extends AppCompatActivity
     }
 
     private void setFare() {
-        Log.d("distanceMatrix", "setFareCheck: " + TaskConfig.DISTANCE_MATRIX_URL);
-        DistanceMatrixTask.execute(this, TaskConfig.DISTANCE_MATRIX_URL);
+        SuperTask.execute(this, TaskConfig.CREATE_TAXI_FARE_URL);
     }
 
     @Override
     public void onTaskRespond(String jsonString) {
+        Log.d("fareMatrix", jsonString);
         try {
             JSONObject jsonObject = new JSONObject(jsonString);
             if(jsonObject.getString("status").equals("OK")) {
-                taxi_fare = jsonObject.getString('taxi_fare');
-                distance = jsonObject.getString('distance');
-                duration = jsonObject.getString('duration');
+                taxi_fare = jsonObject.getString("fare");
+                distance = jsonObject.getString("distance");
+                duration = jsonObject.getString("duration");
+
+                taxifareTxtVw.setText("₱ " + taxi_fare);
+                distanceTxtVw.setText(distance);
+                durationTxtVw.setText(duration);
+                Log.d("fareMatrix", jsonString + " " + taxi_fare + " " + distance + " " + duration);
             }
         } catch(Exception e) {}
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+        builder.include(pickupLocation);
+        builder.include(dropoffLocation);
+        LatLngBounds bounds = builder.build();
+        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100));
     }
 
     @Override
@@ -264,7 +262,7 @@ public class HomeActivity extends AppCompatActivity
         contentValues.put("android", 1);
         contentValues.put("origins", pickupPlaceId);
         contentValues.put("destinations", dropoffPlaceId);
-        Log.d("distanceMatrix", "createPostringCheck");
+        Log.d("fareMatrix", pickupPlaceId + " " + dropoffPlaceId);
         return (contentValues);
     }
 
@@ -286,6 +284,7 @@ public class HomeActivity extends AppCompatActivity
                         dropoffName = myPlace.getName().toString();
                         setText(dropoffTxtVw, dropoffName);
                         dropoffLocation = myPlace.getLatLng();
+                        setFare();
                     }
                     setMarkers(false);
                     places.release();
@@ -343,6 +342,15 @@ public class HomeActivity extends AppCompatActivity
                                     pickupPlaceId = placeLikelihood.getPlace().getId();
                                     setText(pickupTxtVw, pickupName);
                                     setMarkers(true);
+                                    if(!cameraUpdated) {
+                                        cameraPosition = new CameraPosition.Builder()
+                                                .target(pickupLocation)
+                                                .zoom(14)
+                                                .bearing(0)
+                                                .build();
+                                        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+                                        cameraUpdated = true;
+                                    }
                                 }
                                 likelyPlaces.release();
                             }
@@ -418,16 +426,6 @@ public class HomeActivity extends AppCompatActivity
     public void onLocationChanged(Location location) {
         if(getApplicationContext()!=null){
             mLastLocation = location;
-
-            if(!cameraUpdated) {
-                cameraPosition = new CameraPosition.Builder()
-                        .target(new LatLng(location.getLatitude(),location.getLongitude()))
-                        .zoom(14)
-                        .bearing(0)
-                        .build();
-                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-                cameraUpdated = true;
-            }
         }
     }
 
