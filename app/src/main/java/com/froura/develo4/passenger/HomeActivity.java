@@ -39,7 +39,7 @@ import com.froura.develo4.passenger.config.TaskConfig;
 import com.froura.develo4.passenger.libraries.DialogCreator;
 import com.froura.develo4.passenger.libraries.RequestPostString;
 import com.froura.develo4.passenger.libraries.SnackBarCreator;
-import com.froura.develo4.passenger.tasks.DistanceMatrixTask;
+import com.froura.develo4.passenger.tasks.SuperTask;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -97,7 +97,7 @@ public class HomeActivity extends AppCompatActivity
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         com.google.android.gms.location.LocationListener,
-        DistanceMatrixTask.TaskListener {
+        SuperTask.TaskListener {
 
     private DrawerLayout drawer;
     private TextView name;
@@ -133,6 +133,9 @@ public class HomeActivity extends AppCompatActivity
     private String user_name;
     private String user_mobnum;
     private String user_email;
+    private String taxi_fare;
+    private String duration;
+    private String distance;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -246,44 +249,21 @@ public class HomeActivity extends AppCompatActivity
 
     @Override
     public void onTaskRespond(String jsonString) {
-        Log.d("distanceMatrix", "parseCheck: " + jsonString);
-        int distance = 0;
-        int duration = 0;
         try {
             JSONObject jsonObject = new JSONObject(jsonString);
             if(jsonObject.getString("status").equals("OK")) {
-                JSONArray jsonArray = jsonObject.getJSONArray("rows");
-                for(int i = 0; i < jsonArray.length(); i++) {
-                    jsonObject = jsonArray.getJSONObject(i);
-                    jsonArray = jsonObject.getJSONArray("elements");
-                    for(int j = 0; j < jsonArray.length(); j++) {
-                        jsonObject = jsonArray.getJSONObject(i);
-                        if(j == 0) {
-                            jsonArray = jsonObject.getJSONArray("distance");
-                            jsonObject = jsonArray.getJSONObject(0);
-                            distance = jsonObject.getInt("value");
-                        } else if(j == 1) {
-                            jsonArray = jsonObject.getJSONArray("duration");
-                            jsonObject = jsonArray.getJSONObject(0);
-                            duration = jsonObject.getInt("value");
-                        }
-                    }
-                }
+                taxi_fare = jsonObject.getString('taxi_fare');
+                distance = jsonObject.getString('distance');
+                duration = jsonObject.getString('duration');
             }
-            Toast.makeText(this, "Duration: " + duration + " " + "Distance: " + distance, Toast.LENGTH_SHORT).show();
-            Log.d("distanceMatrix", "Duration: " + duration + " " + "Distance: " + distance);
-        } catch (Exception e) {
-            Log.e("distanceMatrix", "Eto problema mo: " ,e);
-        }
+        } catch(Exception e) {}
     }
 
     @Override
     public ContentValues setRequestValues(ContentValues contentValues) {
         contentValues.put("android", 1);
-        contentValues.put("units", "metric");
-        contentValues.put("origins", pickupLocation.latitude + "," + pickupLocation.longitude);
-        contentValues.put("destinations", dropoffLocation.latitude + "," + dropoffLocation.longitude);
-        contentValues.put("key", getResources().getString(R.string.google_api_key));
+        contentValues.put("origins", pickupPlaceId);
+        contentValues.put("destinations", dropoffPlaceId);
         Log.d("distanceMatrix", "createPostringCheck");
         return (contentValues);
     }
@@ -487,6 +467,10 @@ public class HomeActivity extends AppCompatActivity
 
                     mGoogleSignInClient.signOut();
                 }
+                SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                SharedPreferences.Editor editor = sharedPref.edit();
+                editor.clear();
+                editor.commit();
                 FirebaseAuth.getInstance().signOut();
                 Intent intent = new Intent(HomeActivity.this, MainActivity.class);
                 startActivity(intent);

@@ -27,18 +27,18 @@ import java.util.Set;
  * Created by User on 01/10.
  */
 
-public final class DistanceMatrixTask extends AsyncTask<Void, Void, String> {
+public final class SuperTask extends AsyncTask<Void, Void, String> {
 
     private final Context context;
     private final String url;
 
-    private DistanceMatrixTask(Context context, String url) {
+    private SuperTask(Context context, String url) {
         this.context = context;
         this.url = url;
     }
 
     public static void execute(Context context, String url) {
-        new DistanceMatrixTask(context, url).execute();
+        new SuperTask(context, url).execute();
     }
 
     public interface TaskListener {
