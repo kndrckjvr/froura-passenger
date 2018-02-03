@@ -60,6 +60,7 @@ public class PlaceAutocompleteAdapter extends RecyclerView.Adapter<PlaceAutocomp
 
     public void clearList(){
         if(mResultList != null && mResultList.size() > 0){ mResultList.clear(); }
+        notifyDataSetChanged();
     }
 
     @Override
@@ -141,6 +142,7 @@ public class PlaceAutocompleteAdapter extends RecyclerView.Adapter<PlaceAutocomp
                             prediction.getPrimaryText(STYLE_BOLD), prediction.getSecondaryText(STYLE_BOLD)));
                 }
                 autocompletePredictions.release();
+
                 return resultList;
             }
         } catch (Exception e) {

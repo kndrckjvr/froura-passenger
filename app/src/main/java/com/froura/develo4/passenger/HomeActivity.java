@@ -48,7 +48,6 @@ import com.google.android.gms.location.places.PlaceDetectionClient;
 import com.google.android.gms.location.places.PlaceLikelihood;
 import com.google.android.gms.location.places.PlaceLikelihoodBufferResponse;
 import com.google.android.gms.location.places.Places;
-import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -158,7 +157,7 @@ public class HomeActivity extends AppCompatActivity
         distanceTxtVw = findViewById(R.id.txtVw_distance);
         durationTxtVw = findViewById(R.id.txtVw_duration);
 
-        taxifareTxtVw.setText("₱ " + taxi_fare);
+        taxifareTxtVw.setText(taxi_fare);
         distanceTxtVw.setText(distance);
         durationTxtVw.setText(duration);
 
@@ -244,7 +243,7 @@ public class HomeActivity extends AppCompatActivity
                 distance = jsonObject.getString("distance");
                 duration = jsonObject.getString("duration");
 
-                taxifareTxtVw.setText("₱ " + taxi_fare);
+                taxifareTxtVw.setText(taxi_fare);
                 distanceTxtVw.setText(distance);
                 durationTxtVw.setText(duration);
                 Log.d("fareMatrix", jsonString + " " + taxi_fare + " " + distance + " " + duration);
@@ -543,27 +542,18 @@ public class HomeActivity extends AppCompatActivity
     }
 
     private void permissionDenied() {
-        LatLng latLng = new LatLng(14.6091, 121.0223);
-        cameraPosition = new CameraPosition.Builder()
-                .target(latLng)
-                .zoom(11)
-                .bearing(0)
-                .build();
-        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
         bookFab.setImageResource(R.mipmap.book_disabled);
         rsrvFab.setImageResource(R.mipmap.rsrv_disabled);
-
         bookFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                permissionDenied(viewFab);
+                showSnackbarMessage(viewFab, "Permissions denied.");
             }
         });
-
         rsrvFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                permissionDenied(viewFab);
+                showSnackbarMessage(viewFab, "Permissions denied.");
             }
         });
     }
@@ -575,40 +565,21 @@ public class HomeActivity extends AppCompatActivity
                         android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
     }
 
-
     private void prepareBooking() {
         if(permissionStatus()) {
             if(checkDetails() == 1) {
-                if(pickupName != null && dropoffName != null) {
-                    Intent intent = new Intent(this, BookingActivity.class);
-                    intent.putExtra("user_id", uid);
-                    if(pickupLocation != null) {
-                        intent.putExtra("pickupLat", pickupLocation.latitude);
-                        intent.putExtra("pickupLng", pickupLocation.longitude);
-                    } else {
-                        intent.putExtra("pickupLat", mLastLocation.getLatitude());
-                        intent.putExtra("pickupLng", mLastLocation.getLongitude());
-                    }
-                    intent.putExtra("pickupName", pickupName);
-                    intent.putExtra("dropoffName", dropoffName);
-                    startActivity(intent);
-                    finish();
-                } else {
-                    SnackBarCreator.set("Set a Drop-off point.");
-                    SnackBarCreator.show(viewFab);
+                if(dropoffLocation == null) {
+                    showSnackbarMessage(viewFab, "Drop-off point not yet set.");
                 }
             } else if(checkDetails() == -1) {
-                SnackBarCreator.set("Please set your Mobile Number.");
-                SnackBarCreator.show(viewFab);
+                showSnackbarMessage(viewFab, "Please set your Mobile Number.");
             } else if(checkDetails() == 2) {
-                SnackBarCreator.set("Please set your Email Address.");
-                SnackBarCreator.show(viewFab);
+                showSnackbarMessage(viewFab, "Please set your Email Address.");
             } else {
-                SnackBarCreator.set("Please set your Mobile Number and Email Address.");
-                SnackBarCreator.show(viewFab);
+                showSnackbarMessage(viewFab, "Please set your Mobile Number and Email Address.");
             }
         } else {
-            permissionDenied(viewFab);
+            showSnackbarMessage(viewFab, "Permissions denied.");
         }
     }
 
@@ -630,8 +601,9 @@ public class HomeActivity extends AppCompatActivity
         txtVw.setTextColor(getResources().getColor(R.color.place_autocomplete_search_hint));
     }
 
-    private void permissionDenied(View view) {
-        SnackBarCreator.set("Permissions denied.");
-        SnackBarCreator.show(viewFab);
+    private void showSnackbarMessage(View view, String msg) {
+        SnackBarCreator.set(msg);
+        SnackBarCreator.show(view);
     }
+
 }

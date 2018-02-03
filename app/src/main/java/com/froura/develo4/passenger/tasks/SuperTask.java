@@ -67,8 +67,7 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
-        progressDialog.setTitle("Estimated Fare");
-        progressDialog.setMessage("Loading Details...");
+        progressDialog.setMessage("Calculating Fare...");
         progressDialog.setIndeterminate(false);
         progressDialog.setCancelable(true);
         progressDialog.show();

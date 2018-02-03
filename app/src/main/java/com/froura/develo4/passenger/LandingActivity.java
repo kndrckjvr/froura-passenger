@@ -42,6 +42,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import org.apache.commons.lang3.text.WordUtils;
 import org.json.JSONObject;
 
 import java.util.Map;
@@ -142,10 +143,7 @@ public class LandingActivity extends AppCompatActivity {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 if(mAuth.getCurrentUser() != null) {
-                    progressDialog.dismiss();
-                    Intent intent = new Intent(LandingActivity.this, HomeActivity.class);
-                    startActivity(intent);
-                    finish();
+                    saveUserDetails();
                     return;
                 }
             }
@@ -198,7 +196,7 @@ public class LandingActivity extends AppCompatActivity {
     private void registerUser() {
         String user_id = mAuth.getCurrentUser().getUid();
         final DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(user_id);
-        dbRef.child("name").setValue(name);
+        dbRef.child("name").setValue(WordUtils.capitalize(name.toLowerCase()));
         dbRef.child("email").setValue(email);
         dbRef.child("auth").setValue(auth);
         dbRef.child("profile_pic").setValue(profpic);
@@ -207,30 +205,35 @@ public class LandingActivity extends AppCompatActivity {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if(dataSnapshot.exists()) {
                     Map<String, Object> value = (Map<String, Object>) dataSnapshot.getValue();
-                    if(!value.get("mobnum").toString().equals("null")) {
-                        dbRef.child("mobnum").setValue(value.get("mobnum").toString());
-                        saveUserDetails(value.get("mobnum").toString());
+                    if(value.get("mobnum") != null) {
+                        if(!value.get("mobnum").toString().equals("null")) {
+                            dbRef.child("mobnum").setValue(value.get("mobnum").toString());
+                            mobnum = value.get("mobnum").toString();
+                        } else {
+                            mobnum = "null";
+                        }
                     } else {
-                        saveUserDetails("null");
+                        dbRef.child("mobnum").setValue(mobnum);
                     }
                 }
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
+            public void onCancelled(DatabaseError databaseError) { }
         });
     }
 
-    private void saveUserDetails(String mobnum) {
+    private void saveUserDetails() {
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         SharedPreferences.Editor editor = sharedPref.edit();
         String JSON_DETAILS_KEY = "userDetails";
-        String jsonDetails = "{ \"name\" : \"" + name + "\", \"email\" : \"" + email + "\", \"mobnum\" : \"" + mobnum + "\", \"profile_pic\" : \"" + profpic + "\", \"auth\" : \"" + auth + "\"}";
+        String jsonDetails = "{ \"name\" : \"" + WordUtils.capitalize(name.toLowerCase()) + "\", \"email\" : \"" + email + "\", \"mobnum\" : \"" + mobnum + "\", \"profile_pic\" : \"" + profpic + "\", \"auth\" : \"" + auth + "\"}";
         editor.putString(JSON_DETAILS_KEY, jsonDetails);
         editor.apply();
-        Log.d("saveUser", "Saved String");
+        progressDialog.dismiss();
+        Intent intent = new Intent(LandingActivity.this, HomeActivity.class);
+        startActivity(intent);
+        finish();
     }
 
     private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
