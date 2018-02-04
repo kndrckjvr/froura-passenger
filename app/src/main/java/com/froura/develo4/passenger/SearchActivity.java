@@ -16,6 +16,7 @@ import android.view.Window;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,7 +32,8 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
 
     private EditText searchET;
     private ImageButton clearImgVw;
-    private TextView emptyView;
+    private ImageButton backImgVw;
+    private LinearLayout openMap;
     private RecyclerView listRecVw;
     private PlaceAutocompleteAdapter mAdapter;
 
@@ -65,7 +67,8 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
         searchET = findViewById(R.id.searchET);
         clearImgVw = findViewById(R.id.clearImgVw);
         listRecVw = findViewById(R.id.listRecVw);
-        emptyView = findViewById(R.id.listEmpty);
+        backImgVw = findViewById(R.id.backImgVw);
+        openMap = findViewById(R.id.openMap);
         listRecVw.setHasFixedSize(true);
         listRecVw.setLayoutManager(new LinearLayoutManager(this));
 
@@ -128,6 +131,20 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
                 if(mAdapter != null)
                     mAdapter.clearList();
                 searchET.setText("");
+            }
+        });
+
+        backImgVw.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                onBackPressed();
+            }
+        });
+
+        openMap.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
             }
         });
     }
