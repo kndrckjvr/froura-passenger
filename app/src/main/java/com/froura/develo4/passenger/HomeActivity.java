@@ -299,6 +299,15 @@ public class HomeActivity extends AppCompatActivity
             mMap.addMarker(new MarkerOptions()
                     .position(new LatLng(pickupLocation.latitude, pickupLocation.longitude))
                     .icon(BitmapDescriptorFactory.fromResource(R.mipmap.yellow_marker)));
+            if(hasDropoff == -1) {
+                cameraPosition = new CameraPosition.Builder()
+                        .target(pickupLocation)
+                        .zoom(14)
+                        .bearing(0)
+                        .build();
+                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+                cameraUpdated = true;
+            }
         }
         if(dropoffLocation != null) {
             mMap.addMarker(new MarkerOptions()
@@ -400,9 +409,8 @@ public class HomeActivity extends AppCompatActivity
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        mMap.setPadding(0, 350, 0 ,0);
         mMap.getUiSettings().setMyLocationButtonEnabled(false);
-        mMap.getUiSettings().setTiltGesturesEnabled(false);
-        mMap.getUiSettings().setCompassEnabled(false);
         buildGoogleApiClient();
     }
 
