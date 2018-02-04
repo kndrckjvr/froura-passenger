@@ -3,7 +3,9 @@ package com.froura.develo4.passenger;
 import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.CountDownTimer;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -33,6 +35,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import org.apache.commons.lang3.text.WordUtils;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
@@ -52,6 +55,8 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
     private String mobNum;
     private String email;
     private String name;
+    private String profpic = "default";
+    private String auth = "mobile";
     private boolean phoneReg;
     private CountDownTimer requestCodeTimer;
 
@@ -85,9 +90,7 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 if(mAuth.getCurrentUser() != null) {
-                    Intent intent = new Intent(PhoneAuthentication.this, HomeActivity.class);
-                    startActivity(intent);
-                    finish();
+                    saveUserDetails();
                     return;
                 }
             }
@@ -144,13 +147,26 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
         }
     }
 
+    private void saveUserDetails() {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        SharedPreferences.Editor editor = sharedPref.edit();
+        String JSON_DETAILS_KEY = "userDetails";
+        String jsonDetails = "{ \"name\" : \"" + WordUtils.capitalize(name.toLowerCase()) + "\", \"email\" : \"" + email + "\", \"mobnum\" : \"" + mobNum + "\", \"profile_pic\" : \"" + profpic + "\", \"auth\" : \"" + auth + "\"}";
+        editor.putString(JSON_DETAILS_KEY, jsonDetails);
+        editor.apply();
+        progressDialog.dismiss();
+        Intent intent = new Intent(PhoneAuthentication.this, HomeActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
     private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
         mAuth.signInWithCredential(credential)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            userExist(mAuth.getCurrentUser().getUid());
+                            registerUser();
                         }
                     }
                 });
@@ -189,29 +205,14 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
                 });
     }
 
-    private void userExist(String user_id) {
-        DatabaseReference rootRef = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(user_id);
-        rootRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot snapshot) {
-                if (!snapshot.exists()) {
-                    registerUser();
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {}
-        });
-    }
-
     private void registerUser() {
         String user_id = mAuth.getCurrentUser().getUid();
         DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(user_id);
-        dbRef.child("name").setValue(name);
+        dbRef.child("name").setValue(WordUtils.capitalize(name.toLowerCase()));
         dbRef.child("email").setValue(email);
         dbRef.child("mobnum").setValue(mobNum);
-        dbRef.child("auth").setValue("mobile");
-        dbRef.child("profile_pic").setValue("default");
+        dbRef.child("auth").setValue(auth);
+        dbRef.child("profile_pic").setValue(profpic);
         new CheckUserTasks(PhoneAuthentication.this).execute();
     }
 

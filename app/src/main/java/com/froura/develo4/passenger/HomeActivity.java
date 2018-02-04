@@ -140,10 +140,10 @@ public class HomeActivity extends AppCompatActivity
         name = v.findViewById(R.id.txtVw_name);
         prof_pic = v.findViewById(R.id.imgVw_profile_pic);
         AutofitHelper.create(name);
+
         Glide.with(this)
                 .load(getImage("placeholder"))
                 .into(prof_pic);
-
         uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
         setDetails();
 
@@ -375,9 +375,10 @@ public class HomeActivity extends AppCompatActivity
             JSONObject jsonObject = new JSONObject(userDetails);
             if(!jsonObject.getString("name").equals("NULL")) {
                 name.setText(jsonObject.getString("name"));
-                Glide.with(this)
-                        .load(jsonObject.getString("profile_pic"))
-                        .into(prof_pic);
+                if(!jsonObject.getString("profile_pic").equals("default"))
+                    Glide.with(this)
+                            .load(jsonObject.getString("profile_pic"))
+                            .into(prof_pic);
                 user_name = jsonObject.getString("name");
                 user_email = jsonObject.getString("email");
                 user_mobnum = jsonObject.getString("mobnum");
