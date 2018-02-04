@@ -24,6 +24,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -78,10 +79,8 @@ public class HomeActivity extends AppCompatActivity
 
     private DrawerLayout drawer;
     private TextView name;
-    private FloatingActionButton bookFab;
-    private FloatingActionButton rsrvFab;
-    private View viewFab;
     private CardView viewDetails;
+    private Button bookBtn;
     private CircleImageView prof_pic;
     private TextView pickupTxtVw;
     private TextView dropoffTxtVw;
@@ -147,9 +146,7 @@ public class HomeActivity extends AppCompatActivity
         uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
         setDetails();
 
-        bookFab = findViewById(R.id.bookFab);
-        rsrvFab = findViewById(R.id.rsrvFab);
-        viewFab = findViewById(R.id.viewFab);
+        bookBtn = findViewById(R.id.bookingButton);
         viewDetails = findViewById(R.id.details);
         pickupTxtVw = findViewById(R.id.txtVw_pickup);
         dropoffTxtVw = findViewById(R.id.txtVw_dropoff);
@@ -178,6 +175,21 @@ public class HomeActivity extends AppCompatActivity
             Log.d("distanceMatrix", "hasDropoffCheck");
             cameraUpdated = true;
             findPlaceById(getIntent().getStringExtra("dropoffPlaceId"), 1);
+            bookBtn.setText("Book");
+            bookBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    prepareBooking();
+                }
+            });
+        } else {
+            bookBtn.setText("Set Drop-off Point");
+            bookBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    setDropoff();
+                }
+            });
         }
 
         mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -206,27 +218,36 @@ public class HomeActivity extends AppCompatActivity
         dropoffTxtVw.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(HomeActivity.this, SearchActivity.class);
-                if(pickupPlaceId != null) {
-                    intent.putExtra("pickupPlaceId", pickupPlaceId);
-                    intent.putExtra("from", 1);
-                }
-
-                if(dropoffPlaceId != null) {
-                    intent.putExtra("dropoffPlaceId", dropoffPlaceId);
-                    intent.putExtra("from", 1);
-                }
-                startActivity(intent);
-                finish();
+                setDropoff();
             }
         });
+    }
 
-        bookFab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                prepareBooking();
-            }
-        });
+    private void prepareBooking() {
+        if(checkDetails() == 1) {
+
+        } else if(checkDetails() == -1) {
+            showSnackbarMessage(bookBtn, "Please set your Mobile Number.");
+        } else if(checkDetails() == 2) {
+            showSnackbarMessage(bookBtn, "Please set your Email Address.");
+        } else {
+            showSnackbarMessage(bookBtn, "Please set your Mobile Number and Email Address.");
+        }
+    }
+
+    private void setDropoff() {
+        Intent intent = new Intent(HomeActivity.this, SearchActivity.class);
+        if(pickupPlaceId != null) {
+            intent.putExtra("pickupPlaceId", pickupPlaceId);
+            intent.putExtra("from", 1);
+        }
+
+        if(dropoffPlaceId != null) {
+            intent.putExtra("dropoffPlaceId", dropoffPlaceId);
+            intent.putExtra("from", 1);
+        }
+        startActivity(intent);
+        finish();
     }
 
     private void setFare() {
@@ -326,9 +347,11 @@ public class HomeActivity extends AppCompatActivity
                 android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this,
                         android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(HomeActivity.this,
-                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                    LOCATION_REQUEST_CODE);
+            DialogCreator.create(this, "locationPermission")
+                    .setMessage("We need to access your location and device state to continue using FROURÁ.")
+                    .setPositiveButton("OK")
+                    .setNegativeButton("CANCEL")
+                    .show();
             return;
         }
         mMap.setMyLocationEnabled(true);
@@ -410,7 +433,7 @@ public class HomeActivity extends AppCompatActivity
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        mMap.setPadding(0, 350, 0 ,0);
+        mMap.setPadding(0, 370, 0 ,130);
         mMap.getUiSettings().setMyLocationButtonEnabled(false);
         buildGoogleApiClient();
     }
@@ -497,7 +520,7 @@ public class HomeActivity extends AppCompatActivity
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     mapFragment.getMapAsync(this);
                 } else {
-                    permissionDenied();
+                    finish();
                 }
                 break;
         }
@@ -515,6 +538,11 @@ public class HomeActivity extends AppCompatActivity
             case "requestLocation":
                 Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
                 startActivity(intent);
+                break;
+            case "locationPermission":
+                ActivityCompat.requestPermissions(HomeActivity.this,
+                        new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                        LOCATION_REQUEST_CODE);
                 break;
         }
     }
@@ -551,18 +579,10 @@ public class HomeActivity extends AppCompatActivity
     }
 
     private void permissionDenied() {
-        bookFab.setImageResource(R.mipmap.book_disabled);
-        rsrvFab.setImageResource(R.mipmap.rsrv_disabled);
-        bookFab.setOnClickListener(new View.OnClickListener() {
+        bookBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                showSnackbarMessage(viewFab, "Permissions denied.");
-            }
-        });
-        rsrvFab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                showSnackbarMessage(viewFab, "Permissions denied.");
+                showSnackbarMessage(bookBtn, "Permissions denied.");
             }
         });
     }
@@ -572,24 +592,6 @@ public class HomeActivity extends AppCompatActivity
                 android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this,
                         android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
-    }
-
-    private void prepareBooking() {
-        if(permissionStatus()) {
-            if(checkDetails() == 1) {
-                if(dropoffLocation == null) {
-                    showSnackbarMessage(viewFab, "Drop-off point not yet set.");
-                }
-            } else if(checkDetails() == -1) {
-                showSnackbarMessage(viewFab, "Please set your Mobile Number.");
-            } else if(checkDetails() == 2) {
-                showSnackbarMessage(viewFab, "Please set your Email Address.");
-            } else {
-                showSnackbarMessage(viewFab, "Please set your Mobile Number and Email Address.");
-            }
-        } else {
-            showSnackbarMessage(viewFab, "Permissions denied.");
-        }
     }
 
     private int checkDetails() {
