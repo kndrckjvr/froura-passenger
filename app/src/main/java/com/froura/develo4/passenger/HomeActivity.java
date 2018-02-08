@@ -225,7 +225,17 @@ public class HomeActivity extends AppCompatActivity
 
     private void prepareBooking() {
         if(checkDetails() == 1) {
-
+            Intent intent = new Intent(HomeActivity.this, BookingActivity.class);
+            intent.putExtra("pickupName", pickupName);
+            intent.putExtra("pickupLat", pickupLocation.latitude);
+            intent.putExtra("pickupLng", pickupLocation.longitude);
+            intent.putExtra("pickupPlaceId", pickupPlaceId);
+            intent.putExtra("dropoffName", dropoffName);
+            intent.putExtra("dropoffLat", dropoffLocation.latitude);
+            intent.putExtra("dropoffLng", dropoffLocation.longitude);
+            intent.putExtra("dropoffPlaceId", dropoffPlaceId);
+            startActivity(intent);
+            finish();
         } else if(checkDetails() == -1) {
             showSnackbarMessage(bookBtn, "Please set your Mobile Number.");
         } else if(checkDetails() == 2) {
@@ -350,7 +360,6 @@ public class HomeActivity extends AppCompatActivity
             DialogCreator.create(this, "locationPermission")
                     .setMessage("We need to access your location and device state to continue using FROURÁ.")
                     .setPositiveButton("OK")
-                    .setNegativeButton("CANCEL")
                     .show();
             return;
         }
@@ -527,9 +536,19 @@ public class HomeActivity extends AppCompatActivity
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        if(mGoogleApiClient != null) {
+            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+        }
+    }
+
+    @Override
     protected void onStop() {
         super.onStop();
-        LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+        if(mGoogleApiClient != null) {
+            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+        }
     }
 
     @Override
