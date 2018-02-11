@@ -87,6 +87,11 @@ public class LandingActivity extends AppCompatActivity {
         mCallbackManager = CallbackManager.Factory.create();
         loginButton = findViewById(R.id.login_button);
 
+        if(getIntent().getIntExtra("loginError", -1) == 1) {
+            SnackBarCreator.set("Sorry! You're not a Driver.");
+            SnackBarCreator.show(mobLogin);
+        }
+
         loginButton.setReadPermissions("email", "public_profile");
         loginButton.registerCallback(mCallbackManager, new FacebookCallback<LoginResult>() {
             @Override
@@ -197,7 +202,6 @@ public class LandingActivity extends AppCompatActivity {
         String user_id = mAuth.getCurrentUser().getUid();
         final DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(user_id);
         dbRef.child("name").setValue(WordUtils.capitalize(name.toLowerCase()));
-        dbRef.child("email").setValue(email);
         dbRef.child("auth").setValue(auth);
         dbRef.child("profile_pic").setValue(profpic);
         dbRef.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -205,6 +209,7 @@ public class LandingActivity extends AppCompatActivity {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if(dataSnapshot.exists()) {
                     Map<String, Object> value = (Map<String, Object>) dataSnapshot.getValue();
+                    Log.d("landingAc", value+"");
                     if(value.get("mobnum") != null) {
                         if(!value.get("mobnum").toString().equals("null")) {
                             mobnum = value.get("mobnum").toString();
@@ -214,7 +219,6 @@ public class LandingActivity extends AppCompatActivity {
                     } else {
                         dbRef.child("mobnum").setValue(mobnum);
                     }
-
                     if(value.get("email") != null) {
                         if(!value.get("email").toString().equals("null")) {
                             email = value.get("email").toString();
