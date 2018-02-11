@@ -27,6 +27,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -84,6 +85,7 @@ public class HomeActivity extends AppCompatActivity
 
     private DrawerLayout drawer;
     private TextView name;
+    private CardView cardView;
     private CardView viewDetails;
     private Button bookBtn;
     private CircleImageView prof_pic;
@@ -158,6 +160,7 @@ public class HomeActivity extends AppCompatActivity
 
         bookBtn = findViewById(R.id.bookingButton);
         viewDetails = findViewById(R.id.details);
+        cardView = findViewById(R.id.cardView);
         pickupTxtVw = findViewById(R.id.txtVw_pickup);
         dropoffTxtVw = findViewById(R.id.txtVw_dropoff);
         taxifareTxtVw = findViewById(R.id.txtVw_taxi_fare);
@@ -362,7 +365,7 @@ public class HomeActivity extends AppCompatActivity
         builder.include(pickupLocation);
         builder.include(dropoffLocation);
         LatLngBounds bounds = builder.build();
-        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 200));
     }
 
     @Override
@@ -519,7 +522,9 @@ public class HomeActivity extends AppCompatActivity
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        mMap.setPadding(0, 370, 0 ,130);
+        ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) cardView.getLayoutParams();
+        ViewGroup.MarginLayoutParams lp2 = (ViewGroup.MarginLayoutParams) viewDetails.getLayoutParams();
+        mMap.setPadding(0, cardView.getLayoutParams().height + lp.topMargin + lp2.bottomMargin + viewDetails.getLayoutParams().height, 0 ,bookBtn.getLayoutParams().height);
         mMap.getUiSettings().setMyLocationButtonEnabled(false);
         buildGoogleApiClient();
     }

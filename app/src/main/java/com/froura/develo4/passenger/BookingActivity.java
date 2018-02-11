@@ -64,7 +64,7 @@ public class BookingActivity extends AppCompatActivity {
     private GeoQuery geoQuery;
     private boolean driverFound = false;
     private void findNearbyDriver() {
-        final DatabaseReference drvAvailable = FirebaseDatabase.getInstance().getReference().child("available_drivers");
+        DatabaseReference drvAvailable = FirebaseDatabase.getInstance().getReference().child("available_drivers");
 
         GeoFire geoFire = new GeoFire(drvAvailable);
         geoQuery = geoFire.queryAtLocation(new GeoLocation(getIntent().getDoubleExtra("pickupLat", 0), getIntent().getDoubleExtra("pickupLng", 0)), radius);
@@ -74,7 +74,7 @@ public class BookingActivity extends AppCompatActivity {
             @Override
             public void onKeyEntered(String key, GeoLocation location) {
                 if(driverFound) return;
-                drvAvailable.child(key).child("nearest_passenger").setValue(uid);
+                bookingRef.child("nearest_driver").setValue(key);
                 driverFound = true;
             }
 
