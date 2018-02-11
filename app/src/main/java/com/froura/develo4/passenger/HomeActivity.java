@@ -28,6 +28,7 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewFlipper;
@@ -121,6 +122,7 @@ public class HomeActivity extends AppCompatActivity
     private String distance = "0M";
 
     private ViewFlipper viewFlipper;
+    private Toolbar toolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -130,7 +132,8 @@ public class HomeActivity extends AppCompatActivity
         mGeoDataClient = Places.getGeoDataClient(this, null);
         viewFlipper = findViewById(R.id.app_bar_include).findViewById(R.id.vf);
 
-        Toolbar toolbar = findViewById(R.id.toolbar);
+        toolbar = findViewById(R.id.toolbar);
+        toolbar.setTitle("Booking");
         setSupportActionBar(toolbar);
 
         drawer = findViewById(R.id.drawer_layout);
@@ -179,7 +182,6 @@ public class HomeActivity extends AppCompatActivity
             findPlaceById(getIntent().getStringExtra("pickupPlaceId"), 0);
         
         if(hasDropoff == 1) {
-            Log.d("distanceMatrix", "hasDropoffCheck");
             cameraUpdated = true;
             findPlaceById(getIntent().getStringExtra("dropoffPlaceId"), 1);
             bookBtn.setText("Book");
@@ -230,6 +232,76 @@ public class HomeActivity extends AppCompatActivity
         });
     }
 
+    @SuppressWarnings("StatementWithEmptyBody")
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.booking:
+                viewFlipper.setDisplayedChild(0);
+                toolbar.setTitle("Booking");
+                break;
+            case R.id.reservation:
+                viewFlipper.setDisplayedChild(1);
+                toolbar.setTitle("Reservation");
+                break;
+            case R.id.history:
+                viewFlipper.setDisplayedChild(2);
+                toolbar.setTitle("History");
+                break;
+            case R.id.profile:
+                setAccountProfile();
+                viewFlipper.setDisplayedChild(3);
+                toolbar.setTitle("Profile");
+                break;
+            case R.id.settings:
+                viewFlipper.setDisplayedChild(4);
+                toolbar.setTitle("Settings");
+                break;
+            case R.id.logout:
+                String providerid = "";
+                for(UserInfo user: FirebaseAuth.getInstance().getCurrentUser().getProviderData()) {
+                    providerid = user.getProviderId();
+                }
+                if(AccessToken.getCurrentAccessToken() != null && providerid.equals("facebook.com")) {
+                    LoginManager.getInstance().logOut();
+                } else if(providerid.equals("google.com")) {
+                    GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                            .requestIdToken(getString(R.string.default_web_client_id))
+                            .requestEmail()
+                            .build();
+
+                    GoogleSignInClient mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
+
+                    mGoogleSignInClient.signOut();
+                }
+                SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                SharedPreferences.Editor editor = sharedPref.edit();
+                editor.clear();
+                editor.commit();
+                FirebaseAuth.getInstance().signOut();
+                Intent intent = new Intent(HomeActivity.this, MainActivity.class);
+                startActivity(intent);
+                finish();
+                break;
+        }
+
+        drawer = findViewById(R.id.drawer_layout);
+        drawer.closeDrawer(GravityCompat.START);
+        return true;
+    }
+
+    private void setAccountProfile() {
+        TextView nameTxtVw = findViewById(R.id.nameTxtVw);
+        EditText nameEt = findViewById(R.id.nameEt);
+        EditText emailEt = findViewById(R.id.emailEt);
+        EditText numberEt = findViewById(R.id.numberEt);
+
+        nameTxtVw.setText(user_name);
+        nameEt.setText(user_name);
+        emailEt.setText(user_email);
+        numberEt.setText(user_mobnum);
+    }
+
     private void prepareBooking() {
         if(checkDetails() == 1) {
             Intent intent = new Intent(HomeActivity.this, BookingActivity.class);
@@ -274,7 +346,6 @@ public class HomeActivity extends AppCompatActivity
 
     @Override
     public void onTaskRespond(String jsonString) {
-        Log.d("fareMatrix", jsonString);
         try {
             JSONObject jsonObject = new JSONObject(jsonString);
             if(jsonObject.getString("status").equals("OK")) {
@@ -285,7 +356,6 @@ public class HomeActivity extends AppCompatActivity
                 taxifareTxtVw.setText(taxi_fare);
                 distanceTxtVw.setText(distance);
                 durationTxtVw.setText(duration);
-                Log.d("fareMatrix", jsonString + " " + taxi_fare + " " + distance + " " + duration);
             }
         } catch(Exception e) {}
         LatLngBounds.Builder builder = new LatLngBounds.Builder();
@@ -300,7 +370,6 @@ public class HomeActivity extends AppCompatActivity
         contentValues.put("android", 1);
         contentValues.put("origins", pickupPlaceId);
         contentValues.put("destinations", dropoffPlaceId);
-        Log.d("fareMatrix", pickupPlaceId + " " + dropoffPlaceId);
         return (contentValues);
     }
 
@@ -411,7 +480,6 @@ public class HomeActivity extends AppCompatActivity
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String JSON_DETAILS_KEY = "userDetails";
         String userDetails = sharedPref.getString(JSON_DETAILS_KEY, "{ \"name\" : NULL }");
-        Log.d("userDetails",userDetails);
         try {
             JSONObject jsonObject = new JSONObject(userDetails);
             if(!jsonObject.getString("name").equals("NULL")) {
@@ -491,59 +559,6 @@ public class HomeActivity extends AppCompatActivity
         } else {
             super.onBackPressed();
         }
-    }
-
-    @SuppressWarnings("StatementWithEmptyBody")
-    @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
-
-        switch (item.getItemId()) {
-            case R.id.booking:
-                viewFlipper.setDisplayedChild(0);
-                break;
-            case R.id.reservation:
-                viewFlipper.setDisplayedChild(1);
-                break;
-            case R.id.history:
-                viewFlipper.setDisplayedChild(2);
-                break;
-            case R.id.profile:
-                viewFlipper.setDisplayedChild(3);
-                break;
-            case R.id.settings:
-                viewFlipper.setDisplayedChild(4);
-                break;
-            case R.id.logout:
-                String providerid = "";
-                for(UserInfo user: FirebaseAuth.getInstance().getCurrentUser().getProviderData()) {
-                    providerid = user.getProviderId();
-                }
-                if(AccessToken.getCurrentAccessToken() != null && providerid.equals("facebook.com")) {
-                    LoginManager.getInstance().logOut();
-                } else if(providerid.equals("google.com")) {
-                    GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                            .requestIdToken(getString(R.string.default_web_client_id))
-                            .requestEmail()
-                            .build();
-
-                    GoogleSignInClient mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
-
-                    mGoogleSignInClient.signOut();
-                }
-                SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                SharedPreferences.Editor editor = sharedPref.edit();
-                editor.clear();
-                editor.commit();
-                FirebaseAuth.getInstance().signOut();
-                Intent intent = new Intent(HomeActivity.this, MainActivity.class);
-                startActivity(intent);
-                finish();
-                break;
-        }
-
-        drawer = findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
     }
 
     @Override

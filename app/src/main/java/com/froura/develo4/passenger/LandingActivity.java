@@ -215,8 +215,6 @@ public class LandingActivity extends AppCompatActivity {
                         dbRef.child("mobnum").setValue(mobnum);
                     }
 
-                    Log.d("userDetails", mobnum + " " + value.get("mobnum").toString());
-
                     if(value.get("email") != null) {
                         if(!value.get("email").toString().equals("null")) {
                             email = value.get("email").toString();
@@ -240,7 +238,6 @@ public class LandingActivity extends AppCompatActivity {
         SharedPreferences.Editor editor = sharedPref.edit();
         String JSON_DETAILS_KEY = "userDetails";
         String jsonDetails = "{ \"name\" : \"" + WordUtils.capitalize(name.toLowerCase()) + "\", \"email\" : \"" + email + "\", \"mobnum\" : \"" + mobnum + "\", \"profile_pic\" : \"" + profpic + "\", \"auth\" : \"" + auth + "\"}";
-        Log.d("userDetails", jsonDetails);
         editor.putString(JSON_DETAILS_KEY, jsonDetails);
         editor.apply();
         progressDialog.dismiss();
@@ -289,7 +286,7 @@ public class LandingActivity extends AppCompatActivity {
                 progressDialog.setMessage("Logging in with Google...");
                 progressDialog.show();
                 firebaseAuthWithGoogle(account);
-            } catch (ApiException e) { Log.d("ApiError", e.getMessage()); }
+            } catch (ApiException e) { }
         }
 
         mCallbackManager.onActivityResult(requestCode, resultCode, data);
