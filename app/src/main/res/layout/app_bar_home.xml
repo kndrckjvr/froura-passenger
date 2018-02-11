@@ -20,6 +20,29 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <include layout="@layout/content_home" />
+
+    <ViewFlipper
+        android:layout_width="match_parent"
+        android:layout_height="fill_parent"
+        android:layout_marginTop="?attr/actionBarSize"
+        android:id="@+id/vf">
+
+        <include
+            layout="@layout/content_home"
+            android:id="@+id/booking"/>
+        <include
+            layout="@layout/content_reservation"
+            android:id="@+id/booking"/>
+        <include
+            layout="@layout/content_history"
+            android:id="@+id/booking"/>
+        <include
+            layout="@layout/content_account"
+            android:id="@+id/booking"/>
+        <include
+            layout="@layout/content_settings"
+            android:id="@+id/booking"/>
+
+    </ViewFlipper>
 
 </android.support.design.widget.CoordinatorLayout>

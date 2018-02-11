@@ -143,7 +143,7 @@ public class LandingActivity extends AppCompatActivity {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 if(mAuth.getCurrentUser() != null) {
-                    saveUserDetails();
+                    registerUser();
                     return;
                 }
             }
@@ -181,8 +181,8 @@ public class LandingActivity extends AppCompatActivity {
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
-                        if(task.isSuccessful()) {
-                            registerUser();
+                        if(!task.isSuccessful()) {
+                            Log.e("firebaseFacebook", task.getException().toString());
                         } else if(task.getException() instanceof FirebaseAuthUserCollisionException) {
                             progressDialog.dismiss();
                             LoginManager.getInstance().logOut();
@@ -207,7 +207,6 @@ public class LandingActivity extends AppCompatActivity {
                     Map<String, Object> value = (Map<String, Object>) dataSnapshot.getValue();
                     if(value.get("mobnum") != null) {
                         if(!value.get("mobnum").toString().equals("null")) {
-                            dbRef.child("mobnum").setValue(value.get("mobnum").toString());
                             mobnum = value.get("mobnum").toString();
                         } else {
                             mobnum = "null";
@@ -215,6 +214,19 @@ public class LandingActivity extends AppCompatActivity {
                     } else {
                         dbRef.child("mobnum").setValue(mobnum);
                     }
+
+                    Log.d("userDetails", mobnum + " " + value.get("mobnum").toString());
+
+                    if(value.get("email") != null) {
+                        if(!value.get("email").toString().equals("null")) {
+                            email = value.get("email").toString();
+                        } else {
+                            email= "null";
+                        }
+                    } else {
+                        dbRef.child("email").setValue(email);
+                    }
+                    saveUserDetails();
                 }
             }
 
@@ -228,6 +240,7 @@ public class LandingActivity extends AppCompatActivity {
         SharedPreferences.Editor editor = sharedPref.edit();
         String JSON_DETAILS_KEY = "userDetails";
         String jsonDetails = "{ \"name\" : \"" + WordUtils.capitalize(name.toLowerCase()) + "\", \"email\" : \"" + email + "\", \"mobnum\" : \"" + mobnum + "\", \"profile_pic\" : \"" + profpic + "\", \"auth\" : \"" + auth + "\"}";
+        Log.d("userDetails", jsonDetails);
         editor.putString(JSON_DETAILS_KEY, jsonDetails);
         editor.apply();
         progressDialog.dismiss();
@@ -242,8 +255,8 @@ public class LandingActivity extends AppCompatActivity {
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
-                        if(task.isSuccessful()) {
-                            registerUser();
+                        if(!task.isSuccessful()) {
+                            Log.e("firebaseGoogle", task.getException().toString());
                         }
                     }
                 });

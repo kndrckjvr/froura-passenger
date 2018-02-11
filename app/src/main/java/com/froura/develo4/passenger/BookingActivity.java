@@ -56,7 +56,7 @@ public class BookingActivity extends AppCompatActivity {
         bookingRef.child("dropoffName").setValue(getIntent().getStringExtra("dropoffName"));
         bookingRef.child("dropoffLocation").child("0").setValue(getIntent().getDoubleExtra("dropoffLat", 0));
         bookingRef.child("dropoffLocation").child("1").setValue(getIntent().getDoubleExtra("dropoffLng", 0));
-        bookingRef.child("nearestDriver").setValue("none");
+        bookingRef.child("fare").setValue(getIntent().getStringExtra("fare"));
         findNearbyDriver();
     }
 
@@ -64,21 +64,17 @@ public class BookingActivity extends AppCompatActivity {
     private GeoQuery geoQuery;
     private boolean driverFound = false;
     private void findNearbyDriver() {
-        DatabaseReference drvAvailable = FirebaseDatabase.getInstance().getReference().child("available_drivers");
+        final DatabaseReference drvAvailable = FirebaseDatabase.getInstance().getReference().child("available_drivers");
 
         GeoFire geoFire = new GeoFire(drvAvailable);
         geoQuery = geoFire.queryAtLocation(new GeoLocation(getIntent().getDoubleExtra("pickupLat", 0), getIntent().getDoubleExtra("pickupLng", 0)), radius);
         geoQuery.removeAllListeners();
 
-        Log.d("find", driverFound+"");
         geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
             @Override
             public void onKeyEntered(String key, GeoLocation location) {
-                DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference().child("services").child("booking").child(uid);
                 if(driverFound) return;
-                Log.d("find", key);
-                dbRef.child("nearestDriver").setValue(key);
-                dbRef.child("accepted").setValue("no");
+                drvAvailable.child(key).child("nearest_passenger").setValue(uid);
                 driverFound = true;
             }
 
@@ -94,6 +90,8 @@ public class BookingActivity extends AppCompatActivity {
 
             @Override
             public void onGeoQueryReady() {
+                radius++;
+                findNearbyDriver();
             }
 
             @Override
@@ -114,5 +112,11 @@ public class BookingActivity extends AppCompatActivity {
         intent.putExtra("dropoffPlaceId", getIntent().getStringExtra("dropoffPlaceId"));
         startActivity(intent);
         finish();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        //bookingRef.removeValue();
     }
 }

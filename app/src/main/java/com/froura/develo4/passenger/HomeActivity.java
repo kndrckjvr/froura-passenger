@@ -14,6 +14,9 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -27,6 +30,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ViewFlipper;
 
 import com.bumptech.glide.Glide;
 import com.facebook.AccessToken;
@@ -116,12 +120,15 @@ public class HomeActivity extends AppCompatActivity
     private String duration = "0KM";
     private String distance = "0M";
 
+    private ViewFlipper viewFlipper;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
         mGeoDataClient = Places.getGeoDataClient(this, null);
+        viewFlipper = findViewById(R.id.app_bar_include).findViewById(R.id.vf);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -234,6 +241,7 @@ public class HomeActivity extends AppCompatActivity
             intent.putExtra("dropoffLat", dropoffLocation.latitude);
             intent.putExtra("dropoffLng", dropoffLocation.longitude);
             intent.putExtra("dropoffPlaceId", dropoffPlaceId);
+            intent.putExtra("fare", taxi_fare);
             startActivity(intent);
             finish();
         } else if(checkDetails() == -1) {
@@ -403,6 +411,7 @@ public class HomeActivity extends AppCompatActivity
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String JSON_DETAILS_KEY = "userDetails";
         String userDetails = sharedPref.getString(JSON_DETAILS_KEY, "{ \"name\" : NULL }");
+        Log.d("userDetails",userDetails);
         try {
             JSONObject jsonObject = new JSONObject(userDetails);
             if(!jsonObject.getString("name").equals("NULL")) {
@@ -487,7 +496,23 @@ public class HomeActivity extends AppCompatActivity
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
+
         switch (item.getItemId()) {
+            case R.id.booking:
+                viewFlipper.setDisplayedChild(0);
+                break;
+            case R.id.reservation:
+                viewFlipper.setDisplayedChild(1);
+                break;
+            case R.id.history:
+                viewFlipper.setDisplayedChild(2);
+                break;
+            case R.id.profile:
+                viewFlipper.setDisplayedChild(3);
+                break;
+            case R.id.settings:
+                viewFlipper.setDisplayedChild(4);
+                break;
             case R.id.logout:
                 String providerid = "";
                 for(UserInfo user: FirebaseAuth.getInstance().getCurrentUser().getProviderData()) {
