@@ -351,6 +351,7 @@ public class HomeActivity extends AppCompatActivity
     public void onTaskRespond(String jsonString) {
         try {
             JSONObject jsonObject = new JSONObject(jsonString);
+            Toast.makeText(this, jsonString, Toast.LENGTH_SHORT).show();
             if(jsonObject.getString("status").equals("OK")) {
                 taxi_fare = jsonObject.getString("fare");
                 distance = jsonObject.getString("distance");
