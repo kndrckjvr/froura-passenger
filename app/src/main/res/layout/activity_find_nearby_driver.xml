@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/colorPrimaryDark"
-    tools:context="com.froura.develo4.passenger.BookingActivity">
+    tools:context="com.froura.develo4.passenger.FindNearbyDriverActivity">
 
     <Button
         android:id="@+id/btnCancel"

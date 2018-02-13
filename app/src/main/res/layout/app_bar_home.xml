@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.froura.develo4.passenger.HomeActivity">
+    tools:context="com.froura.develo4.passenger.BookingActivity">
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
@@ -28,7 +28,7 @@
         android:id="@+id/vf">
 
         <include
-            layout="@layout/content_home"
+            layout="@layout/content_booking"
             android:id="@+id/booking"/>
         <include
             layout="@layout/content_reservation"

@@ -18,7 +18,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.froura.develo4.passenger.libraries.RequestPostString;
-import com.froura.develo4.passenger.libraries.SnackBarCreator;
 import com.froura.develo4.passenger.tasks.CheckUserTasks;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -27,7 +26,6 @@ import com.google.firebase.FirebaseTooManyRequestsException;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthProvider;
 import com.google.firebase.database.DataSnapshot;
@@ -37,7 +35,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import org.apache.commons.lang3.text.WordUtils;
-import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
 import java.util.concurrent.TimeUnit;
@@ -156,7 +153,7 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
         editor.putString(JSON_DETAILS_KEY, jsonDetails);
         editor.apply();
         progressDialog.dismiss();
-        Intent intent = new Intent(PhoneAuthentication.this, HomeActivity.class);
+        Intent intent = new Intent(PhoneAuthentication.this, BookingActivity.class);
         startActivity(intent);
         finish();
     }

@@ -1,24 +1,17 @@
 package com.froura.develo4.passenger;
 
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.CountDownTimer;
-import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
-import android.view.Window;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import com.froura.develo4.passenger.adapter.PlaceAutocompleteAdapter;
 import com.froura.develo4.passenger.object.PlaceAutocompleteObject;
@@ -151,7 +144,7 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
 
     @Override
     public void onPlaceClick(ArrayList<PlaceAutocompleteObject> mResultList, int position) {
-        Intent intent = new Intent(SearchActivity.this, HomeActivity.class);
+        Intent intent = new Intent(SearchActivity.this, BookingActivity.class);
         if(from == 0) {
             if(hasPickup == 1) {
                 intent.putExtra("hasPickup", 1);
@@ -183,7 +176,7 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        Intent intent = new Intent(SearchActivity.this, HomeActivity.class);
+        Intent intent = new Intent(SearchActivity.this, BookingActivity.class);
         if(hasPickup == 1) {
             intent.putExtra("hasPickup", 1);
             intent.putExtra("pickupPlaceId", pickupPlaceId);

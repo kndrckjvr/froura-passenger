@@ -1,7 +1,6 @@
 package com.froura.develo4.passenger;
 
 import android.app.ProgressDialog;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
@@ -11,7 +10,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.Toast;
 
 import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
@@ -245,7 +243,7 @@ public class LandingActivity extends AppCompatActivity {
         editor.putString(JSON_DETAILS_KEY, jsonDetails);
         editor.apply();
         progressDialog.dismiss();
-        Intent intent = new Intent(LandingActivity.this, HomeActivity.class);
+        Intent intent = new Intent(LandingActivity.this, BookingActivity.class);
         startActivity(intent);
         finish();
     }

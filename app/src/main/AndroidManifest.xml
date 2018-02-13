@@ -32,7 +32,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".HomeActivity"
+            android:name=".BookingActivity"
             android:label=""
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
@@ -51,7 +51,7 @@
             android:screenOrientation="portrait"
             android:theme="@style/RegistrationTheme" />
         <activity
-            android:name=".BookingActivity"
+            android:name=".FindNearbyDriverActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar.Fullscreen" />
 
@@ -92,6 +92,7 @@
         <activity
             android:name=".SearchActivity"
             android:theme="@style/AppTheme.NoActionBar" />
+        <activity android:name=".DriverAccepted"></activity>
     </application>
 
 </manifest>
