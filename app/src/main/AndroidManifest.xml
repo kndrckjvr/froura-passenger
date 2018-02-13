@@ -52,6 +52,7 @@
             android:theme="@style/RegistrationTheme" />
         <activity
             android:name=".FindNearbyDriverActivity"
+            android:label=""
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar.Fullscreen" />
 
