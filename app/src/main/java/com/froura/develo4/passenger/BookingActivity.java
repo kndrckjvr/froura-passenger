@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
@@ -20,6 +21,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -58,6 +60,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -80,10 +83,10 @@ public class BookingActivity extends AppCompatActivity
 
     private DrawerLayout drawer;
     private TextView name;
+    private CircleImageView prof_pic;
     private CardView cardView;
     private CardView viewDetails;
     private Button bookBtn;
-    private CircleImageView prof_pic;
     private TextView pickupTxtVw;
     private TextView dropoffTxtVw;
     private TextView taxifareTxtVw;
@@ -107,6 +110,7 @@ public class BookingActivity extends AppCompatActivity
     private String dropoffPlaceId;
     private int hasPickup = -1;
     private int hasDropoff = -1;
+    private int noDriver = -1;
     private boolean cameraUpdated = false;
     final int LOCATION_REQUEST_CODE = 1;
 
@@ -124,7 +128,7 @@ public class BookingActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_home);
+        setContentView(R.layout.activity_booking);
 
         mGeoDataClient = Places.getGeoDataClient(this, null);
         viewFlipper = findViewById(R.id.app_bar_include).findViewById(R.id.vf);
@@ -175,6 +179,15 @@ public class BookingActivity extends AppCompatActivity
 
         hasPickup = getIntent().getIntExtra("hasPickup", -1);
         hasDropoff = getIntent().getIntExtra("hasDropoff", -1);
+        noDriver = getIntent().getIntExtra("noDriver", -1);
+
+        if(noDriver == 1) {
+            DialogCreator.create(this, "noDriverFound")
+                    .setTitle("No Driver Found")
+                    .setMessage("Drivers are currently busy right now. Please try again later.")
+                    .setPositiveButton("OK")
+                    .show();
+        }
 
         if(hasPickup == 1)
             findPlaceById(getIntent().getStringExtra("pickupPlaceId"), 0);
@@ -517,11 +530,22 @@ public class BookingActivity extends AppCompatActivity
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
+        try {
+            boolean success = googleMap.setMapStyle(
+                    MapStyleOptions.loadRawResourceStyle(
+                            this, R.raw.mapstyle));
+
+            if (!success) {
+                Log.e("Booking", "Style parsing failed.");
+            }
+        } catch (Resources.NotFoundException e) {
+            Log.e("Booking", "Can't find style. Error: ", e);
+        }
         mMap = googleMap;
+        mMap.getUiSettings().setMyLocationButtonEnabled(true);
         ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) cardView.getLayoutParams();
         ViewGroup.MarginLayoutParams lp2 = (ViewGroup.MarginLayoutParams) viewDetails.getLayoutParams();
         mMap.setPadding(0, cardView.getLayoutParams().height + lp.topMargin + lp2.bottomMargin + viewDetails.getLayoutParams().height, 0 ,bookBtn.getLayoutParams().height);
-        mMap.getUiSettings().setMyLocationButtonEnabled(false);
         buildGoogleApiClient();
     }
 

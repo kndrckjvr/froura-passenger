@@ -22,6 +22,7 @@ import com.google.firebase.database.ValueEventListener;
 public class FindNearbyDriverActivity extends AppCompatActivity {
 
     private CountDownTimer timer;
+    private CountDownTimer searchTimer;
     private TextView cntDwnTxtVw;
     private String uid;
     private DatabaseReference bookingRef;
@@ -56,9 +57,19 @@ public class FindNearbyDriverActivity extends AppCompatActivity {
             }
         };
         timer.start();
+        searchTimer = new CountDownTimer(15000, 1000) {
+            @Override
+            public void onTick(long l) { }
+
+            @Override
+            public void onFinish() {
+
+            }
+        };
     }
 
     private void sendBooking() {
+        searchTimer.start();
         cntDwnTxtVw.setVisibility(View.GONE);
         btnCancel.setVisibility(View.GONE);
         bookingRef.child("pickupName").setValue(getIntent().getStringExtra("pickupName"));
@@ -84,7 +95,15 @@ public class FindNearbyDriverActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-
+                bookingRef.removeValue();
+                Intent intent = new Intent(FindNearbyDriverActivity.this, BookingActivity.class);
+                intent.putExtra("hasPickup", 1);
+                intent.putExtra("pickupPlaceId", getIntent().getStringExtra("pickupPlaceId"));
+                intent.putExtra("hasDropoff", 1);
+                intent.putExtra("dropoffPlaceId", getIntent().getStringExtra("dropoffPlaceId"));
+                intent.putExtra("noDriver", 1);
+                startActivity(intent);
+                finish();
             }
         });
     }

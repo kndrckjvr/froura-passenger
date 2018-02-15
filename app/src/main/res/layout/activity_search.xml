@@ -124,7 +124,7 @@
                         android:layout_height="wrap_content"
                         android:padding="10dp"
                         android:layout_weight="0"
-                        android:src="@drawable/ic_pin_drop_black_24dp"/>
+                        android:src="@drawable/ic_pin_drop_gray_24dp"/>
 
                     <TextView
                         android:id="@+id/textView"
@@ -157,15 +157,5 @@
             android:background="#FFFFFF">
 
         </android.support.v7.widget.RecyclerView>
-
-        <TextView
-            android:id="@+id/listEmpty"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
-            android:layout_centerVertical="true"
-            android:textColor="#000000"
-            android:visibility="gone"
-            android:text="No Places Found. Try Again." />
     </RelativeLayout>
 </LinearLayout>
