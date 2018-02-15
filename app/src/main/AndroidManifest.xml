@@ -93,7 +93,8 @@
         <activity
             android:name=".SearchActivity"
             android:theme="@style/AppTheme.NoActionBar" />
-        <activity android:name=".DriverAcceptedActivity"></activity>
+        <activity android:name=".DriverAcceptedActivity" />
+        <activity android:name=".MapPointActivity"></activity>
     </application>
 
 </manifest>
