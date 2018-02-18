@@ -26,191 +26,146 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <Button
-            android:id="@+id/bookingButton"
-            style="@style/Widget.AppCompat.Button.Colored"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:layout_alignParentBottom="true"
-            android:layout_below="@id/details"
-            android:layout_centerHorizontal="true"
-            android:layout_marginBottom="8dp"
-            android:layout_marginEnd="20dp"
-            android:layout_marginStart="20dp"
-            android:backgroundTint="@color/colorPrimaryDark"
-            android:text="BOOK"
-            android:textColor="#FFFFFF"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
-
         <android.support.v7.widget.CardView
             android:id="@+id/cardView"
             android:layout_width="match_parent"
-            android:layout_height="112dp"
-            android:layout_marginEnd="20dp"
-            android:layout_marginStart="20dp"
-            android:layout_marginTop="20dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            android:layout_height="225dp"
+            app:layout_constraintBottom_toBottomOf="parent">
 
             <RelativeLayout
+                android:padding="20dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
-                <LinearLayout
-                    android:id="@+id/pickupLayout"
-                    android:layout_width="match_parent"
+                <RelativeLayout
+                    android:id="@+id/bookings"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:focusable="true"
-                    android:focusableInTouchMode="true"
-                    android:gravity="center"
-                    android:orientation="horizontal">
-
-                    <ImageButton
-                        android:id="@+id/iconPickup"
-                        android:layout_width="wrap_content"
+                    android:background="@drawable/background_border">
+                    <LinearLayout
+                        android:id="@+id/pickupLayout"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="16dp"
-                        android:layout_marginLeft="15dp"
-                        android:layout_marginRight="5dp"
-                        android:layout_marginTop="16dp"
-                        android:layout_weight="0"
-                        android:background="@null"
-                        android:contentDescription="@string/place_autocomplete_search_hint"
-                        android:src="@drawable/ic_point_yellow_24dp" />
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
+                        android:gravity="center"
+                        android:orientation="horizontal">
 
-                    <TextView
-                        android:id="@+id/txtVw_pickup"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:background="@null"
-                        android:ellipsize="marquee"
-                        android:focusable="false"
-                        android:focusableInTouchMode="false"
-                        android:marqueeRepeatLimit="marquee_forever"
-                        android:paddingLeft="10dp"
-                        android:paddingRight="4dp"
-                        android:paddingTop="17dp"
-                        android:scrollHorizontally="true"
-                        android:singleLine="true"
-                        android:text="Enter pick-up point"
-                        android:textColor="@color/place_autocomplete_search_hint"
-                        android:textSize="16sp" />
+                        <ImageButton
+                            android:id="@+id/iconPickup"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="16dp"
+                            android:layout_marginLeft="15dp"
+                            android:layout_marginRight="5dp"
+                            android:layout_marginTop="16dp"
+                            android:layout_weight="0"
+                            android:background="@null"
+                            android:contentDescription="@string/place_autocomplete_search_hint"
+                            android:src="@drawable/ic_place_yellow_24dp" />
 
-                </LinearLayout>
+                        <TextView
+                            android:id="@+id/txtVw_pickup"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:background="@null"
+                            android:ellipsize="marquee"
+                            android:focusable="false"
+                            android:focusableInTouchMode="false"
+                            android:marqueeRepeatLimit="marquee_forever"
+                            android:paddingLeft="10dp"
+                            android:paddingRight="4dp"
+                            android:paddingTop="17dp"
+                            android:scrollHorizontally="true"
+                            android:singleLine="true"
+                            android:text="Your Location"
+                            android:textColor="@color/place_autocomplete_search_hint"
+                            android:textSize="16sp" />
 
-                <LinearLayout
-                    android:id="@+id/dropoffLayout"
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/dropoffLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_below="@+id/pickupLayout"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
+                        android:gravity="center"
+                        android:orientation="horizontal">
+
+                        <ImageButton
+                            android:id="@+id/iconDropoff"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="16dp"
+                            android:layout_marginLeft="15dp"
+                            android:layout_marginRight="5dp"
+                            android:layout_marginTop="16dp"
+                            android:layout_weight="0"
+                            android:background="@null"
+                            android:src="@drawable/ic_places_black_24dp" />
+
+                        <TextView
+                            android:id="@+id/txtVw_dropoff"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:background="@null"
+                            android:ellipsize="marquee"
+                            android:focusable="false"
+                            android:focusableInTouchMode="false"
+                            android:marqueeRepeatLimit="marquee_forever"
+                            android:paddingLeft="10dp"
+                            android:paddingRight="4dp"
+                            android:paddingTop="17dp"
+                            android:scrollHorizontally="true"
+                            android:singleLine="true"
+                            android:text="Your Destination"
+                            android:textColor="@color/place_autocomplete_search_hint"
+                            android:textSize="16sp" />
+
+                    </LinearLayout>
+                </RelativeLayout>
+
+                <Button
+                    android:id="@+id/bookingButton"
+                    style="@style/Widget.AppCompat.Button.Colored"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_below="@+id/pickupLayout"
-                    android:focusable="true"
-                    android:focusableInTouchMode="true"
-                    android:gravity="center"
-                    android:orientation="horizontal">
-
-                    <ImageButton
-                        android:id="@+id/iconDropoff"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="16dp"
-                        android:layout_marginLeft="15dp"
-                        android:layout_marginRight="5dp"
-                        android:layout_marginTop="16dp"
-                        android:layout_weight="0"
-                        android:background="@null"
-                        android:src="@drawable/ic_point_black_24dp" />
-
-                    <TextView
-                        android:id="@+id/txtVw_dropoff"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:background="@null"
-                        android:ellipsize="marquee"
-                        android:focusable="false"
-                        android:focusableInTouchMode="false"
-                        android:marqueeRepeatLimit="marquee_forever"
-                        android:paddingLeft="10dp"
-                        android:paddingRight="4dp"
-                        android:paddingTop="17dp"
-                        android:scrollHorizontally="true"
-                        android:singleLine="true"
-                        android:text="Where are you going?"
-                        android:textColor="@color/place_autocomplete_search_hint"
-                        android:textSize="16sp" />
-
-                </LinearLayout>
+                    android:layout_height="60dp"
+                    android:layout_below="@+id/bookings"
+                    android:layout_marginTop="10dp"
+                    android:backgroundTint="@color/colorPrimaryDark"
+                    android:text="BOOK"
+                    android:textColor="#FFFFFF"/>
             </RelativeLayout>
 
         </android.support.v7.widget.CardView>
 
-        <android.support.v7.widget.CardView
-            android:id="@+id/details"
-            android:layout_width="match_parent"
-            android:layout_height="35dp"
-            android:layout_below="@id/cardView"
+        <ImageButton
+            android:id="@+id/myLocation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="7dp"
             android:layout_marginBottom="8dp"
-            android:layout_marginEnd="20dp"
-            android:layout_marginStart="20dp"
-            android:animateLayoutChanges="true"
-            android:background="#ffffff"
-            android:gravity="top|center"
-            android:orientation="vertical"
-            app:layout_constraintBottom_toTopOf="@+id/bookingButton"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/cardView"
-            app:layout_constraintVertical_bias="0.0">
+            android:layout_marginRight="12dp"
+            android:background="#95FFFFFF"
+            android:src="@drawable/ic_my_location_black_24dp"
+            app:layout_constraintBottom_toTopOf="@+id/cardView"
+            app:layout_constraintEnd_toEndOf="parent" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal"
-                android:weightSum="3">
-
-                <TextView
-                    android:id="@+id/txtVw_taxi_fare"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:drawableLeft="@drawable/ic_peso_black_24dp"
-                    android:padding="5dp"
-                    android:text="100-200"
-                    android:textAlignment="center"
-                    android:textColor="#000000"
-                    android:textSize="16sp" />
-
-                <TextView
-                    android:id="@+id/txtVw_distance"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:drawableLeft="@drawable/ic_distance_black_24dp"
-                    android:padding="5dp"
-                    android:text="8KM"
-                    android:textAlignment="center"
-                    android:textColor="#000000"
-                    android:textSize="16sp" />
-
-                <TextView
-                    android:id="@+id/txtVw_duration"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:drawableLeft="@drawable/ic_duration_black_24dp"
-                    android:padding="5dp"
-                    android:text="1H 20M"
-                    android:textAlignment="center"
-                    android:textColor="#000000"
-                    android:textSize="16sp" />
-            </LinearLayout>
-
-        </android.support.v7.widget.CardView>
+        <ImageButton
+            android:id="@+id/traffic"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:layout_marginRight="12dp"
+            android:background="#95FFFFFF"
+            android:padding="7dp"
+            android:src="@drawable/ic_traffic_black_24dp"
+            app:layout_constraintBottom_toTopOf="@+id/myLocation"
+            app:layout_constraintEnd_toEndOf="parent" />
 
 
     </android.support.constraint.ConstraintLayout>

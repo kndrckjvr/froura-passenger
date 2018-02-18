@@ -88,6 +88,8 @@ public class FindNearbyDriverActivity extends AppCompatActivity {
                 if(dataSnapshot.getValue() != null) {
                     Intent intent = new Intent(FindNearbyDriverActivity.this, DriverAcceptedActivity.class);
                     intent.putExtra("driverId", dataSnapshot.getValue().toString());
+                    intent.putExtra("pickupLat", getIntent().getDoubleExtra("pickupLat", 0));
+                    intent.putExtra("pickupLng", getIntent().getDoubleExtra("pickupLng", 0));
                     startActivity(intent);
                     finish();
                 }

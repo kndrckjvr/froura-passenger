@@ -89,9 +89,9 @@ public class BookingActivity extends AppCompatActivity
     private Button bookBtn;
     private TextView pickupTxtVw;
     private TextView dropoffTxtVw;
-    private TextView taxifareTxtVw;
-    private TextView distanceTxtVw;
-    private TextView durationTxtVw;
+//    private TextView taxifareTxtVw;
+//    private TextView distanceTxtVw;
+//    private TextView durationTxtVw;
 
     private GoogleMap mMap;
     private CameraPosition cameraPosition;
@@ -158,17 +158,17 @@ public class BookingActivity extends AppCompatActivity
         setDetails();
 
         bookBtn = findViewById(R.id.bookingButton);
-        viewDetails = findViewById(R.id.details);
+        //viewDetails = findViewById(R.id.details);
         cardView = findViewById(R.id.cardView);
         pickupTxtVw = findViewById(R.id.txtVw_pickup);
         dropoffTxtVw = findViewById(R.id.txtVw_dropoff);
-        taxifareTxtVw = findViewById(R.id.txtVw_taxi_fare);
+        /*taxifareTxtVw = findViewById(R.id.txtVw_taxi_fare);
         distanceTxtVw = findViewById(R.id.txtVw_distance);
-        durationTxtVw = findViewById(R.id.txtVw_duration);
+        durationTxtVw = findViewById(R.id.txtVw_duration);*/
 
-        taxifareTxtVw.setText(taxi_fare);
+        /*taxifareTxtVw.setText(taxi_fare);
         distanceTxtVw.setText(distance);
-        durationTxtVw.setText(duration);
+        durationTxtVw.setText(duration);*/
 
         if(!locationEnabled())
             DialogCreator.create(this, "requestLocation")
@@ -365,9 +365,9 @@ public class BookingActivity extends AppCompatActivity
                 distance = jsonObject.getString("distance");
                 duration = jsonObject.getString("duration");
 
-                taxifareTxtVw.setText(taxi_fare);
+                /*taxifareTxtVw.setText(taxi_fare);
                 distanceTxtVw.setText(distance);
-                durationTxtVw.setText(duration);
+                durationTxtVw.setText(duration);*/
             }
         } catch(Exception e) {}
         LatLngBounds.Builder builder = new LatLngBounds.Builder();
@@ -403,7 +403,7 @@ public class BookingActivity extends AppCompatActivity
                         dropoffName = myPlace.getName().toString();
                         setText(dropoffTxtVw, dropoffName);
                         dropoffLocation = myPlace.getLatLng();
-                        setFare();
+                        //setFare();
                     }
                     setMarkers(false);
                     places.release();
@@ -542,10 +542,8 @@ public class BookingActivity extends AppCompatActivity
             Log.e("Booking", "Can't find style. Error: ", e);
         }
         mMap = googleMap;
-        mMap.getUiSettings().setMyLocationButtonEnabled(true);
-        ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) cardView.getLayoutParams();
-        ViewGroup.MarginLayoutParams lp2 = (ViewGroup.MarginLayoutParams) viewDetails.getLayoutParams();
-        mMap.setPadding(0, cardView.getLayoutParams().height + lp.topMargin + lp2.bottomMargin + viewDetails.getLayoutParams().height, 0 ,bookBtn.getLayoutParams().height);
+        mMap.getUiSettings().setMyLocationButtonEnabled(false);
+        mMap.setPadding(0, 0, 0 , cardView.getLayoutParams().height);
         buildGoogleApiClient();
     }
 

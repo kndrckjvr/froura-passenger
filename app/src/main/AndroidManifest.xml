@@ -55,10 +55,6 @@
             android:label=""
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar.Fullscreen" />
-
-        <meta-data
-            android:name="preloaded_fonts"
-            android:resource="@array/preloaded_fonts" />
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
              (See the file "res/values/google_maps_api.xml").
@@ -93,7 +89,8 @@
         <activity
             android:name=".SearchActivity"
             android:theme="@style/AppTheme.NoActionBar" />
-        <activity android:name=".DriverAcceptedActivity" />
+        <activity android:name=".DriverAcceptedActivity"
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity android:name=".MapPointActivity"></activity>
     </application>
 

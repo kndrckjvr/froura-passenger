@@ -22,24 +22,29 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.facebook.AccessToken;
-import com.facebook.login.LoginManager;
 import com.froura.develo4.passenger.libraries.DialogCreator;
-import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInClient;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.UserInfo;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.List;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 import me.grantland.widget.AutofitHelper;
@@ -55,8 +60,10 @@ public class DriverAcceptedActivity extends AppCompatActivity
 
     private GoogleMap mMap;
     private CameraPosition cameraPosition;
+    private Marker driverMarker;
     private SupportMapFragment mapFragment;
     private GoogleApiClient mGoogleApiClient;
+    private Location mLastLocation;
 
     private DrawerLayout drawer;
     private Toolbar toolbar;
@@ -64,15 +71,19 @@ public class DriverAcceptedActivity extends AppCompatActivity
     private CircleImageView prof_pic;
     private LinearLayout informationLayout;
 
+    private String driverId;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_driver_accepted);
 
-        toolbar = findViewById(R.id.toolbar);
+        toolbar = findViewById(R.id.toolbar_driver_accepted);
         toolbar.setTitle("Booking");
         setSupportActionBar(toolbar);
         informationLayout = findViewById(R.id.information_layout);
+
+        driverId = getIntent().getStringExtra("driverId");
 
         drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -92,11 +103,64 @@ public class DriverAcceptedActivity extends AppCompatActivity
                 .findFragmentById(R.id.map);
 
         mapFragment.getMapAsync(this);
+
+        showDriverLocation();
+    }
+
+    private void showDriverLocation() {
+        DatabaseReference driverLoc = FirebaseDatabase.getInstance().getReference("available_drivers/" + driverId + "/l");
+        driverLoc.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                List<Object> map = (List<Object>) dataSnapshot.getValue();
+                double drvLat = 0;
+                double drvLng = 0;
+
+                if(dataSnapshot.getValue() != null) {
+                    if(map.get(0) != null){
+                        drvLat = Double.parseDouble(map.get(0).toString());
+                    }
+                    if(map.get(1) != null){
+                        drvLng = Double.parseDouble(map.get(1).toString());
+                    }
+                }
+
+                LatLng drvLatLng = new LatLng(drvLat, drvLng);
+
+                if(driverMarker != null) {
+                    driverMarker.remove();
+                }
+
+                Location drvLoc = new Location("");
+                drvLoc.setLatitude(drvLat);
+                drvLoc.setLongitude(drvLng);
+
+                Location pickupLoc = new Location("");
+                pickupLoc.setLatitude(getIntent().getDoubleExtra("pickupLat", 0));
+                pickupLoc.setLongitude(getIntent().getDoubleExtra("pickupLng", 0));
+
+                float dist = pickupLoc.distanceTo(drvLoc);
+                if(dist <= 100) {
+                    Toast.makeText(DriverAcceptedActivity.this, "Your Driver has arrived", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(DriverAcceptedActivity.this, "Your driver is approximately " + dist + " meters", Toast.LENGTH_SHORT).show();
+                }
+
+                driverMarker = mMap.addMarker(new MarkerOptions().position(drvLatLng).icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher)));
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
     @Override
     public void onLocationChanged(Location location) {
-
+        if(getApplicationContext() != null) {
+            mLastLocation = location;
+        }
     }
 
     @Override

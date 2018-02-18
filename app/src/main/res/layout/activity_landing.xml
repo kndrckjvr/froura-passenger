@@ -6,19 +6,8 @@
     android:id="@+id/loginView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/login_background"
+    android:background="#FFB700"
     tools:context="com.froura.develo4.passenger.LandingActivity">
-
-    <ImageView
-        android:id="@+id/logoWhite"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginLeft="40dp"
-        android:layout_marginRight="40dp"
-        android:contentDescription="@string/logoWhite_desc"
-        app:srcCompat="@drawable/logo_white" />
 
     <Button
         android:id="@+id/mobLogin"
@@ -29,13 +18,15 @@
         android:layout_alignParentBottom="true"
         android:layout_alignStart="@+id/frameFb"
         android:layout_marginBottom="38dp"
-        android:background="@drawable/mobile_background"
+        android:backgroundTint="@color/colorPrimaryDark"
         android:drawableLeft="@drawable/ic_phone_android_black_24dp"
+        android:elevation="10dp"
+        android:fontFamily="@font/fjalla_one_regular"
         android:paddingLeft="18dp"
-        android:text="CONTINUE WITH MOBILE"
+        android:shadowColor="#000"
+        android:text="MOBILE NUMBER"
         android:textColor="#000000"
-        android:textSize="15sp" />
-
+        android:textSize="24sp" />
 
     <Button
         android:id="@+id/googLogin"
@@ -46,12 +37,13 @@
         android:layout_alignLeft="@+id/frameFb"
         android:layout_alignStart="@+id/frameFb"
         android:layout_marginBottom="10dp"
-        android:background="@drawable/google_background"
         android:drawableLeft="@mipmap/google"
+        android:backgroundTint="@color/colorPrimaryDark"
+        android:fontFamily="@font/fjalla_one_regular"
         android:paddingLeft="8dp"
-        android:text="CONTINUE WITH GOOGLE"
+        android:text="GOOGLE"
         android:textColor="#000000"
-        android:textSize="15sp" />
+        android:textSize="24sp" />
 
     <FrameLayout
         android:id="@+id/frameFb"
@@ -73,11 +65,12 @@
             android:layout_width="300dp"
             android:layout_height="60dp"
             android:layout_above="@+id/googLogin"
-            android:background="@drawable/facebook_background"
+            android:backgroundTint="@color/colorPrimaryDark"
+            android:fontFamily="@font/fjalla_one_regular"
             android:drawableLeft="@mipmap/facebook"
             android:paddingLeft="8dp"
-            android:text="CONTINUE WITH FACEBOOK"
-            android:textColor="#FFFFFF"
-            android:textSize="15sp" />
+            android:text="FACEBOOK"
+            android:textColor="#000000"
+            android:textSize="24sp" />
     </FrameLayout>
 </RelativeLayout>
