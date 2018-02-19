@@ -6,7 +6,7 @@
     android:id="@+id/loginView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFB700"
+    android:background="#FBB71E"
     tools:context="com.froura.develo4.passenger.LandingActivity">
 
     <Button
@@ -20,9 +20,8 @@
         android:layout_marginBottom="38dp"
         android:backgroundTint="@color/colorPrimaryDark"
         android:drawableLeft="@drawable/ic_phone_android_black_24dp"
-        android:elevation="10dp"
         android:fontFamily="@font/fjalla_one_regular"
-        android:paddingLeft="18dp"
+        android:paddingLeft="24dp"
         android:shadowColor="#000"
         android:text="MOBILE NUMBER"
         android:textColor="#000000"
@@ -40,7 +39,6 @@
         android:drawableLeft="@mipmap/google"
         android:backgroundTint="@color/colorPrimaryDark"
         android:fontFamily="@font/fjalla_one_regular"
-        android:paddingLeft="8dp"
         android:text="GOOGLE"
         android:textColor="#000000"
         android:textSize="24sp" />
@@ -68,9 +66,65 @@
             android:backgroundTint="@color/colorPrimaryDark"
             android:fontFamily="@font/fjalla_one_regular"
             android:drawableLeft="@mipmap/facebook"
-            android:paddingLeft="8dp"
             android:text="FACEBOOK"
             android:textColor="#000000"
             android:textSize="24sp" />
     </FrameLayout>
+
+    <ImageView
+        android:id="@+id/imageView3"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="25dp"
+        facebook:srcCompat="@drawable/icon_hex" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="19dp"
+        android:layout_above="@+id/frameFb"
+        android:orientation="horizontal">
+
+        <View
+            android:layout_width="92dp"
+            android:layout_marginTop="15dp"
+            android:layout_marginRight="10dp"
+            android:layout_height="2dp"
+            android:clickable="false"
+            android:background="#000000"/>
+
+        <TextView
+            android:id="@+id/textView7"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/fjalla_one_regular"
+            android:text="SIGN UP WITH"
+            android:textAlignment="center"
+            android:textColor="#000"
+            android:textSize="20sp" />
+
+
+        <View
+            android:layout_width="92dp"
+            android:layout_marginTop="15dp"
+            android:layout_marginLeft="10dp"
+            android:layout_height="2dp"
+            android:clickable="false"
+            android:background="#000000"/>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/textView8"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/imageView3"
+        android:layout_centerHorizontal="true"
+        android:fontFamily="@font/fjalla_one_regular"
+        android:text="FROURÁ"
+        android:textColor="#000"
+        android:textSize="50sp" />
+
 </RelativeLayout>

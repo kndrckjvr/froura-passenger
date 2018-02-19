@@ -33,19 +33,24 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
     private final Context context;
     private final String url;
     private final ProgressDialog progressDialog;
+    private final String message;
+    private final boolean hasDialog;
+    private int resultcode;
 
-    public SuperTask(Context context, String url) {
+    public SuperTask(Context context, String url, String message, boolean hasDialog) {
         this.context = context;
         this.url = url;
+        this.message = message;
+        this.hasDialog = hasDialog;
         progressDialog = new ProgressDialog(context);
     }
 
-    public static void execute(Context context, String url) {
-        new SuperTask(context,url).execute();
+    public static void execute(Context context, String url, String message, boolean hasDialog) {
+        new SuperTask(context,url,message, hasDialog).execute();
     }
 
     public interface TaskListener {
-        void onTaskRespond(String json);
+        void onTaskRespond(String json, int resultcode);
         ContentValues setRequestValues(ContentValues contentValues);
     }
 
@@ -67,10 +72,11 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
-        progressDialog.setMessage("Calculating Fare...");
+        progressDialog.setMessage(this.message);
         progressDialog.setIndeterminate(false);
         progressDialog.setCancelable(true);
-        progressDialog.show();
+        if(hasDialog)
+            progressDialog.show();
     }
 
     @Override
@@ -102,6 +108,8 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
                 stringBuilder.append(line);
             }
 
+            resultcode = httpURLConnection.getResponseCode();
+
             // clear
             bufferedReader.close();
             inputStream.close();
@@ -120,6 +128,6 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
     protected void onPostExecute(String json) {
         super.onPostExecute(json);
         progressDialog.dismiss();
-        ((TaskListener)this.context).onTaskRespond(json);
+        ((TaskListener)this.context).onTaskRespond(json, resultcode);
     }
 }

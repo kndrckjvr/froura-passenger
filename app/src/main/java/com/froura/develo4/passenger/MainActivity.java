@@ -1,5 +1,6 @@
 package com.froura.develo4.passenger;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
@@ -12,11 +13,16 @@ import android.view.View;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
+import com.froura.develo4.passenger.config.TaskConfig;
 import com.froura.develo4.passenger.libraries.DialogCreator;
+import com.froura.develo4.passenger.tasks.SuperTask;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
-public class MainActivity extends AppCompatActivity implements DialogCreator.DialogActionListener {
+import org.json.JSONObject;
+
+public class MainActivity extends AppCompatActivity implements DialogCreator.DialogActionListener,
+        SuperTask.TaskListener {
 
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
@@ -47,39 +53,34 @@ public class MainActivity extends AppCompatActivity implements DialogCreator.Dia
                         }
                     }, 10);
                 } else {
-                    if(!haveNetworkConnection()) {
-                        DialogCreator.create(MainActivity.this, "internetDisabled")
-                                .setTitle("No Internet Connection")
-                                .setMessage("This application needs internet connection.")
-                                .setPositiveButton("EXIT")
-                                .setCancelable(false)
-                                .show();
-                        return;
-                    }
-                    Intent intent = new Intent(MainActivity.this, BookingActivity.class);
-                    startActivity(intent);
-                    finish();
-                    return;
+                    SuperTask.execute(MainActivity.this, TaskConfig.CHECK_CONNECTION_URL, "", false);
                 }
             }
         };
     }
 
-    private boolean haveNetworkConnection() {
-        boolean haveConnectedWifi = false;
-        boolean haveConnectedMobile = false;
-
-        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo[] netInfo = cm.getAllNetworkInfo();
-        for (NetworkInfo ni : netInfo) {
-            if (ni.getTypeName().equalsIgnoreCase("WIFI"))
-                if (ni.isConnected())
-                    haveConnectedWifi = true;
-            if (ni.getTypeName().equalsIgnoreCase("MOBILE"))
-                if (ni.isConnected())
-                    haveConnectedMobile = true;
+    @Override
+    public void onTaskRespond(String json, int resultcode) {
+        if(resultcode == 503) {
+            /*Intent intent = new Intent(MainActivity.this, SMSActivity.class);
+            startactivity(intent);
+            finish();*/
+            return;
         }
-        return haveConnectedWifi || haveConnectedMobile;
+        try {
+            JSONObject jsonObject = new JSONObject(json);
+            if(jsonObject.getString("status").equals("SUCCESS")) {
+                Intent intent = new Intent(MainActivity.this, BookingActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        } catch (Exception e) { }
+    }
+
+    @Override
+    public ContentValues setRequestValues(ContentValues contentValues) {
+        contentValues.put("android", 1);
+        return contentValues;
     }
 
     public int getImage(String imageName) {
@@ -102,31 +103,17 @@ public class MainActivity extends AppCompatActivity implements DialogCreator.Dia
     }
 
     @Override
-    public void onClickPositiveButton(String actionId) {
-        switch (actionId) {
-            case "internetDisabled":
-                finish();
-                break;
-        }
-    }
+    public void onClickPositiveButton(String actionId) { }
 
     @Override
-    public void onClickNegativeButton(String actionId) {
-
-    }
+    public void onClickNegativeButton(String actionId) { }
 
     @Override
-    public void onClickNeutralButton(String actionId) {
-
-    }
+    public void onClickNeutralButton(String actionId) { }
 
     @Override
-    public void onClickMultiChoiceItem(String actionId, int which, boolean isChecked) {
-
-    }
+    public void onClickMultiChoiceItem(String actionId, int which, boolean isChecked) { }
 
     @Override
-    public void onCreateDialogView(String actionId, View view) {
-
-    }
+    public void onCreateDialogView(String actionId, View view) { }
 }

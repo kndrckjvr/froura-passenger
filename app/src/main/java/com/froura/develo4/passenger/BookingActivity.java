@@ -25,6 +25,8 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.Transformation;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -89,9 +91,9 @@ public class BookingActivity extends AppCompatActivity
     private Button bookBtn;
     private TextView pickupTxtVw;
     private TextView dropoffTxtVw;
-//    private TextView taxifareTxtVw;
-//    private TextView distanceTxtVw;
-//    private TextView durationTxtVw;
+    private TextView taxifareTxtVw;
+    private TextView distanceTxtVw;
+    private TextView durationTxtVw;
 
     private GoogleMap mMap;
     private CameraPosition cameraPosition;
@@ -158,17 +160,17 @@ public class BookingActivity extends AppCompatActivity
         setDetails();
 
         bookBtn = findViewById(R.id.bookingButton);
-        //viewDetails = findViewById(R.id.details);
+        viewDetails = findViewById(R.id.details);
         cardView = findViewById(R.id.cardView);
         pickupTxtVw = findViewById(R.id.txtVw_pickup);
         dropoffTxtVw = findViewById(R.id.txtVw_dropoff);
-        /*taxifareTxtVw = findViewById(R.id.txtVw_taxi_fare);
+        taxifareTxtVw = findViewById(R.id.txtVw_taxi_fare);
         distanceTxtVw = findViewById(R.id.txtVw_distance);
-        durationTxtVw = findViewById(R.id.txtVw_duration);*/
-
-        /*taxifareTxtVw.setText(taxi_fare);
+        durationTxtVw = findViewById(R.id.txtVw_duration);
+        collapse(viewDetails);
+        taxifareTxtVw.setText(taxi_fare);
         distanceTxtVw.setText(distance);
-        durationTxtVw.setText(duration);*/
+        durationTxtVw.setText(duration);
 
         if(!locationEnabled())
             DialogCreator.create(this, "requestLocation")
@@ -296,8 +298,8 @@ public class BookingActivity extends AppCompatActivity
                 break;
         }
 
-        drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
+        drawer = findViewById(R.id.drawer_layout);
         return true;
     }
 
@@ -352,11 +354,11 @@ public class BookingActivity extends AppCompatActivity
     }
 
     private void setFare() {
-        SuperTask.execute(this, TaskConfig.CREATE_TAXI_FARE_URL);
+        SuperTask.execute(this, TaskConfig.CREATE_TAXI_FARE_URL, "Calculating Fare...", true);
     }
 
     @Override
-    public void onTaskRespond(String jsonString) {
+    public void onTaskRespond(String jsonString, int resultcode) {
         try {
             JSONObject jsonObject = new JSONObject(jsonString);
             Toast.makeText(this, jsonString, Toast.LENGTH_SHORT).show();
@@ -365,9 +367,10 @@ public class BookingActivity extends AppCompatActivity
                 distance = jsonObject.getString("distance");
                 duration = jsonObject.getString("duration");
 
-                /*taxifareTxtVw.setText(taxi_fare);
+                taxifareTxtVw.setText(taxi_fare);
                 distanceTxtVw.setText(distance);
-                durationTxtVw.setText(duration);*/
+                durationTxtVw.setText(duration);
+                expand(viewDetails);
             }
         } catch(Exception e) {}
         LatLngBounds.Builder builder = new LatLngBounds.Builder();
@@ -375,6 +378,7 @@ public class BookingActivity extends AppCompatActivity
         builder.include(dropoffLocation);
         LatLngBounds bounds = builder.build();
         mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 200));
+        mMap.setPadding(0, viewDetails.getLayoutParams().height, 0 , cardView.getLayoutParams().height);
     }
 
     @Override
@@ -403,7 +407,7 @@ public class BookingActivity extends AppCompatActivity
                         dropoffName = myPlace.getName().toString();
                         setText(dropoffTxtVw, dropoffName);
                         dropoffLocation = myPlace.getLatLng();
-                        //setFare();
+                        setFare();
                     }
                     setMarkers(false);
                     places.release();
@@ -699,4 +703,58 @@ public class BookingActivity extends AppCompatActivity
         SnackBarCreator.show(view);
     }
 
+
+    public static void expand(final View v) {
+        v.measure(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        final int targetHeight = v.getMeasuredHeight();
+
+        // Older versions of android (pre API 21) cancel animations for views with a height of 0.
+        v.getLayoutParams().height = 1;
+        v.setVisibility(View.VISIBLE);
+        Animation a = new Animation()
+        {
+            @Override
+            protected void applyTransformation(float interpolatedTime, Transformation t) {
+                v.getLayoutParams().height = interpolatedTime == 1
+                        ? ViewGroup.LayoutParams.WRAP_CONTENT
+                        : (int)(targetHeight * interpolatedTime);
+                v.requestLayout();
+            }
+
+            @Override
+            public boolean willChangeBounds() {
+                return true;
+            }
+        };
+
+        // 1dp/ms
+        a.setDuration((int)(targetHeight / v.getContext().getResources().getDisplayMetrics().density));
+        v.startAnimation(a);
+    }
+
+    public static void collapse(final View v) {
+        final int initialHeight = v.getMeasuredHeight();
+
+        Animation a = new Animation()
+        {
+            @Override
+            protected void applyTransformation(float interpolatedTime, Transformation t) {
+                if(interpolatedTime == 1){
+                    v.setVisibility(View.GONE);
+                }else{
+                    v.getLayoutParams().height = initialHeight - (int)(initialHeight * interpolatedTime);
+                    v.requestLayout();
+                }
+            }
+
+            @Override
+            public boolean willChangeBounds() {
+                return true;
+            }
+        };
+
+        // 1dp/ms
+        a.setDuration((int)(initialHeight / v.getContext().getResources().getDisplayMetrics().density));
+        v.startAnimation(a);
+    }
 }

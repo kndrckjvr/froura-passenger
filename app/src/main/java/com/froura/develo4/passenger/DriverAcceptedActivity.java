@@ -79,7 +79,7 @@ public class DriverAcceptedActivity extends AppCompatActivity
         setContentView(R.layout.activity_driver_accepted);
 
         toolbar = findViewById(R.id.toolbar_driver_accepted);
-        toolbar.setTitle("Booking");
+        toolbar.setTitle("Driver on the way");
         setSupportActionBar(toolbar);
         informationLayout = findViewById(R.id.information_layout);
 
