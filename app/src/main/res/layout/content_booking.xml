@@ -93,9 +93,9 @@
 
                 <RelativeLayout
                     android:id="@+id/bookings"
+                    android:background="@drawable/background_border"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/background_border">
+                    android:layout_height="wrap_content">
                     <LinearLayout
                         android:id="@+id/pickupLayout"
                         android:layout_width="match_parent"
@@ -138,6 +138,13 @@
                             android:textSize="16sp" />
 
                     </LinearLayout>
+
+                    <View
+                        android:layout_below="@id/pickupLayout"
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:clickable="false"
+                        android:background="#000"/>
 
                     <LinearLayout
                         android:id="@+id/dropoffLayout"

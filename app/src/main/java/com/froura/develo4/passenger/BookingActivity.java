@@ -29,6 +29,7 @@ import android.view.animation.Animation;
 import android.view.animation.Transformation;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewFlipper;
@@ -94,6 +95,8 @@ public class BookingActivity extends AppCompatActivity
     private TextView taxifareTxtVw;
     private TextView distanceTxtVw;
     private TextView durationTxtVw;
+    private ImageButton myLocation;
+    private ImageButton Traffic;
 
     private GoogleMap mMap;
     private CameraPosition cameraPosition;
@@ -114,6 +117,7 @@ public class BookingActivity extends AppCompatActivity
     private int hasDropoff = -1;
     private int noDriver = -1;
     private boolean cameraUpdated = false;
+    private boolean isTraffic = false;
     final int LOCATION_REQUEST_CODE = 1;
 
     //User Details
@@ -167,7 +171,11 @@ public class BookingActivity extends AppCompatActivity
         taxifareTxtVw = findViewById(R.id.txtVw_taxi_fare);
         distanceTxtVw = findViewById(R.id.txtVw_distance);
         durationTxtVw = findViewById(R.id.txtVw_duration);
+        myLocation = findViewById(R.id.myLocation);
+        Traffic = findViewById(R.id.traffic);
         collapse(viewDetails);
+        pickupTxtVw.setSelected(true);
+        dropoffTxtVw.setSelected(true);
         taxifareTxtVw.setText(taxi_fare);
         distanceTxtVw.setText(distance);
         durationTxtVw.setText(duration);
@@ -241,6 +249,35 @@ public class BookingActivity extends AppCompatActivity
             @Override
             public void onClick(View view) {
                 setDropoff();
+            }
+        });
+
+        myLocation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(locationEnabled()) {
+                    if(mLastLocation != null)
+                        cameraPosition = new CameraPosition.Builder()
+                                .target(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()))
+                                .zoom(14)
+                                .bearing(0)
+                                .build();
+                    else
+                        cameraPosition = new CameraPosition.Builder()
+                                .target(pickupLocation)
+                                .zoom(14)
+                                .bearing(0)
+                                .build();
+                    mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+                }
+            }
+        });
+
+        Traffic.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                isTraffic = !isTraffic;
+                mMap.setTrafficEnabled(isTraffic);
             }
         });
     }
@@ -378,7 +415,6 @@ public class BookingActivity extends AppCompatActivity
         builder.include(dropoffLocation);
         LatLngBounds bounds = builder.build();
         mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 200));
-        mMap.setPadding(0, viewDetails.getLayoutParams().height, 0 , cardView.getLayoutParams().height);
     }
 
     @Override
@@ -421,7 +457,7 @@ public class BookingActivity extends AppCompatActivity
 
         if(pickupLocation != null) {
             mMap.addMarker(new MarkerOptions()
-                    .position(new LatLng(pickupLocation.latitude, pickupLocation.longitude))
+                    .position(pickupLocation)
                     .icon(BitmapDescriptorFactory.fromResource(R.mipmap.yellow_marker)));
             if(hasDropoff == -1) {
                 cameraPosition = new CameraPosition.Builder()
@@ -547,7 +583,7 @@ public class BookingActivity extends AppCompatActivity
         }
         mMap = googleMap;
         mMap.getUiSettings().setMyLocationButtonEnabled(false);
-        mMap.setPadding(0, 0, 0 , cardView.getLayoutParams().height);
+        mMap.setPadding(0, hasDropoff == 1 ? viewDetails.getLayoutParams().height : 0 , 0 , cardView.getLayoutParams().height);
         buildGoogleApiClient();
     }
 

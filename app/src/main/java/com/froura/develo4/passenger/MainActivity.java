@@ -53,7 +53,10 @@ public class MainActivity extends AppCompatActivity implements DialogCreator.Dia
                         }
                     }, 10);
                 } else {
-                    SuperTask.execute(MainActivity.this, TaskConfig.CHECK_CONNECTION_URL, "", false);
+                    Intent intent = new Intent(MainActivity.this, BookingActivity.class);
+                    startActivity(intent);
+                    finish();
+                    //SuperTask.execute(MainActivity.this, TaskConfig.CHECK_CONNECTION_URL, "", false);
                 }
             }
         };
