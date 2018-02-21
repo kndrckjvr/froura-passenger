@@ -241,7 +241,14 @@ public class DriverAcceptedActivity extends AppCompatActivity
 
     @Override
     public void onClickPositiveButton(String actionId) {
-
+        switch (actionId) {
+            case "":
+                ActivityCompat.requestPermissions(DriverAcceptedActivity
+                                .this,
+                        new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                        1);
+                break;
+        }
     }
 
     @Override
