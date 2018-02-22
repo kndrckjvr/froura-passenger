@@ -19,7 +19,7 @@ public class PhoneRegistration extends AppCompatActivity {
     private TextInputLayout nameTL;
     private TextInputLayout emailTL;
 
-    private String mobNum = "";
+    private String mobnum = "";
     private String name = "";
     private String email = "";
     private boolean mobET_error_empty = false;
@@ -52,19 +52,19 @@ public class PhoneRegistration extends AppCompatActivity {
         mobET.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                mobNum = mobET.getText().toString().isEmpty() ? "" : mobET.getText().toString();
+                mobnum = mobET.getText().toString().isEmpty() ? "" : mobET.getText().toString();
                 checkMobErrors();
             }
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                mobNum = mobET.getText().toString().isEmpty() ? "" : mobET.getText().toString();
+                mobnum = mobET.getText().toString().isEmpty() ? "" : mobET.getText().toString();
                 checkMobErrors();
             }
 
             @Override
             public void afterTextChanged(Editable editable) {
-                mobNum = mobET.getText().toString().isEmpty() ? "" : mobET.getText().toString();
+                mobnum = mobET.getText().toString().isEmpty() ? "" : mobET.getText().toString();
                 checkMobErrors();
             }
         });
@@ -111,13 +111,13 @@ public class PhoneRegistration extends AppCompatActivity {
     }
 
     private void checkMobErrors() {
-        if(mobNum.isEmpty()) {
+        if(mobnum.isEmpty()) {
             mobET_error_empty = true;
         } else {
             mobET_error_empty = false;
         }
 
-        if(mobNum.matches("^(09|\\+639)\\d{9}$")) {
+        if(mobnum.matches("^(09|\\+639)\\d{9}$")) {
             mobET_error_match = false;
         } else {
             mobET_error_match = true;
@@ -223,7 +223,7 @@ public class PhoneRegistration extends AppCompatActivity {
                 break;
             case R.id.next:
                 Intent intent = new Intent(PhoneRegistration.this, PhoneAuthentication.class);
-                intent.putExtra("mobNum", mobNum);
+                intent.putExtra("mobnum", mobnum);
                 intent.putExtra("name", name);
                 intent.putExtra("email", email);
                 intent.putExtra("phoneReg", true);
@@ -246,7 +246,7 @@ public class PhoneRegistration extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        Intent intent = new Intent(PhoneRegistration.this, LandingActivity.class);
+        Intent intent = new Intent(PhoneRegistration.this, SignUpActivity.class);
         finish();
         startActivity(intent);
         return;

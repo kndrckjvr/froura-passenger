@@ -17,8 +17,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.froura.develo4.passenger.libraries.RequestPostString;
-import com.froura.develo4.passenger.tasks.CheckUserTasks;
+import com.froura.develo4.passenger.config.TaskConfig;
+import com.froura.develo4.passenger.tasks.SuperTask;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseException;
@@ -36,10 +36,10 @@ import com.google.firebase.database.ValueEventListener;
 
 import org.apache.commons.lang3.text.WordUtils;
 
-import java.io.UnsupportedEncodingException;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-public class PhoneAuthentication extends AppCompatActivity implements CheckUserTasks.OnLoginDriverTasksListener {
+public class PhoneAuthentication extends AppCompatActivity implements SuperTask.TaskListener {
 
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
@@ -50,10 +50,11 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
     private EditText verifCode;
     private ProgressDialog progressDialog;
 
-    private String mobNum;
+    private String mobnum;
     private String email;
     private String name;
     private String profpic = "default";
+    private String trusted = "null";
     private String auth = "mobile";
     private boolean phoneReg;
     private CountDownTimer requestCodeTimer;
@@ -78,7 +79,7 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
         progressDialog.setIndeterminate(false);
         progressDialog.setCancelable(false);
 
-        mobNum = getIntent().getStringExtra("mobNum");
+        mobnum = getIntent().getStringExtra("mobnum");
         email = getIntent().getStringExtra("email");
         name = getIntent().getStringExtra("name");
         phoneReg = getIntent().getBooleanExtra("phoneReg", false);
@@ -131,10 +132,10 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
                     }
                 };
 
-        if(mobNum.matches("^(09)\\d{9}$")) {
-            mob_num.setText("+63 " + mobNum.substring(1));
-        } else if(mobNum.matches("^(\\+639)\\d{9}$")) {
-            mob_num.setText("+63 " + mobNum.substring(3));
+        if(mobnum.matches("^(09)\\d{9}$")) {
+            mob_num.setText("+63 " + mobnum.substring(1));
+        } else if(mobnum.matches("^(\\+639)\\d{9}$")) {
+            mob_num.setText("+63 " + mobnum.substring(3));
         }
 
         if(phoneReg) {
@@ -149,11 +150,11 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         SharedPreferences.Editor editor = sharedPref.edit();
         String JSON_DETAILS_KEY = "userDetails";
-        String jsonDetails = "{ \"name\" : \"" + WordUtils.capitalize(name.toLowerCase()) + "\", \"email\" : \"" + email + "\", \"mobnum\" : \"" + mobNum + "\", \"profile_pic\" : \"" + profpic + "\", \"auth\" : \"" + auth + "\"}";
+        String jsonDetails = "{ \"name\" : \"" + WordUtils.capitalize(name.toLowerCase()) + "\", \"email\" : \"" + email + "\", \"mobnum\" : \"" + mobnum + "\", \"profile_pic\" : \"" + profpic + "\", \"trusted\" : " + WordUtils.capitalize(trusted) + " , \"auth\" : \"" + auth + "\"}";
         editor.putString(JSON_DETAILS_KEY, jsonDetails);
         editor.apply();
         progressDialog.dismiss();
-        Intent intent = new Intent(PhoneAuthentication.this, BookingActivity.class);
+        Intent intent = new Intent(PhoneAuthentication.this, LandingActivity.class);
         startActivity(intent);
         finish();
     }
@@ -172,7 +173,7 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
     
     private void requestCode() {
         PhoneAuthProvider.getInstance().verifyPhoneNumber(
-                mobNum,
+                mobnum,
                 60,
                 TimeUnit.SECONDS,
                 PhoneAuthentication.this,
@@ -215,14 +216,54 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
                         for(DataSnapshot passenger : users.getChildren()) {
                             if(user_id.equals(passenger.getKey())) {
                                 userFound = true;
-                                DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(user_id);
+                                final DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(user_id);
                                 dbRef.child("name").setValue(WordUtils.capitalize(name.toLowerCase()));
-                                dbRef.child("email").setValue(email);
-                                dbRef.child("mobnum").setValue(mobNum);
                                 dbRef.child("auth").setValue(auth);
                                 dbRef.child("profile_pic").setValue(profpic);
+                                dbRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(DataSnapshot dataSnapshot) {
+                                        if(dataSnapshot.exists()) {
+                                            Map<String, Object> value = (Map<String, Object>) dataSnapshot.getValue();
+                                            Log.d("landingAc", value+"");
+                                            if(value.get("mobnum") != null) {
+                                                if(!value.get("mobnum").toString().equals("null")) {
+                                                    mobnum = value.get("mobnum").toString();
+                                                } else {
+                                                    mobnum = "null";
+                                                }
+                                            } else {
+                                                dbRef.child("mobnum").setValue(mobnum);
+                                            }
+                                            if(value.get("email") != null) {
+                                                if(!value.get("email").toString().equals("null")) {
+                                                    email = value.get("email").toString();
+                                                } else {
+                                                    email= "null";
+                                                }
+                                            } else {
+                                                dbRef.child("email").setValue(email);
+                                            }
+                                            if(value.get("trusted") != null) {
+                                                if(!value.get("trusted").toString().equals("null")) {
+                                                    trusted = value.get("trusted").toString();
+                                                } else {
+                                                    trusted= "null";
+                                                }
+                                            } else {
+                                                dbRef.child("trusted").setValue(trusted);
+                                            }
+                                            saveUserDetails();
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onCancelled(DatabaseError databaseError) { }
+                                });
                                 saveUserDetails();
-                                new CheckUserTasks(PhoneAuthentication.this).execute();
+                                SuperTask.execute(PhoneAuthentication.this,
+                                        TaskConfig.CHECK_USER_URL,
+                                        "check_user");
                                 break;
                             }
                         }
@@ -232,7 +273,7 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
                                 userFound = true;
                                 progressDialog.dismiss();
                                 mAuth.signOut();
-                                Intent intent = new Intent(PhoneAuthentication.this, LandingActivity.class);
+                                Intent intent = new Intent(PhoneAuthentication.this, SignUpActivity.class);
                                 intent.putExtra("loginError", 1);
                                 startActivity(intent);
                                 finish();
@@ -246,11 +287,13 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
                     DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference().child("users").child("driver").child(user_id);
                     dbRef.child("name").setValue(WordUtils.capitalize(name.toLowerCase()));
                     dbRef.child("email").setValue(email);
-                    dbRef.child("mobnum").setValue(mobNum);
+                    dbRef.child("mobnum").setValue(mobnum);
                     dbRef.child("auth").setValue(auth);
                     dbRef.child("profile_pic").setValue(profpic);
                     saveUserDetails();
-                    new CheckUserTasks(PhoneAuthentication.this).execute();
+                    SuperTask.execute(PhoneAuthentication.this,
+                            TaskConfig.CHECK_USER_URL,
+                            "check_user");
                 }
             }
 
@@ -274,17 +317,20 @@ public class PhoneAuthentication extends AppCompatActivity implements CheckUserT
     }
 
     @Override
-    public void parseCheckUserJSONString(String jsonString) {
-
-    }
+    public void onTaskRespond(String json, String id, int resultcode) { }
 
     @Override
-    public String createCheckUserPostString(ContentValues contentValues) throws UnsupportedEncodingException {
-        contentValues.put("android", 1);
-        contentValues.put("name", name);
-        contentValues.put("email", email);
-        contentValues.put("mobile", mobNum);
-        contentValues.put("firebase_id", mAuth.getCurrentUser().getUid());
-        return RequestPostString.create(contentValues);
+    public ContentValues setRequestValues(ContentValues contentValues, String id) {
+        switch (id) {
+            case "check_user":
+                contentValues.put("android", 1);
+                contentValues.put("name", name);
+                contentValues.put("email", email);
+                contentValues.put("mobile", mobnum);
+                contentValues.put("firebase_id", mAuth.getCurrentUser().getUid());
+                return contentValues;
+            default:
+                return null;
+        }
     }
 }

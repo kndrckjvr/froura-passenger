@@ -6,8 +6,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context="com.froura.develo4.passenger.BookingActivity"
-    tools:showIn="@layout/app_bar_booking">
+    tools:context="com.froura.develo4.passenger.LandingActivity"
+    tools:showIn="@layout/app_bar_landing">
 
     <fragment xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:map="http://schemas.android.com/apk/res-auto"

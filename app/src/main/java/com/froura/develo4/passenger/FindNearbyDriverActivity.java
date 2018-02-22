@@ -98,7 +98,7 @@ public class FindNearbyDriverActivity extends AppCompatActivity {
             @Override
             public void onCancelled(DatabaseError databaseError) {
                 bookingRef.removeValue();
-                Intent intent = new Intent(FindNearbyDriverActivity.this, BookingActivity.class);
+                Intent intent = new Intent(FindNearbyDriverActivity.this, LandingActivity.class);
                 intent.putExtra("hasPickup", 1);
                 intent.putExtra("pickupPlaceId", getIntent().getStringExtra("pickupPlaceId"));
                 intent.putExtra("hasDropoff", 1);
@@ -155,7 +155,7 @@ public class FindNearbyDriverActivity extends AppCompatActivity {
     public void onBackPressed() {
         super.onBackPressed();
         bookingRef.removeValue();
-        Intent intent = new Intent(FindNearbyDriverActivity.this, BookingActivity.class);
+        Intent intent = new Intent(FindNearbyDriverActivity.this, LandingActivity.class);
         intent.putExtra("hasPickup", 1);
         intent.putExtra("pickupPlaceId", getIntent().getStringExtra("pickupPlaceId"));
         intent.putExtra("hasDropoff", 1);

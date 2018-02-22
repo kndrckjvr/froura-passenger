@@ -32,26 +32,39 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
 
     private final Context context;
     private final String url;
-    private final ProgressDialog progressDialog;
-    private final String message;
-    private final boolean hasDialog;
+    private ProgressDialog progressDialog;
+    private String message;
+    private boolean hasDialog;
     private int resultcode;
+    private String id;
 
-    public SuperTask(Context context, String url, String message, boolean hasDialog) {
+    public SuperTask(Context context, String url, String id, String message, boolean hasDialog) {
         this.context = context;
         this.url = url;
         this.message = message;
         this.hasDialog = hasDialog;
+        this.id = id;
         progressDialog = new ProgressDialog(context);
     }
 
-    public static void execute(Context context, String url, String message, boolean hasDialog) {
-        new SuperTask(context,url,message, hasDialog).execute();
+    public static void execute(Context context, String url, String id, String message, boolean hasDialog) {
+        new SuperTask(context,url,id,message,hasDialog).execute();
+    }
+
+    public SuperTask(Context context, String url, String id) {
+        this.context = context;
+        this.url = url;
+        this.id = id;
+        hasDialog = false;
+    }
+
+    public static void execute(Context context, String url, String id) {
+        new SuperTask(context,url,id).execute();
     }
 
     public interface TaskListener {
-        void onTaskRespond(String json, int resultcode);
-        ContentValues setRequestValues(ContentValues contentValues);
+        void onTaskRespond(String json, String id, int resultcode);
+        ContentValues setRequestValues(ContentValues contentValues, String id);
     }
 
     public static String createPostString(Set<Map.Entry<String, Object>> set) throws UnsupportedEncodingException {
@@ -72,11 +85,12 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
-        progressDialog.setMessage(this.message);
-        progressDialog.setIndeterminate(false);
-        progressDialog.setCancelable(true);
-        if(hasDialog)
+        if(hasDialog) {
+            progressDialog.setMessage(this.message);
+            progressDialog.setIndeterminate(false);
+            progressDialog.setCancelable(false);
             progressDialog.show();
+        }
     }
 
     @Override
@@ -91,7 +105,7 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
             OutputStream outputStream = new BufferedOutputStream(httpURLConnection.getOutputStream());
             BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream));
             Log.d("Error Tag", ((AppCompatActivity)context).getPackageName());
-            String postString = createPostString(((TaskListener)this.context).setRequestValues(new ContentValues()).valueSet());
+            String postString = createPostString(((TaskListener)this.context).setRequestValues(new ContentValues(), id).valueSet());
             bufferedWriter.write(postString);
 
             // clear
@@ -128,6 +142,6 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
     protected void onPostExecute(String json) {
         super.onPostExecute(json);
         progressDialog.dismiss();
-        ((TaskListener)this.context).onTaskRespond(json, resultcode);
+        ((TaskListener)this.context).onTaskRespond(json, id, resultcode);
     }
 }

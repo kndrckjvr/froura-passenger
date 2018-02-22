@@ -1,10 +1,7 @@
 package com.froura.develo4.passenger;
 
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -13,7 +10,6 @@ import android.view.View;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
-import com.froura.develo4.passenger.config.TaskConfig;
 import com.froura.develo4.passenger.libraries.DialogCreator;
 import com.froura.develo4.passenger.tasks.SuperTask;
 import com.google.firebase.auth.FirebaseAuth;
@@ -46,24 +42,24 @@ public class MainActivity extends AppCompatActivity implements DialogCreator.Dia
                     handler.postDelayed(new Runnable() {
                         @Override
                         public void run() {
-                            Intent intent = new Intent(MainActivity.this, LandingActivity.class);
+                            Intent intent = new Intent(MainActivity.this, SignUpActivity.class);
                             startActivity(intent);
                             finish();
                             return;
                         }
                     }, 10);
                 } else {
-                    Intent intent = new Intent(MainActivity.this, BookingActivity.class);
+                    Intent intent = new Intent(MainActivity.this, LandingActivity.class);
                     startActivity(intent);
                     finish();
-                    //SuperTask.execute(MainActivity.this, TaskConfig.CHECK_CONNECTION_URL, "", false);
+                    //SuperTask.execute(MainActivity.this, TaskConfig.CHECK_CONNECTION_URL, "check_connection");
                 }
             }
         };
     }
 
     @Override
-    public void onTaskRespond(String json, int resultcode) {
+    public void onTaskRespond(String json, String id, int resultcode) {
         if(resultcode == 503) {
             /*Intent intent = new Intent(MainActivity.this, SMSActivity.class);
             startactivity(intent);
@@ -73,7 +69,7 @@ public class MainActivity extends AppCompatActivity implements DialogCreator.Dia
         try {
             JSONObject jsonObject = new JSONObject(json);
             if(jsonObject.getString("status").equals("SUCCESS")) {
-                Intent intent = new Intent(MainActivity.this, BookingActivity.class);
+                Intent intent = new Intent(MainActivity.this, LandingActivity.class);
                 startActivity(intent);
                 finish();
             }
@@ -81,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements DialogCreator.Dia
     }
 
     @Override
-    public ContentValues setRequestValues(ContentValues contentValues) {
+    public ContentValues setRequestValues(ContentValues contentValues, String id) {
         contentValues.put("android", 1);
         return contentValues;
     }

@@ -78,7 +78,10 @@ public class DriverAcceptedActivity extends AppCompatActivity
     private LinearLayout informationLayout;
 
     private String driverId;
-    private Bitmap driverProfpic;
+    private String driver_name;
+    private String driver_plate;
+    private String driver_mobnum;
+    private String driver_profpic;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -111,7 +114,21 @@ public class DriverAcceptedActivity extends AppCompatActivity
 
         mapFragment.getMapAsync(this);
 
+        getDriverDetails();
         showDriverLocation();
+    }
+
+    private void getDriverDetails() {
+        DatabaseReference driverDetails = FirebaseDatabase.getInstance().getReference("users/driver/" + driverId);
+        driverDetails.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) { }
+        });
     }
 
     private void showDriverLocation() {

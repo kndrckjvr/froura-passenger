@@ -144,7 +144,7 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
 
     @Override
     public void onPlaceClick(ArrayList<PlaceAutocompleteObject> mResultList, int position) {
-        Intent intent = new Intent(SearchActivity.this, BookingActivity.class);
+        Intent intent = new Intent(SearchActivity.this, LandingActivity.class);
         if(from == 0) {
             if(hasPickup == 1) {
                 intent.putExtra("hasPickup", 1);
@@ -176,7 +176,7 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        Intent intent = new Intent(SearchActivity.this, BookingActivity.class);
+        Intent intent = new Intent(SearchActivity.this, LandingActivity.class);
         if(hasPickup == 1) {
             intent.putExtra("hasPickup", 1);
             intent.putExtra("pickupPlaceId", pickupPlaceId);

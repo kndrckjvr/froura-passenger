@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.froura.develo4.passenger.BookingActivity">
+    tools:context="com.froura.develo4.passenger.LandingActivity">
 
     <android.support.design.widget.AppBarLayout
         android:layout_width="match_parent"
@@ -37,7 +37,7 @@
             layout="@layout/content_history"
             android:id="@+id/booking"/>
         <include
-            layout="@layout/content_account"
+            layout="@layout/content_profile"
             android:id="@+id/booking"/>
         <include
             layout="@layout/content_settings"
