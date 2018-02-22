@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
 import android.location.Location;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
@@ -24,6 +25,10 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
+import com.bumptech.glide.request.target.SimpleTarget;
+import com.bumptech.glide.request.transition.Transition;
 import com.froura.develo4.passenger.libraries.DialogCreator;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -31,6 +36,7 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -72,6 +78,7 @@ public class DriverAcceptedActivity extends AppCompatActivity
     private LinearLayout informationLayout;
 
     private String driverId;
+    private Bitmap driverProfpic;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -146,12 +153,26 @@ public class DriverAcceptedActivity extends AppCompatActivity
                     Toast.makeText(DriverAcceptedActivity.this, "Your driver is approximately " + dist + " meters", Toast.LENGTH_SHORT).show();
                 }
 
-                driverMarker = mMap.addMarker(new MarkerOptions().position(drvLatLng).icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher)));
+                driverMarker = mMap.addMarker(new MarkerOptions().position(drvLatLng));
+                loadMarkerIcon(driverMarker);
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
 
+            }
+        });
+    }
+
+    private void loadMarkerIcon(final Marker marker) {
+        Glide.with(this).asBitmap()
+                .load("http://www.myiconfinder.com/uploads/iconsets/256-256-a5485b563efc4511e0cd8bd04ad0fe9e.png")
+                .apply(RequestOptions.fitCenterTransform())
+                .into(new SimpleTarget<Bitmap>() {
+            @Override
+            public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
+                BitmapDescriptor icon = BitmapDescriptorFactory.fromBitmap(resource);
+                marker.setIcon(icon);
             }
         });
     }
