@@ -89,9 +89,11 @@
         <activity
             android:name=".SearchActivity"
             android:theme="@style/AppTheme.NoActionBar" />
-        <activity android:name=".DriverAcceptedActivity"
+        <activity
+            android:name=".DriverAcceptedActivity"
             android:theme="@style/AppTheme.NoActionBar" />
-        <activity android:name=".MapPointActivity"></activity>
+        <activity android:name=".MapPointActivity" />
+        <activity android:name=".UpdateAccountActivity"></activity>
     </application>
 
 </manifest>

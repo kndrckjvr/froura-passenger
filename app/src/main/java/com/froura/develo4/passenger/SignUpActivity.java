@@ -61,7 +61,7 @@ public class SignUpActivity extends AppCompatActivity {
     private String name = "null";
     private String profpic = "null";
     private String mobnum = "null";
-    private String trusted = "null";
+    private String trusted_id = "null";
     private String auth;
     private static final int RC_SIGN_IN = 1;
 
@@ -225,15 +225,14 @@ public class SignUpActivity extends AppCompatActivity {
                     } else {
                         dbRef.child("email").setValue(email);
                     }
-                    Log.d("signup", value.get("trusted").toString());
                     if(value.get("trusted") != null) {
                         if(!value.get("trusted").toString().equals("null")) {
-                            trusted = value.get("trusted").toString();
+                            trusted_id = value.get("trusted").toString();
                         } else {
-                            trusted= "null";
+                            trusted_id = "null";
                         }
                     } else {
-                        dbRef.child("trusted").setValue(trusted);
+                        dbRef.child("trusted").setValue(trusted_id);
                     }
                     saveUserDetails();
                 }
@@ -248,7 +247,7 @@ public class SignUpActivity extends AppCompatActivity {
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         SharedPreferences.Editor editor = sharedPref.edit();
         String JSON_DETAILS_KEY = "userDetails";
-        String jsonDetails = "{ \"name\" : \"" + WordUtils.capitalize(name.toLowerCase()) + "\", \"email\" : \"" + email + "\", \"mobnum\" : \"" + mobnum + "\", \"profile_pic\" : \"" + profpic + "\", \"trusted\" : " + WordUtils.capitalize(trusted ) + " , \"auth\" : \"" + auth + "\"}";
+        String jsonDetails = "{ \"name\" : \"" + WordUtils.capitalize(name.toLowerCase()) + "\", \"email\" : \"" + email + "\", \"mobnum\" : \"" + mobnum + "\", \"profile_pic\" : \"" + profpic + "\", \"trusted_id\" : " + WordUtils.capitalize(trusted_id) + ", \"auth\" : \"" + auth + "\"}";
         editor.putString(JSON_DETAILS_KEY, jsonDetails);
         editor.apply();
         progressDialog.dismiss();

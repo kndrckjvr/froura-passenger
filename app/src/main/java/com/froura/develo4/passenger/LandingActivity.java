@@ -1,5 +1,6 @@
 package com.froura.develo4.passenger;
 
+import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -71,8 +72,15 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.UserInfo;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import org.json.JSONObject;
+
+import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 import me.grantland.widget.AutofitHelper;
@@ -127,7 +135,8 @@ public class LandingActivity extends AppCompatActivity
     private String user_mobnum;
     private String user_email;
     private String user_pic;
-    private String user_trusted;
+    private String user_trusted_id;
+    private String user_trusted_name;
     private String taxi_fare = "0.00";
     private String duration = "0KM";
     private String distance = "0M";
@@ -304,8 +313,6 @@ public class LandingActivity extends AppCompatActivity
                 break;
             case R.id.profile:
                 setAccountProfile();
-                viewFlipper.setDisplayedChild(3);
-                toolbar.setTitle("Profile");
                 break;
             case R.id.settings:
                 viewFlipper.setDisplayedChild(4);
@@ -345,11 +352,16 @@ public class LandingActivity extends AppCompatActivity
     }
 
     private void setAccountProfile() {
-        setDetails();
-        TextView nameTxtVw = findViewById(R.id.name_txt_vw);
-        TextView emailTxtVw = findViewById(R.id.email_txt_vw);
-        TextView mobnumTxtVw = findViewById(R.id.mobnum_txt_vw);
-        TextView trustedTxtVw = findViewById(R.id.trusted_txt_vw);
+        final ProgressDialog progressDialog = new ProgressDialog(this);
+        progressDialog.setCancelable(false);
+        progressDialog.setMessage("Fetching Data...");
+        progressDialog.setIndeterminate(false);
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+        final TextView nameTxtVw = findViewById(R.id.name_txt_vw);
+        final TextView emailTxtVw = findViewById(R.id.email_txt_vw);
+        final TextView mobnumTxtVw = findViewById(R.id.mobnum_txt_vw);
+        final TextView trustedTxtVw = findViewById(R.id.trusted_txt_vw);
         ImageView profpicImgVw = findViewById(R.id.profpic_img_vw);
         Button update = findViewById(R.id.update_btn);
 
@@ -358,18 +370,42 @@ public class LandingActivity extends AppCompatActivity
                 .apply(RequestOptions.circleCropTransform())
                 .into(profpicImgVw);
 
-        nameTxtVw.setText(user_name);
-        emailTxtVw.setText(user_email);
-        mobnumTxtVw.setText(user_mobnum);
-        trustedTxtVw.setText(user_trusted);
-
         update.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //Intent intent = new Intent(LandingActivity.this, UpdateAccountActivity.class);
-                //startActivity(intent);
+                Intent intent = new Intent(LandingActivity.this, UpdateAccountActivity.class);
+                startActivity(intent);
             }
         });
+        if(!user_trusted_id.equals("null")) {
+            DatabaseReference pssngr = FirebaseDatabase.getInstance().getReference("users/passenger/"+user_trusted_id);
+            pssngr.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    Map<String, Object> data = (Map<String, Object>) dataSnapshot.getValue();
+                    user_trusted_name = data.get("name") != null ? data.get("name").toString() : "null";
+                    nameTxtVw.setText(user_name);
+                    emailTxtVw.setText(user_email.equals("null") ? "None" :  user_email);
+                    mobnumTxtVw.setText(user_mobnum.equals("null") ? "None" :  user_mobnum);
+                    trustedTxtVw.setText(user_trusted_name);
+                    viewFlipper.setDisplayedChild(3);
+                    toolbar.setTitle("Profile");
+                    progressDialog.dismiss();
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) { }
+            });
+        } else {
+            nameTxtVw.setText(user_name);
+            emailTxtVw.setText(user_email.equals("null") ? "None" :  user_email);
+            mobnumTxtVw.setText(user_mobnum.equals("null") ? "None" :  user_mobnum);
+            trustedTxtVw.setText(user_trusted_name);
+            viewFlipper.setDisplayedChild(3);
+            toolbar.setTitle("Profile");
+            progressDialog.dismiss();
+        }
+
     }
 
     private void prepareBooking() {
@@ -565,10 +601,10 @@ public class LandingActivity extends AppCompatActivity
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String JSON_DETAILS_KEY = "userDetails";
         String userDetails = sharedPref.getString(JSON_DETAILS_KEY, "{ \"name\" : NULL }");
+        Log.d("bagoto", userDetails);
         try {
             JSONObject jsonObject = new JSONObject(userDetails);
             if(!jsonObject.getString("name").equals("NULL")) {
-                Log.d("landing", userDetails);
                 name.setText(jsonObject.getString("name"));
                 if(!jsonObject.getString("profile_pic").equals("default")) {
                     user_pic = jsonObject.getString("profile_pic");
@@ -580,7 +616,8 @@ public class LandingActivity extends AppCompatActivity
                 user_name = jsonObject.getString("name");
                 user_email = jsonObject.getString("email");
                 user_mobnum = jsonObject.getString("mobnum");
-                user_trusted = jsonObject.getString("trusted");
+                user_trusted_id = jsonObject.getString("trusted_id");
+                if(user_trusted_id.equals("null")) user_trusted_name = "None";
             }
         } catch (Exception e) { }
     }
