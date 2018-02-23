@@ -51,6 +51,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.List;
+import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 import me.grantland.widget.AutofitHelper;
@@ -123,7 +124,14 @@ public class DriverAcceptedActivity extends AppCompatActivity
         driverDetails.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-
+                Map<String, Object> data = (Map<String, Object>) dataSnapshot.getValue();
+                if(data.get("profile_pic") != null) {
+                    if(data.get("profile_pic").equals("default")) {
+                        driver_profpic = "default";
+                    } else {
+                        driver_profpic = data.get("profile_pic").toString();
+                    }
+                }
             }
 
             @Override
@@ -182,16 +190,28 @@ public class DriverAcceptedActivity extends AppCompatActivity
     }
 
     private void loadMarkerIcon(final Marker marker) {
-        Glide.with(this).asBitmap()
-                .load("http://www.myiconfinder.com/uploads/iconsets/256-256-a5485b563efc4511e0cd8bd04ad0fe9e.png")
-                .apply(RequestOptions.fitCenterTransform())
+        if(driver_profpic.equals("default"))
+            Glide.with(this).asBitmap()
+                    .load(driver_profpic)
+                    .apply(RequestOptions.circleCropTransform())
+                    .into(new SimpleTarget<Bitmap>() {
+                        @Override
+                        public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
+                            BitmapDescriptor icon = BitmapDescriptorFactory.fromBitmap(resource);
+                            marker.setIcon(icon);
+                        }
+                    });
+        else
+            Glide.with(this).asBitmap()
+                .load(driver_profpic)
+                .apply(RequestOptions.circleCropTransform())
                 .into(new SimpleTarget<Bitmap>() {
             @Override
             public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
-                BitmapDescriptor icon = BitmapDescriptorFactory.fromBitmap(resource);
-                marker.setIcon(icon);
-            }
-        });
+                    BitmapDescriptor icon = BitmapDescriptorFactory.fromBitmap(resource);
+                    marker.setIcon(icon);
+                }
+            });
     }
 
     @Override
