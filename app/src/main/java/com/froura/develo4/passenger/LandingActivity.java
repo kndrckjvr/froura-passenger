@@ -689,9 +689,7 @@ public class LandingActivity extends AppCompatActivity
 
     @Override
     public void onLocationChanged(Location location) {
-        if(getApplicationContext()!=null){
-            mLastLocation = location;
-        }
+        mLastLocation = location;
     }
 
     private void setText(TextView txtVw, String str) {
