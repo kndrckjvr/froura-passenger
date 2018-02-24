@@ -29,7 +29,6 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.Transformation;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -128,6 +127,7 @@ public class LandingActivity extends AppCompatActivity
     private int noDriver = -1;
     private boolean cameraUpdated = false;
     private boolean isTraffic = false;
+    private boolean fromUpdate = false;
     final int LOCATION_REQUEST_CODE = 1;
 
     //User Details
@@ -222,7 +222,7 @@ public class LandingActivity extends AppCompatActivity
             bookBtn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    prepareBooking();
+                    prepareBooking(false);
                 }
             });
         } else {
@@ -352,6 +352,7 @@ public class LandingActivity extends AppCompatActivity
     }
 
     private void setAccountProfile() {
+        setDetails();
         final ProgressDialog progressDialog = new ProgressDialog(this);
         progressDialog.setCancelable(false);
         progressDialog.setMessage("Fetching Data...");
@@ -359,9 +360,9 @@ public class LandingActivity extends AppCompatActivity
         progressDialog.setCancelable(false);
         progressDialog.show();
         final TextView nameTxtVw = findViewById(R.id.name_txt_vw);
-        final TextView emailTxtVw = findViewById(R.id.email_txt_vw);
-        final TextView mobnumTxtVw = findViewById(R.id.mobnum_txt_vw);
-        final TextView trustedTxtVw = findViewById(R.id.trusted_txt_vw);
+        final TextView emailTxtVw = findViewById(R.id.email_edit_txt);
+        final TextView mobnumTxtVw = findViewById(R.id.mobnum_edit_txt);
+        final TextView trustedTxtVw = findViewById(R.id.change_trusted_btn);
         ImageView profpicImgVw = findViewById(R.id.profpic_img_vw);
         Button update = findViewById(R.id.update_btn);
 
@@ -373,6 +374,7 @@ public class LandingActivity extends AppCompatActivity
         update.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                fromUpdate = true;
                 Intent intent = new Intent(LandingActivity.this, UpdateAccountActivity.class);
                 startActivity(intent);
             }
@@ -408,8 +410,8 @@ public class LandingActivity extends AppCompatActivity
 
     }
 
-    private void prepareBooking() {
-        if(checkDetails() == 1) {
+    private void prepareBooking(boolean notrusted) {
+        if(checkDetails() == 1 || notrusted) {
             Intent intent = new Intent(LandingActivity.this, FindNearbyDriverActivity.class);
             intent.putExtra("pickupName", pickupName);
             intent.putExtra("pickupLat", pickupLocation.latitude);
@@ -426,8 +428,16 @@ public class LandingActivity extends AppCompatActivity
             showSnackbarMessage(bookBtn, "Please set your Mobile Number.");
         } else if(checkDetails() == 2) {
             showSnackbarMessage(bookBtn, "Please set your Email Address.");
-        } else {
+        } else if(checkDetails() == -3) {
             showSnackbarMessage(bookBtn, "Please set your Mobile Number and Email Address.");
+        } else if(checkDetails() == -4) {
+            DialogCreator.create(this, "noTrusted")
+                    .setTitle("No Trusted Contact")
+                    .setMessage("Are you sure to proceed?")
+                    .setCancelable(false)
+                    .setPositiveButton("BOOK")
+                    .setNegativeButton("CANCEL")
+                    .show();
         }
     }
 
@@ -741,6 +751,9 @@ public class LandingActivity extends AppCompatActivity
                         new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
                         LOCATION_REQUEST_CODE);
                 break;
+            case "noTrusted":
+                prepareBooking(true);
+                break;
         }
     }
 
@@ -800,6 +813,9 @@ public class LandingActivity extends AppCompatActivity
         }
         if(user_email.equals("null")) {
             return -2;
+        }
+        if(user_trusted_id.equals("null")) {
+            return -4;
         }
         return 1;
     }
@@ -867,5 +883,14 @@ public class LandingActivity extends AppCompatActivity
         // 1dp/ms
         a.setDuration((int)(initialHeight / v.getContext().getResources().getDisplayMetrics().density));
         v.startAnimation(a);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if(fromUpdate) {
+            setAccountProfile();
+            fromUpdate = false;
+        }
     }
 }

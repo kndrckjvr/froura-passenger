@@ -28,6 +28,7 @@
         android:layout_marginTop="19dp"
         android:ems="10"
         android:hint="@string/et_hint_verification_code"
+        android:maxLines="1"
         android:inputType="number"
         android:textAlignment="center"
         android:textSize="24sp" />

@@ -104,8 +104,7 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
                     verifCode.setError(null);
                     verifCode.setCompoundDrawablesWithIntrinsicBounds(0,0, 0,0);
                 } else {
-                    verifCode.setError("Code is required.");
-                    verifCode.setCompoundDrawablesWithIntrinsicBounds(0,0, R.drawable.ic_warning_red_24dp,0);
+                    verifCode.setError("Code is required.", getResources().getDrawable(R.drawable.ic_warning_red_24dp));
                 }
 
             }
