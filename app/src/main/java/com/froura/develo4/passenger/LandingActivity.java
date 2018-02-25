@@ -81,7 +81,6 @@ import org.json.JSONObject;
 
 import java.util.Map;
 
-import de.hdodenhof.circleimageview.CircleImageView;
 import me.grantland.widget.AutofitHelper;
 
 public class LandingActivity extends AppCompatActivity
@@ -95,7 +94,8 @@ public class LandingActivity extends AppCompatActivity
 
     private DrawerLayout drawer;
     private TextView name;
-    private CircleImageView prof_pic;
+    private TextView email_txt_vw;
+    private ImageView prof_pic;
     private CardView cardView;
     private CardView viewDetails;
     private Button bookBtn;
@@ -162,14 +162,23 @@ public class LandingActivity extends AppCompatActivity
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = findViewById(R.id.nav_view);
+        final NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         navigationView.getMenu().getItem(0).setChecked(true);
         View v = navigationView.getHeaderView(0);
         name = v.findViewById(R.id.txtVw_name);
+        email_txt_vw = v.findViewById(R.id.email_txt_vw);
         prof_pic = v.findViewById(R.id.imgVw_profile_pic);
         AutofitHelper.create(name);
-
+        prof_pic.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                setAccountProfile();
+                drawer.closeDrawer(GravityCompat.START);
+                drawer = findViewById(R.id.drawer_layout);
+                navigationView.getMenu().getItem(3).setChecked(true);
+            }
+        });
         Glide.with(this)
                 .load(getImage("placeholder"))
                 .apply(RequestOptions.circleCropTransform())
@@ -481,13 +490,16 @@ public class LandingActivity extends AppCompatActivity
                         distanceTxtVw.setText(distance);
                         durationTxtVw.setText(duration);
                         expand(viewDetails);
+                    } else if(jsonObject.getString("status").equals("STATUS: SERVER ERROR!")) {
+                        SnackBarCreator.set("Sorry! Place is not available right now.");
+                        SnackBarCreator.show(bookBtn);
                     }
 
                     LatLngBounds.Builder builder = new LatLngBounds.Builder();
                     builder.include(pickupLocation);
                     builder.include(dropoffLocation);
                     LatLngBounds bounds = builder.build();
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 200));
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 130));
                     break;
             }
         } catch(Exception e) {}
@@ -617,7 +629,6 @@ public class LandingActivity extends AppCompatActivity
         try {
             JSONObject jsonObject = new JSONObject(userDetails);
             if(!jsonObject.getString("name").equals("NULL")) {
-                name.setText(jsonObject.getString("name"));
                 if(!jsonObject.getString("profile_pic").equals("default")) {
                     user_pic = jsonObject.getString("profile_pic");
                     Glide.with(this)
@@ -631,6 +642,8 @@ public class LandingActivity extends AppCompatActivity
                 user_mobnum = jsonObject.getString("mobnum");
                 user_trusted_id = jsonObject.getString("trusted_id");
                 if(user_trusted_id.equals("null")) user_trusted_name = "None";
+                name.setText(jsonObject.getString("name"));
+                email_txt_vw.setText(user_email.equals("null") ? "None" : user_email    );
             }
         } catch (Exception e) { }
     }

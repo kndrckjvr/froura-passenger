@@ -72,12 +72,12 @@ public class FindNearbyDriverActivity extends AppCompatActivity {
         searchTimer.start();
         cntDwnTxtVw.setVisibility(View.GONE);
         btnCancel.setVisibility(View.GONE);
-        bookingRef.child("pickupName").setValue(getIntent().getStringExtra("pickupName"));
-        bookingRef.child("pickupLocation").child("0").setValue(getIntent().getDoubleExtra("pickupLat", 0));
-        bookingRef.child("pickupLocation").child("1").setValue(getIntent().getDoubleExtra("pickupLng", 0));
-        bookingRef.child("dropoffName").setValue(getIntent().getStringExtra("dropoffName"));
-        bookingRef.child("dropoffLocation").child("0").setValue(getIntent().getDoubleExtra("dropoffLat", 0));
-        bookingRef.child("dropoffLocation").child("1").setValue(getIntent().getDoubleExtra("dropoffLng", 0));
+        bookingRef.child("pickup").child("name").setValue(getIntent().getStringExtra("pickupName"));
+        bookingRef.child("pickup").child("lat").setValue(getIntent().getDoubleExtra("pickupLat", 0));
+        bookingRef.child("pickup").child("lng").setValue(getIntent().getDoubleExtra("pickupLng", 0));
+        bookingRef.child("dropoff").child("name").setValue(getIntent().getStringExtra("dropoffName"));
+        bookingRef.child("dropoff").child("lat").setValue(getIntent().getDoubleExtra("dropoffLat", 0));
+        bookingRef.child("dropoff").child("lng").setValue(getIntent().getDoubleExtra("dropoffLng", 0));
         bookingRef.child("fare").setValue(getIntent().getStringExtra("fare"));
         findNearbyDriver();
 

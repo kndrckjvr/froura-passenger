@@ -87,6 +87,7 @@ public class TrustedContactAdapter extends RecyclerView.Adapter<TrustedContactAd
         return new Filter() {
             @Override
             protected FilterResults performFiltering(CharSequence charSequence) {
+                lastPosition = -1;
                 FilterResults results = new FilterResults();
                 if(userRefValueListener != null)
                     userRef.removeEventListener(userRefValueListener);
@@ -189,7 +190,6 @@ public class TrustedContactAdapter extends RecyclerView.Adapter<TrustedContactAd
     }
 
     private void setAnimation(View viewToAnimate, int position) {
-        // If the bound view wasn't previously displayed on screen, it's animated
         if (position > lastPosition) {
             Animation animation = AnimationUtils.loadAnimation(context, android.R.anim.slide_in_left);
             viewToAnimate.startAnimation(animation);
