@@ -4,7 +4,7 @@
 
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
-
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <!--
          The ACCESS_COARSE/FINE_LOCATION permissions are not required to use
          Google Maps Android API v2, but you must specify either coarse or fine
@@ -96,7 +96,9 @@
         <activity
             android:name=".UpdateAccountActivity"
             android:label="Update Account" />
-        <activity android:name=".TrustedContactActivity"></activity>
+        <activity
+            android:name=".TrustedContactActivity"
+            android:label="Trusted Contact"/>
     </application>
 
 </manifest>

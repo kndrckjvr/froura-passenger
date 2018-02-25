@@ -172,6 +172,7 @@ public class LandingActivity extends AppCompatActivity
 
         Glide.with(this)
                 .load(getImage("placeholder"))
+                .apply(RequestOptions.circleCropTransform())
                 .into(prof_pic);
         uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
         setDetails();
@@ -363,8 +364,9 @@ public class LandingActivity extends AppCompatActivity
         final TextView emailTxtVw = findViewById(R.id.email_edit_txt);
         final TextView mobnumTxtVw = findViewById(R.id.mobnum_edit_txt);
         final TextView trustedTxtVw = findViewById(R.id.change_trusted_btn);
-        ImageView profpicImgVw = findViewById(R.id.profpic_img_vw);
+        final ImageView profpicImgVw = findViewById(R.id.profpic_img_vw);
         Button update = findViewById(R.id.update_btn);
+        Log.d("setaccount", user_pic);
 
         Glide.with(this)
                 .load(user_pic)
@@ -620,6 +622,7 @@ public class LandingActivity extends AppCompatActivity
                     user_pic = jsonObject.getString("profile_pic");
                     Glide.with(this)
                             .load(user_pic)
+                            .apply(RequestOptions.circleCropTransform())
                             .into(prof_pic);
                 }
 

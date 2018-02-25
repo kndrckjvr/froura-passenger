@@ -60,10 +60,10 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
         searchET = findViewById(R.id.searchET);
         clearImgVw = findViewById(R.id.clearImgVw);
         listRecVw = findViewById(R.id.listRecVw);
-        backImgVw = findViewById(R.id.backImgVw);
-        openMap = findViewById(R.id.openMap);
         listRecVw.setHasFixedSize(true);
         listRecVw.setLayoutManager(new LinearLayoutManager(this));
+        backImgVw = findViewById(R.id.backImgVw);
+        openMap = findViewById(R.id.openMap);
 
         from = getIntent().getIntExtra("from", -1);
 

@@ -301,4 +301,11 @@ public class SignUpActivity extends AppCompatActivity {
 
         mCallbackManager.onActivityResult(requestCode, resultCode, data);
     }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(AccessToken.getCurrentAccessToken() != null)
+            LoginManager.getInstance().logOut();
+    }
 }
