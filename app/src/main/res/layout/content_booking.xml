@@ -116,7 +116,7 @@
                             android:layout_weight="0"
                             android:background="@null"
                             android:contentDescription="@string/place_autocomplete_search_hint"
-                            android:src="@drawable/ic_place_yellow_24dp" />
+                            android:src="@drawable/ic_pin_yellow_24dp" />
 
                         <TextView
                             android:id="@+id/txtVw_pickup"

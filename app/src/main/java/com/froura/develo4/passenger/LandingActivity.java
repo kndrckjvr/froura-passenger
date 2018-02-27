@@ -305,6 +305,11 @@ public class LandingActivity extends AppCompatActivity
         });
     }
 
+    private void setHistoryList() {
+        viewFlipper.setDisplayedChild(2);
+        toolbar.setTitle("History");
+    }
+
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
@@ -318,8 +323,7 @@ public class LandingActivity extends AppCompatActivity
                 toolbar.setTitle("Reservation");
                 break;
             case R.id.history:
-                viewFlipper.setDisplayedChild(2);
-                toolbar.setTitle("History");
+                setHistoryList();
                 break;
             case R.id.profile:
                 setAccountProfile();
@@ -390,16 +394,13 @@ public class LandingActivity extends AppCompatActivity
                 startActivity(intent);
             }
         });
-        if(!user_trusted_id.equals("null")) {
+        if(!user_trusted_id.equals("None")) {
             DatabaseReference pssngr = FirebaseDatabase.getInstance().getReference("users/passenger/"+user_trusted_id);
             pssngr.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     Map<String, Object> data = (Map<String, Object>) dataSnapshot.getValue();
-                    user_trusted_name = data.get("name") != null ? data.get("name").toString() : "null";
-                    nameTxtVw.setText(user_name);
-                    emailTxtVw.setText(user_email.equals("null") ? "None" :  user_email);
-                    mobnumTxtVw.setText(user_mobnum.equals("null") ? "None" :  user_mobnum);
+                    user_trusted_name = data.get("name") != null ? data.get("name").toString() : "None";
                     trustedTxtVw.setText(user_trusted_name);
                     viewFlipper.setDisplayedChild(3);
                     toolbar.setTitle("Profile");
@@ -410,15 +411,14 @@ public class LandingActivity extends AppCompatActivity
                 public void onCancelled(DatabaseError databaseError) { }
             });
         } else {
-            nameTxtVw.setText(user_name);
-            emailTxtVw.setText(user_email.equals("null") ? "None" :  user_email);
-            mobnumTxtVw.setText(user_mobnum.equals("null") ? "None" :  user_mobnum);
             trustedTxtVw.setText(user_trusted_name);
             viewFlipper.setDisplayedChild(3);
             toolbar.setTitle("Profile");
             progressDialog.dismiss();
         }
-
+        nameTxtVw.setText(user_name);
+        emailTxtVw.setText(user_email);
+        mobnumTxtVw.setText(user_mobnum);
     }
 
     private void prepareBooking(boolean notrusted) {
@@ -575,16 +575,17 @@ public class LandingActivity extends AppCompatActivity
         mLocationRequest.setInterval(5000);
         mLocationRequest.setFastestInterval(1000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        if (ActivityCompat.checkSelfPermission(this,
-                android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this,
-                        android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            DialogCreator.create(this, "locationPermission")
-                    .setMessage("We need to access your location and device state to continue using FROURÁ.")
-                    .setPositiveButton("OK")
-                    .show();
-            return;
-        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
+            if (ActivityCompat.checkSelfPermission(this,
+                    android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                    ActivityCompat.checkSelfPermission(this,
+                            android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                DialogCreator.create(this, "locationPermission")
+                        .setMessage("We need to access your location and device state to continue using FROURÁ.")
+                        .setPositiveButton("OK")
+                        .show();
+                return;
+            }
         mMap.setMyLocationEnabled(true);
         LocationServices.FusedLocationApi
                 .requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
@@ -638,12 +639,11 @@ public class LandingActivity extends AppCompatActivity
                 }
 
                 user_name = jsonObject.getString("name");
-                user_email = jsonObject.getString("email");
-                user_mobnum = jsonObject.getString("mobnum");
-                user_trusted_id = jsonObject.getString("trusted_id");
-                if(user_trusted_id.equals("null")) user_trusted_name = "None";
+                user_email = jsonObject.getString("email").equals("null") ? "None" : jsonObject.getString("email");
+                user_mobnum = jsonObject.getString("mobnum").equals("null") ? "None" : jsonObject.getString("mobnum");
+                user_trusted_id = jsonObject.getString("trusted_id").equals("null") ? "None" : jsonObject.getString("trusted_id");
                 name.setText(jsonObject.getString("name"));
-                email_txt_vw.setText(user_email.equals("null") ? "None" : user_email    );
+                email_txt_vw.setText(user_email);
             }
         } catch (Exception e) { }
     }
@@ -675,13 +675,7 @@ public class LandingActivity extends AppCompatActivity
             boolean success = googleMap.setMapStyle(
                     MapStyleOptions.loadRawResourceStyle(
                             this, R.raw.mapstyle));
-
-            if (!success) {
-                Log.e("Booking", "Style parsing failed.");
-            }
-        } catch (Resources.NotFoundException e) {
-            Log.e("Booking", "Can't find style. Error: ", e);
-        }
+        } catch (Resources.NotFoundException e) { }
         mMap = googleMap;
         mMap.getUiSettings().setMyLocationButtonEnabled(false);
         mMap.setPadding(0, hasDropoff == 1 ? viewDetails.getLayoutParams().height : 0 , 0 , cardView.getLayoutParams().height);
@@ -727,11 +721,15 @@ public class LandingActivity extends AppCompatActivity
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         switch (requestCode) {
             case LOCATION_REQUEST_CODE:
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     mapFragment.getMapAsync(this);
                 } else {
-                    finish();
+                    DialogCreator.create(this,"locationPermission")
+                            .setMessage("We need to access your location and device state to continue using FROURÁ. Ask permission again?")
+                            .setPositiveButton("YES")
+                            .setNegativeButton("NO")
+                            .setCancelable(false)
+                            .show();
                 }
                 break;
         }
@@ -772,7 +770,13 @@ public class LandingActivity extends AppCompatActivity
     }
 
     @Override
-    public void onClickNegativeButton(String actionId) { }
+    public void onClickNegativeButton(String actionId) {
+        switch (actionId) {
+            case "locationPermission":
+                finish();
+                break;
+        }
+    }
 
     @Override
     public void onClickNeutralButton(String actionId) { }
@@ -790,16 +794,17 @@ public class LandingActivity extends AppCompatActivity
     }
 
     private void askPermissions() {
-        if (ActivityCompat.checkSelfPermission(this,
-                android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this,
-                        android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(LandingActivity.this,
-                    new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
-                    LOCATION_REQUEST_CODE);
-        } else {
-            Toast.makeText(this, "All Permissions granted.", Toast.LENGTH_SHORT).show();
-        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
+            if (ActivityCompat.checkSelfPermission(this,
+                    android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                    ActivityCompat.checkSelfPermission(this,
+                            android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(LandingActivity.this,
+                        new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
+                        LOCATION_REQUEST_CODE);
+            } else {
+                Toast.makeText(this, "All Permissions granted.", Toast.LENGTH_SHORT).show();
+            }
     }
 
     private void permissionDenied() {
@@ -811,24 +816,17 @@ public class LandingActivity extends AppCompatActivity
         });
     }
 
-    private boolean permissionStatus() {
-        return ActivityCompat.checkSelfPermission(this,
-                android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this,
-                        android.Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
-    }
-
     private int checkDetails() {
-        if(user_mobnum.equals("null") && user_email.equals("null")) {
+        if(user_mobnum.equals("None") && user_email.equals("None")) {
             return  -3;
         }
-        if(user_mobnum.equals("null")) {
+        if(user_mobnum.equals("None")) {
             return -1;
         }
-        if(user_email.equals("null")) {
+        if(user_email.equals("None")) {
             return -2;
         }
-        if(user_trusted_id.equals("null")) {
+        if(user_trusted_id.equals("None")) {
             return -4;
         }
         return 1;
@@ -849,11 +847,9 @@ public class LandingActivity extends AppCompatActivity
         v.measure(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         final int targetHeight = v.getMeasuredHeight();
 
-        // Older versions of android (pre API 21) cancel animations for views with a height of 0.
         v.getLayoutParams().height = 1;
         v.setVisibility(View.VISIBLE);
-        Animation a = new Animation()
-        {
+        Animation a = new Animation() {
             @Override
             protected void applyTransformation(float interpolatedTime, Transformation t) {
                 v.getLayoutParams().height = interpolatedTime == 1
@@ -868,7 +864,6 @@ public class LandingActivity extends AppCompatActivity
             }
         };
 
-        // 1dp/ms
         a.setDuration((int)(targetHeight / v.getContext().getResources().getDisplayMetrics().density));
         v.startAnimation(a);
     }
@@ -876,8 +871,7 @@ public class LandingActivity extends AppCompatActivity
     public static void collapse(final View v) {
         final int initialHeight = v.getMeasuredHeight();
 
-        Animation a = new Animation()
-        {
+        Animation a = new Animation() {
             @Override
             protected void applyTransformation(float interpolatedTime, Transformation t) {
                 if(interpolatedTime == 1){
@@ -894,7 +888,6 @@ public class LandingActivity extends AppCompatActivity
             }
         };
 
-        // 1dp/ms
         a.setDuration((int)(initialHeight / v.getContext().getResources().getDisplayMetrics().density));
         v.startAnimation(a);
     }
