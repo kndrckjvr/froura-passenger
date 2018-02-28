@@ -8,6 +8,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -34,18 +35,22 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
     private PlaceAutocompleteAdapter mAdapter;
 
     private GeoDataClient mGeoDataClient;
-    private String pickupPlaceId;
-    private String dropoffPlaceId;
+    private String pickupPlaceId = "";
+    private String dropoffPlaceId = "";
     private int hasPickup = -1;
     private int hasDropoff = -1;
     private int from;
     private CharSequence text;
     private CountDownTimer timer;
 
+    private String TAG = "SEARCH_ACTIVTY_FROURA";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
+
+        from = getIntent().getIntExtra("from", -1);
 
         if(getIntent().getStringExtra("pickupPlaceId") != null) {
             hasPickup = 1;
@@ -68,7 +73,6 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
         loadingView = findViewById(R.id.loading_view);
         blankView = findViewById(R.id.blank_view);
         noLocationFound(true);
-        from = getIntent().getIntExtra("from", -1);
 
         timer = new CountDownTimer(1500, 1000) {
 
@@ -145,7 +149,15 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
         openMap.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                Intent intent = new Intent(SearchActivity.this, MapPointActivity.class);
+                Log.d(TAG, hasPickup + " " + hasDropoff + " " + pickupPlaceId + " " + dropoffPlaceId);
+                if(hasPickup == 1)
+                    intent.putExtra("pickupPlaceId", pickupPlaceId);
+                if(hasDropoff == 1)
+                    intent.putExtra("dropoffPlaceId", dropoffPlaceId);
+                intent.putExtra("from", from);
+                startActivity(intent);
+                finish();
             }
         });
     }

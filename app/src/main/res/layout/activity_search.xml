@@ -90,8 +90,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clickable="true"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
+                android:focusable="false"
                 android:orientation="vertical">
 
                 <View
@@ -101,7 +100,6 @@
                     android:layout_height="1dp"
                     android:clickable="false"
                     android:focusable="false"
-                    android:focusableInTouchMode="false"
                     android:background="#454545"/>
 
                 <LinearLayout

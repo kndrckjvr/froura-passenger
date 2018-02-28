@@ -236,8 +236,17 @@ public class DriverAcceptedActivity extends AppCompatActivity
             Log.e("Booking", "Can't find style. Error: ", e);
         }
         mMap = googleMap;
+        mMap.getUiSettings().setMapToolbarEnabled(false);
+        mMap.getUiSettings().setZoomControlsEnabled(false);
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
         mMap.setPadding(0,0,0,informationLayout.getLayoutParams().height);
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            DialogCreator.create(this, "locationPermission")
+                    .setMessage("We need to access your location and device state to continue using FROURÁ.")
+                    .setPositiveButton("OK")
+                    .show();
+            return;
+        }
         buildGoogleApiClient();
     }
 

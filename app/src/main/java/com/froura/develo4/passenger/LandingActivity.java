@@ -227,27 +227,31 @@ public class LandingActivity extends AppCompatActivity
                     .show();
         }
 
-        if(hasPickup == 1)
-            findPlaceById(getIntent().getStringExtra("pickupPlaceId"), 0);
-        
-        if(hasDropoff == 1) {
-            cameraUpdated = true;
-            findPlaceById(getIntent().getStringExtra("dropoffPlaceId"), 1);
-            bookBtn.setText("Book");
-            bookBtn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    prepareBooking(false);
-                }
-            });
+        if(getIntent().getIntExtra("fromMapPointChange", -1) == 1) {
+
         } else {
-            bookBtn.setText("Set Drop-off Point");
-            bookBtn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    setDropoff();
-                }
-            });
+            if(hasPickup == 1)
+                findPlaceById(getIntent().getStringExtra("pickupPlaceId"), 0);
+
+            if(hasDropoff == 1) {
+                cameraUpdated = true;
+                findPlaceById(getIntent().getStringExtra("dropoffPlaceId"), 1);
+                bookBtn.setText("Book");
+                bookBtn.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        prepareBooking(false);
+                    }
+                });
+            } else {
+                bookBtn.setText("Set Drop-off Point");
+                bookBtn.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        setDropoff();
+                    }
+                });
+            }
         }
 
         mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -805,11 +809,13 @@ public class LandingActivity extends AppCompatActivity
     @Override
     public void onMapReady(GoogleMap googleMap) {
         try {
-            boolean success = googleMap.setMapStyle(
+            googleMap.setMapStyle(
                     MapStyleOptions.loadRawResourceStyle(
                             this, R.raw.mapstyle));
         } catch (Resources.NotFoundException e) { }
         mMap = googleMap;
+        mMap.getUiSettings().setMapToolbarEnabled(false);
+        mMap.getUiSettings().setZoomControlsEnabled(false);
         mMap.getUiSettings().setMyLocationButtonEnabled(false);
         mMap.setPadding(0, hasDropoff == 1 ? viewDetails.getLayoutParams().height : 0 , 0 , cardView.getLayoutParams().height);
         buildGoogleApiClient();
