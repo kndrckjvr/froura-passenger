@@ -12,6 +12,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 
 import com.froura.develo4.passenger.adapter.PlaceAutocompleteAdapter;
 import com.froura.develo4.passenger.object.PlaceAutocompleteObject;
@@ -27,6 +28,8 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
     private ImageButton clearImgVw;
     private ImageButton backImgVw;
     private LinearLayout openMap;
+    private RelativeLayout loadingView;
+    private RelativeLayout blankView;
     private RecyclerView listRecVw;
     private PlaceAutocompleteAdapter mAdapter;
 
@@ -44,9 +47,6 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
 
-//        Toolbar myToolbar = findViewById(R.id.my_toolbar);
-//        setSupportActionBar(myToolbar);
-
         if(getIntent().getStringExtra("pickupPlaceId") != null) {
             hasPickup = 1;
             pickupPlaceId = getIntent().getStringExtra("pickupPlaceId");
@@ -57,6 +57,7 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
             dropoffPlaceId = getIntent().getStringExtra("dropoffPlaceId");
         }
 
+
         searchET = findViewById(R.id.searchET);
         clearImgVw = findViewById(R.id.clearImgVw);
         listRecVw = findViewById(R.id.listRecVw);
@@ -64,10 +65,12 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
         listRecVw.setLayoutManager(new LinearLayoutManager(this));
         backImgVw = findViewById(R.id.backImgVw);
         openMap = findViewById(R.id.openMap);
-
+        loadingView = findViewById(R.id.loading_view);
+        blankView = findViewById(R.id.blank_view);
+        noLocationFound(true);
         from = getIntent().getIntExtra("from", -1);
 
-        timer = new CountDownTimer(2000, 1000) {
+        timer = new CountDownTimer(1500, 1000) {
 
             @Override
             public void onTick(long l) {
@@ -77,6 +80,7 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
             @Override
             public void onFinish() {
                 mAdapter.getFilter().filter(text);
+                finishedLoading(true);
             }
         };
 
@@ -102,12 +106,15 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 text = charSequence;
+                finishedLoading(false);
+                noLocationFound(false);
                 timer.cancel();
 
                 if(!text.toString().isEmpty()) {
                     clearImgVw.setVisibility(View.VISIBLE);
                 } else {
                     clearImgVw.setVisibility(View.GONE);
+                    noLocationFound(true);
                     if(mAdapter != null) mAdapter.clearList();
                 }
             }
@@ -124,6 +131,7 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
                 if(mAdapter != null)
                     mAdapter.clearList();
                 searchET.setText("");
+                noLocationFound(true);
             }
         });
 
@@ -140,6 +148,24 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
 
             }
         });
+    }
+
+    private void noLocationFound(boolean notFound) {
+        blankView.setVisibility(View.GONE);
+        if(notFound) {
+            blankView.setVisibility(View.VISIBLE);
+            listRecVw.setVisibility(View.GONE);
+        }
+    }
+
+    private void finishedLoading(boolean isFinished) {
+        if(isFinished) {
+            listRecVw.setVisibility(View.VISIBLE);
+            loadingView.setVisibility(View.GONE);
+        } else {
+            listRecVw.setVisibility(View.GONE);
+            loadingView.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override

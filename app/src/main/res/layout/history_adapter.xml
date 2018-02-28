@@ -3,7 +3,7 @@
     android:id="@+id/row_layout"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="#fff"
+    android:background="?android:attr/selectableItemBackground"
     android:clickable="true"
     android:orientation="vertical"
     android:padding="10dp">
@@ -64,15 +64,15 @@
             android:textSize="16sp" />
 
         <TextView
-            android:id="@+id/rating_txt_vw"
+            android:id="@+id/time_txt_vw"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:clickable="false"
-            android:drawableRight="@drawable/ic_star_yellow_24dp"
+            android:drawableLeft="@drawable/ic_duration_black_24dp"
             android:padding="5dp"
             android:drawablePadding="5dp"
-            android:layout_weight="0"
-            android:text="5"
+            android:layout_weight="1"
+            android:text="12:69 AM"
             android:textColor="#000"
             android:textSize="16sp" />
 

@@ -15,6 +15,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.froura.develo4.passenger.R;
+import com.froura.develo4.passenger.SearchActivity;
 import com.froura.develo4.passenger.object.PlaceAutocompleteObject;
 import com.google.android.gms.location.places.AutocompleteFilter;
 import com.google.android.gms.location.places.AutocompletePrediction;
@@ -75,6 +76,8 @@ public class PlaceAutocompleteAdapter extends RecyclerView.Adapter<PlaceAutocomp
     public void onBindViewHolder(PlaceAutocompleteAdapter.ViewHolder holder, final int position) {
         holder.placesTxtVw.setText(mResultList.get(position).getPrimaryText());
         holder.addressTxtVw.setText(mResultList.get(position).getSecondaryText());
+        holder.placesTxtVw.setSelected(true);
+        holder.addressTxtVw.setSelected(true);
         holder.rowRecVw.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -108,7 +111,7 @@ public class PlaceAutocompleteAdapter extends RecyclerView.Adapter<PlaceAutocomp
             protected void publishResults(CharSequence constraint, FilterResults results) {
                 if (results != null && results.count > 0) {
                     notifyDataSetChanged();
-                } else {  }
+                } else { }
             }
         };
     }

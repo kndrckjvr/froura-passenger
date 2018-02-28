@@ -20,9 +20,12 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,9 +42,12 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.facebook.AccessToken;
 import com.facebook.login.LoginManager;
+import com.froura.develo4.passenger.adapter.HistoryAdapter;
 import com.froura.develo4.passenger.config.TaskConfig;
 import com.froura.develo4.passenger.libraries.DialogCreator;
+import com.froura.develo4.passenger.libraries.SimpleDividerItemDecoration;
 import com.froura.develo4.passenger.libraries.SnackBarCreator;
+import com.froura.develo4.passenger.object.HistoryObject;
 import com.froura.develo4.passenger.tasks.SuperTask;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -79,6 +85,7 @@ import com.google.firebase.database.ValueEventListener;
 
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Map;
 
 import me.grantland.widget.AutofitHelper;
@@ -90,6 +97,7 @@ public class LandingActivity extends AppCompatActivity
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         com.google.android.gms.location.LocationListener,
+        HistoryAdapter.HistoryAdapterListener,
         SuperTask.TaskListener {
 
     private DrawerLayout drawer;
@@ -105,18 +113,18 @@ public class LandingActivity extends AppCompatActivity
     private TextView distanceTxtVw;
     private TextView durationTxtVw;
     private ImageButton myLocation;
-    private ImageButton Traffic;
-
+    private ImageButton traffic;
+    private MenuItem clear_history;
     private GoogleMap mMap;
     private CameraPosition cameraPosition;
     private SupportMapFragment mapFragment;
-
     private GoogleApiClient mGoogleApiClient;
     private GeoDataClient mGeoDataClient;
     private Location mLastLocation;
     private LatLng pickupLocation;
     private LatLng dropoffLocation;
-
+    private HistoryAdapter historyAdapter;
+    private DatabaseReference historyRef;
     private String uid;
     private String pickupName;
     private String dropoffName;
@@ -129,8 +137,6 @@ public class LandingActivity extends AppCompatActivity
     private boolean isTraffic = false;
     private boolean fromUpdate = false;
     final int LOCATION_REQUEST_CODE = 1;
-
-    //User Details
     private String user_name;
     private String user_mobnum;
     private String user_email;
@@ -140,7 +146,6 @@ public class LandingActivity extends AppCompatActivity
     private String taxi_fare = "0.00";
     private String duration = "0KM";
     private String distance = "0M";
-
     private ViewFlipper viewFlipper;
     private Toolbar toolbar;
 
@@ -195,7 +200,7 @@ public class LandingActivity extends AppCompatActivity
         distanceTxtVw = findViewById(R.id.txtVw_distance);
         durationTxtVw = findViewById(R.id.txtVw_duration);
         myLocation = findViewById(R.id.myLocation);
-        Traffic = findViewById(R.id.traffic);
+        traffic = findViewById(R.id.traffic);
         collapse(viewDetails);
         pickupTxtVw.setSelected(true);
         dropoffTxtVw.setSelected(true);
@@ -296,7 +301,7 @@ public class LandingActivity extends AppCompatActivity
             }
         });
 
-        Traffic.setOnClickListener(new View.OnClickListener() {
+        traffic.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 isTraffic = !isTraffic;
@@ -306,8 +311,135 @@ public class LandingActivity extends AppCompatActivity
     }
 
     private void setHistoryList() {
-        viewFlipper.setDisplayedChild(2);
-        toolbar.setTitle("History");
+        final ProgressDialog progressDialog = new ProgressDialog(this);
+        progressDialog.setCancelable(false);
+        progressDialog.setMessage("Fetching Data...");
+        progressDialog.setIndeterminate(false);
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+        historyAdapter = new HistoryAdapter(this, this);
+        historyRef = FirebaseDatabase.getInstance().getReference("history/"+FirebaseAuth.getInstance().getCurrentUser().getUid());
+        historyRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                historyAdapter.clearHistory();
+                for(DataSnapshot historyIds : dataSnapshot.getChildren()) {
+                    String history_id = historyIds.getKey();
+                    String driver_id = "";
+                    String pickup_name = "";
+                    LatLng pickup_location = new LatLng(0,0);
+                    String dropoff_name = "";
+                    LatLng dropoff_location = new LatLng(0,0);
+                    int driver_rating = 0;
+                    String date = "";
+                    String time = "";
+                    double lat = 0;
+                    double lng = 0;
+                    for(DataSnapshot userHistory : historyIds.getChildren()) {
+                        Log.d("adapter", userHistory.getKey());
+                        switch (userHistory.getKey()) {
+                            case "driver_id":
+                                driver_id = userHistory.getValue().toString();
+                                break;
+                            case "dropoff":
+                                for(DataSnapshot dropoff: userHistory.getChildren()) {
+                                    switch (dropoff.getKey()) {
+                                        case "name":
+                                            dropoff_name = dropoff.getValue().toString();
+                                            break;
+                                        case "lat":
+                                            lat = Double.parseDouble(dropoff.getValue().toString());
+                                            break;
+                                        case "lng":
+                                            lng = Double.parseDouble(dropoff.getValue().toString());
+                                            break;
+                                    }
+                                }
+                                dropoff_location = new LatLng(lat, lng);
+                                break;
+                            case "pickup":
+                                for(DataSnapshot pickup : userHistory.getChildren()) {
+                                    switch (pickup.getKey()) {
+                                        case "name":
+                                            pickup_name = pickup.getValue().toString();
+                                            break;
+                                        case "lat":
+                                            lat = Double.parseDouble(pickup.getValue().toString());
+                                            break;
+                                        case "lng":
+                                            lng = Double.parseDouble(pickup.getValue().toString());
+                                            break;
+                                    }
+                                }
+                                pickup_location = new LatLng(lat, lng);
+                                break;
+                            case "driver_rating":
+                                driver_rating = Integer.parseInt(userHistory.getValue().toString());
+                                break;
+                            case "date":
+                                date = userHistory.getValue().toString();
+                                break;
+                            case "time" :
+                                time = userHistory.getValue().toString();
+                                break;
+                        }
+                    }
+                    HistoryAdapter.historyList.add(new HistoryObject(history_id, driver_id, dropoff_name, pickup_name, pickup_location, dropoff_location, date, time, driver_rating));
+                    historyAdapter.notifyDataSetChanged();
+                }
+                progressDialog.dismiss();
+                viewFlipper.setDisplayedChild(2);
+                toolbar.setTitle("History");
+                showOptionsMenu(R.id.history);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+        RecyclerView history_rec_vw = findViewById(R.id.history_rec_vw);
+        history_rec_vw.setAdapter(historyAdapter);
+        history_rec_vw.setHasFixedSize(true);
+        history_rec_vw.setLayoutManager(new LinearLayoutManager(this));
+        history_rec_vw.addItemDecoration(new SimpleDividerItemDecoration(this));
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.history_menu, menu);
+        clear_history = menu.findItem(R.id.clear_history);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.clear_history:
+                DialogCreator.create(this, "clearHistory")
+                        .setTitle("Clear History")
+                        .setMessage("Are you sure?")
+                        .setPositiveButton("OK")
+                        .setNegativeButton("CANCEL")
+                        .setCancelable(false)
+                        .show();
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onHistoryClick(ArrayList<HistoryObject> resultList, int position) {
+
+    }
+
+    private void showOptionsMenu(int id) {
+        clear_history.setVisible(false);
+        switch (id) {
+            case R.id.history:
+                clear_history.setVisible(true);
+                break;
+        }
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
@@ -394,6 +526,7 @@ public class LandingActivity extends AppCompatActivity
                 startActivity(intent);
             }
         });
+        Log.d("newdetails", user_trusted_id);
         if(!user_trusted_id.equals("None")) {
             DatabaseReference pssngr = FirebaseDatabase.getInstance().getReference("users/passenger/"+user_trusted_id);
             pssngr.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -411,7 +544,7 @@ public class LandingActivity extends AppCompatActivity
                 public void onCancelled(DatabaseError databaseError) { }
             });
         } else {
-            trustedTxtVw.setText(user_trusted_name);
+            trustedTxtVw.setText(user_trusted_id);
             viewFlipper.setDisplayedChild(3);
             toolbar.setTitle("Profile");
             progressDialog.dismiss();
@@ -637,13 +770,13 @@ public class LandingActivity extends AppCompatActivity
                             .apply(RequestOptions.circleCropTransform())
                             .into(prof_pic);
                 }
-
                 user_name = jsonObject.getString("name");
                 user_email = jsonObject.getString("email").equals("null") ? "None" : jsonObject.getString("email");
                 user_mobnum = jsonObject.getString("mobnum").equals("null") ? "None" : jsonObject.getString("mobnum");
                 user_trusted_id = jsonObject.getString("trusted_id").equals("null") ? "None" : jsonObject.getString("trusted_id");
                 name.setText(jsonObject.getString("name"));
                 email_txt_vw.setText(user_email);
+                Log.d("newdetails", jsonObject.getString("trusted_id") + " " +user_trusted_id);
             }
         } catch (Exception e) { }
     }
@@ -765,6 +898,10 @@ public class LandingActivity extends AppCompatActivity
                 break;
             case "noTrusted":
                 prepareBooking(true);
+                break;
+            case "clearHistory":
+                historyAdapter.clearHistory();
+                historyRef.removeValue();
                 break;
         }
     }

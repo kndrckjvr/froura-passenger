@@ -14,18 +14,20 @@ public class HistoryObject {
     private String pickupName;
     private LatLng pickupLoc;
     private LatLng dropoffLoc;
+    private String date;
+    private String time;
     private int driver_rating;
-    private int timestamp;
 
-    public HistoryObject(String history_id, String driver_id, String dropoffName, String pickupName, LatLng pickupLoc, LatLng dropoffLoc, int driver_rating, int timestamp) {
+    public HistoryObject(String history_id, String driver_id, String dropoffName, String pickupName, LatLng pickupLoc, LatLng dropoffLoc, String date, String time, int driver_rating) {
         this.history_id = history_id;
         this.driver_id = driver_id;
         this.dropoffName = dropoffName;
         this.pickupName = pickupName;
         this.pickupLoc = pickupLoc;
         this.dropoffLoc = dropoffLoc;
+        this.date = date;
+        this.time = time;
         this.driver_rating = driver_rating;
-        this.timestamp = timestamp;
     }
 
     public String getHistory_id() {
@@ -52,11 +54,15 @@ public class HistoryObject {
         return dropoffLoc;
     }
 
-    public int getDriver_rating() {
-        return driver_rating;
+    public String getDate() {
+        return date;
     }
 
-    public int getTimestamp() {
-        return timestamp;
+    public String getTime() {
+        return time;
+    }
+
+    public int getDriver_rating() {
+        return driver_rating;
     }
 }
