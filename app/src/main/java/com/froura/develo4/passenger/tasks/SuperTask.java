@@ -88,7 +88,7 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
         if(hasDialog) {
             progressDialog.setMessage(this.message);
             progressDialog.setIndeterminate(false);
-            progressDialog.setCancelable(false);
+            //progressDialog.setCancelable(false);
             progressDialog.show();
         }
     }

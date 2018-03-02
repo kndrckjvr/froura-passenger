@@ -129,11 +129,11 @@
                             android:focusableInTouchMode="false"
                             android:marqueeRepeatLimit="marquee_forever"
                             android:paddingLeft="10dp"
-                            android:paddingRight="4dp"
+                            android:layout_marginRight="10dp"
                             android:paddingTop="17dp"
                             android:scrollHorizontally="true"
                             android:singleLine="true"
-                            android:text="Your Location"
+                            android:text="Your Pickup"
                             android:textColor="@color/place_autocomplete_search_hint"
                             android:textSize="16sp" />
 
@@ -179,7 +179,7 @@
                             android:focusableInTouchMode="false"
                             android:marqueeRepeatLimit="marquee_forever"
                             android:paddingLeft="10dp"
-                            android:paddingRight="4dp"
+                            android:layout_marginRight="10dp"
                             android:paddingTop="17dp"
                             android:scrollHorizontally="true"
                             android:singleLine="true"

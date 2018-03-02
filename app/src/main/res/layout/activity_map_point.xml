@@ -69,7 +69,7 @@
                 android:orientation="horizontal">
 
                 <ImageButton
-                    android:id="@+id/iconDropoff"
+                    android:id="@+id/point_img_btn"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
@@ -81,7 +81,7 @@
                     android:src="@drawable/ic_places_black_24dp" />
 
                 <TextView
-                    android:id="@+id/txtVw_dropoff"
+                    android:id="@+id/point_txt_vw"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"

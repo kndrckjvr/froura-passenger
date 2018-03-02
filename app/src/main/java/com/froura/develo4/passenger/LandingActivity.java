@@ -34,6 +34,7 @@ import android.view.animation.Transformation;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewFlipper;
@@ -109,6 +110,8 @@ public class LandingActivity extends AppCompatActivity
     private Button bookBtn;
     private TextView pickupTxtVw;
     private TextView dropoffTxtVw;
+    private LinearLayout pickupLayout;
+    private LinearLayout dropoffLayout;
     private TextView taxifareTxtVw;
     private TextView distanceTxtVw;
     private TextView durationTxtVw;
@@ -194,6 +197,8 @@ public class LandingActivity extends AppCompatActivity
         bookBtn = findViewById(R.id.bookingButton);
         viewDetails = findViewById(R.id.details);
         cardView = findViewById(R.id.cardView);
+        pickupLayout = findViewById(R.id.pickupLayout);
+        dropoffLayout = findViewById(R.id.dropoffLayout);
         pickupTxtVw = findViewById(R.id.txtVw_pickup);
         dropoffTxtVw = findViewById(R.id.txtVw_dropoff);
         taxifareTxtVw = findViewById(R.id.txtVw_taxi_fare);
@@ -259,7 +264,7 @@ public class LandingActivity extends AppCompatActivity
 
         mapFragment.getMapAsync(this);
 
-        pickupTxtVw.setOnClickListener(new View.OnClickListener() {
+        pickupLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(LandingActivity.this, SearchActivity.class);
@@ -277,7 +282,7 @@ public class LandingActivity extends AppCompatActivity
             }
         });
 
-        dropoffTxtVw.setOnClickListener(new View.OnClickListener() {
+        dropoffLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 setDropoff();

@@ -16,6 +16,7 @@ import android.support.v7.widget.CardView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.TextView;
 
 import com.froura.develo4.passenger.libraries.DialogCreator;
 import com.google.android.gms.common.ConnectionResult;
@@ -68,9 +69,11 @@ public class MapPointActivity extends AppCompatActivity implements
     private Marker dropoffMarker;
 
     private Button set_button;
+    private ImageButton point_img_btn;
     private ImageButton my_location_button;
     private ImageButton zoom_out_button;
     private CardView point_layout;
+    private TextView point_txt_vw;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,9 +94,13 @@ public class MapPointActivity extends AppCompatActivity implements
         set_button = findViewById(R.id.set_button);
         zoom_out_button = findViewById(R.id.zoom_out_button);
         my_location_button = findViewById(R.id.my_location_button);
+        point_txt_vw = findViewById(R.id.point_txt_vw);
+        point_img_btn = findViewById(R.id.point_img_btn);
+        point_txt_vw.setSelected(true);
         point_layout = findViewById(R.id.point_layout);
         set_button.setText(from == 0 ? "SET AS PICKUP POINT" : "SET AS DROP-OFF POINT");
-
+        setHint(point_txt_vw, from == 0 ? "Your Pickup" : "Your Destination");
+        point_img_btn.setImageDrawable(getResources().getDrawable(from == 0 ? R.drawable.ic_pin_yellow_24dp : R.drawable.ic_places_black_24dp));
         set_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -141,6 +148,16 @@ public class MapPointActivity extends AppCompatActivity implements
                 .addApi(LocationServices.API)
                 .build();
         mGoogleApiClient.connect();
+    }
+
+    private void setText(TextView txtVw, String str) {
+        txtVw.setText(str);
+        txtVw.setTextColor(getResources().getColor(R.color.place_autocomplete_search_text));
+    }
+
+    private void setHint(TextView txtVw, String str) {
+        txtVw.setText(str);
+        txtVw.setTextColor(getResources().getColor(R.color.place_autocomplete_search_hint));
     }
 
     @Override
@@ -225,6 +242,7 @@ public class MapPointActivity extends AppCompatActivity implements
                                 .icon(BitmapDescriptorFactory.fromResource(R.mipmap.black_marker)));
                         break;
                 }
+                point_txt_vw.setText("Loading Address...");
                 findPlaceByLatLng(latLng);
             }
         });
@@ -242,6 +260,8 @@ public class MapPointActivity extends AppCompatActivity implements
         List<Address> matches = null;
         try {
             matches = geoCoder.getFromLocation(latLng.latitude, latLng.longitude, 1);
+            Address bestMatch = (matches.isEmpty() ? null : matches.get(0));
+            setText(point_txt_vw, bestMatch.getAddressLine(0));
         } catch (IOException e) { }
         Address bestMatch = (matches.isEmpty() ? null : matches.get(0));
         if(bestMatch != null) {
@@ -277,13 +297,13 @@ public class MapPointActivity extends AppCompatActivity implements
         if(pickupMarker != null && dropoffMarker != null) {
             mMap.clear();
         }
-        if(pickupLatLng != null) {
+        if(pickupMarker == null && pickupLatLng != null) {
             pickupMarker = mMap.addMarker(new MarkerOptions()
                     .position(pickupLatLng)
                     .icon(BitmapDescriptorFactory.fromResource(R.mipmap.yellow_marker)));
         }
 
-        if(dropoffLatLng != null) {
+        if(dropoffMarker == null && dropoffLatLng != null) {
             dropoffMarker = mMap.addMarker(new MarkerOptions()
                     .position(dropoffLatLng)
                     .icon(BitmapDescriptorFactory.fromResource(R.mipmap.black_marker)));
