@@ -34,28 +34,25 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
     private final String url;
     private ProgressDialog progressDialog;
     private String message;
-    private boolean hasDialog;
     private int resultcode;
     private String id;
 
-    public SuperTask(Context context, String url, String id, String message, boolean hasDialog) {
+    public SuperTask(Context context, String url, String id, String message) {
         this.context = context;
         this.url = url;
         this.message = message;
-        this.hasDialog = hasDialog;
         this.id = id;
         progressDialog = new ProgressDialog(context);
     }
 
-    public static void execute(Context context, String url, String id, String message, boolean hasDialog) {
-        new SuperTask(context,url,id,message,hasDialog).execute();
+    public static void execute(Context context, String url, String id, String message) {
+        new SuperTask(context,url,id,message).execute();
     }
 
     public SuperTask(Context context, String url, String id) {
         this.context = context;
         this.url = url;
         this.id = id;
-        hasDialog = false;
     }
 
     public static void execute(Context context, String url, String id) {
@@ -85,7 +82,7 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
-        if(hasDialog) {
+        if(progressDialog != null) {
             progressDialog.setMessage(this.message);
             progressDialog.setIndeterminate(false);
             //progressDialog.setCancelable(false);
@@ -141,7 +138,8 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
     @Override
     protected void onPostExecute(String json) {
         super.onPostExecute(json);
-        progressDialog.dismiss();
         ((TaskListener)this.context).onTaskRespond(json, id, resultcode);
+        if(progressDialog != null)
+            progressDialog.dismiss();
     }
 }

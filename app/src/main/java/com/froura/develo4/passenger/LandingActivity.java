@@ -613,8 +613,7 @@ public class LandingActivity extends AppCompatActivity
         SuperTask.execute(this,
                 TaskConfig.CREATE_TAXI_FARE_URL,
                 "get_fare",
-                "Calculating Fare...",
-                true);
+                "Calculating Fare...");
     }
 
     @Override
