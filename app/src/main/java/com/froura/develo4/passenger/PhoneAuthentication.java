@@ -288,7 +288,7 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
     @Override
     public ContentValues setRequestValues(ContentValues contentValues, String id) {
         switch (id) {
-            case "check_user":
+            case "register":
                 contentValues.put("android", 1);
                 contentValues.put("firebase_uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
                 contentValues.put("name", name);
