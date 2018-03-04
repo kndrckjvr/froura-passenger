@@ -31,7 +31,6 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
     private final String url;
     private ProgressDialog progressDialog;
     private String message;
-    private int resultcode;
     private String id;
 
     private SuperTask(Context context, String url, String id, String message) {
@@ -57,7 +56,7 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
     }
 
     public interface TaskListener {
-        void onTaskRespond(String json, String id, int resultcode);
+        void onTaskRespond(String json, String id);
         ContentValues setRequestValues(ContentValues contentValues, String id);
     }
 
@@ -114,9 +113,6 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
             while ((line = bufferedReader.readLine()) != null){
                 stringBuilder.append(line);
             }
-
-            resultcode = httpURLConnection.getResponseCode();
-
             bufferedReader.close();
             inputStream.close();
 
@@ -133,7 +129,7 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
     @Override
     protected void onPostExecute(String json) {
         super.onPostExecute(json);
-        ((TaskListener)this.context).onTaskRespond(json, id, resultcode);
+        ((TaskListener)this.context).onTaskRespond(json, id);
         if(progressDialog != null)
             progressDialog.dismiss();
     }

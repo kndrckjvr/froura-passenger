@@ -13,6 +13,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.CardView;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -67,6 +68,8 @@ public class MapPointActivity extends AppCompatActivity implements
     private String dropoffName;
     private Marker pickupMarker;
     private Marker dropoffMarker;
+    private Address bestMatch;
+    private LatLng pointLatLng;
 
     private Button set_button;
     private ImageButton point_img_btn;
@@ -74,6 +77,8 @@ public class MapPointActivity extends AppCompatActivity implements
     private ImageButton zoom_out_button;
     private CardView point_layout;
     private TextView point_txt_vw;
+
+    private String TAG = "MAP_POINT_ACTIVITY_FROURA";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,10 +90,25 @@ public class MapPointActivity extends AppCompatActivity implements
         if(getIntent().getStringExtra("pickupPlaceId") != null) {
             hasPickup = true;
             pickupPlaceId = getIntent().getStringExtra("pickupPlaceId");
+            Log.d(TAG, "onCreate pickupPlaceId: "+pickupPlaceId);
         }
         if(getIntent().getStringExtra("dropoffPlaceId") != null) {
             hasDropoff = true;
             dropoffPlaceId = getIntent().getStringExtra("dropoffPlaceId");
+            Log.d(TAG, "onCreate pickupPlaceId: "+dropoffPlaceId);
+        }
+        if(getIntent().getStringExtra("pickupName") != null) {
+            hasPickup = true;
+            pickupName = getIntent().getStringExtra("pickupName");
+            pickupLatLng = new LatLng(getIntent().getDoubleExtra("pickupLat", 0), getIntent().getDoubleExtra("pickupLng", 0));
+            Log.d(TAG, "onCreate pickupName: "+pickupName);
+        }
+
+        if(getIntent().getStringExtra("dropoffName") != null) {
+            hasDropoff = true;
+            dropoffName = getIntent().getStringExtra("dropoffName");
+            dropoffLatLng = new LatLng(getIntent().getDoubleExtra("dropoffLat", 0), getIntent().getDoubleExtra("dropoffLng", 0));
+            Log.d(TAG, "onCreate dropoffName: "+dropoffName);
         }
 
         set_button = findViewById(R.id.set_button);
@@ -104,7 +124,7 @@ public class MapPointActivity extends AppCompatActivity implements
         set_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                sendPoint();
             }
         });
 
@@ -139,6 +159,65 @@ public class MapPointActivity extends AppCompatActivity implements
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+    }
+
+    private void sendPoint() {
+        Intent intent = new Intent(MapPointActivity.this, LandingActivity.class);
+        intent.putExtra("MapPointActivity", 1);
+        if(hasPickup)
+            intent.putExtra("hasPickup", 1);
+        if(hasDropoff)
+            intent.putExtra("hasDropoff", 1);
+        if(bestMatch != null) {
+            if(from == 0) {
+                intent.putExtra("pickupName", bestMatch.getAddressLine(0));
+                intent.putExtra("pickupLatLng", pointLatLng.latitude + "," + pointLatLng.longitude);
+                intent.putExtra("pickupLat", pointLatLng.latitude);
+                intent.putExtra("pickupLng", pointLatLng.longitude);
+
+                intent.putExtra("hasPickup", 1);
+                if(getIntent().getStringExtra("dropoffPlaceId") != null) {
+                    intent.putExtra("dropoffPlaceId", dropoffPlaceId);
+                }
+            } else {
+                intent.putExtra("dropoffName", bestMatch.getAddressLine(0));
+                intent.putExtra("dropoffLatLng", pointLatLng.latitude + "," + pointLatLng.longitude);
+                intent.putExtra("dropoffLat", pointLatLng.latitude);
+                intent.putExtra("dropoffLng", pointLatLng.longitude);
+                intent.putExtra("hasDropoff", 1);
+                if(getIntent().getStringExtra("pickupPlaceId") != null) {
+                    intent.putExtra("pickupPlaceId", pickupPlaceId);
+                }
+            }
+
+        } else {
+            if(hasPickup) {
+                if(getIntent().getStringExtra("pickupName") != null) {
+                    intent.putExtra("pickupName", pickupName);
+                    intent.putExtra("pickupLatLng", pickupLatLng.latitude + "," + pickupLatLng.longitude);
+                    intent.putExtra("pickupLat", pickupLatLng.latitude);
+                    intent.putExtra("pickupLng", pickupLatLng.longitude);
+                } else {
+                    intent.putExtra("pickupPlaceId", pickupPlaceId);
+                }
+                intent.putExtra("hasPickup", 1);
+            }
+
+            if(hasDropoff) {
+                if(getIntent().getStringExtra("dropoffName") != null) {
+                    intent.putExtra("dropoffName", dropoffName);
+                    intent.putExtra("dropoffLatLng", dropoffLatLng.latitude + "," + dropoffLatLng.longitude);
+                    intent.putExtra("dropoffLat", dropoffLatLng.latitude);
+                    intent.putExtra("dropoffLng", dropoffLatLng.longitude);
+                } else {
+                    intent.putExtra("dropoffPlaceId", dropoffPlaceId);
+                }
+                intent.putExtra("hasDropoff", 1);
+            }
+
+        }
+        startActivity(intent);
+        finish();
     }
 
     protected synchronized void buildGoogleApiClient() {
@@ -224,6 +303,7 @@ public class MapPointActivity extends AppCompatActivity implements
         mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
             public void onMapClick(LatLng latLng) {
+                pointLatLng = latLng;
                 switch (from) {
                     case 0:
                         if(pickupMarker != null) {
@@ -246,10 +326,10 @@ public class MapPointActivity extends AppCompatActivity implements
                 findPlaceByLatLng(latLng);
             }
         });
-        if(hasPickup) {
+        if(getIntent().getStringExtra("pickupPlaceId") != null) {
             findPlaceById(pickupPlaceId, "pickup");
         }
-        if(hasDropoff) {
+        if(getIntent().getStringExtra("dropoffPlaceId") != null) {
             findPlaceById(dropoffPlaceId, "dropoff");
         }
         buildGoogleApiClient();
@@ -260,16 +340,13 @@ public class MapPointActivity extends AppCompatActivity implements
         List<Address> matches = null;
         try {
             matches = geoCoder.getFromLocation(latLng.latitude, latLng.longitude, 1);
-            Address bestMatch = (matches.isEmpty() ? null : matches.get(0));
-            setText(point_txt_vw, bestMatch.getAddressLine(0));
+            bestMatch = (matches.isEmpty() ? null : matches.get(0));
+            setText(point_txt_vw, bestMatch == null ? "No Place Found!" : bestMatch.getAddressLine(0));
         } catch (IOException e) { }
-        Address bestMatch = (matches.isEmpty() ? null : matches.get(0));
-        if(bestMatch != null) {
-
-        }
     }
 
     private void findPlaceById(String placeId, final String marker) {
+        Log.d(TAG, placeId + " " + marker);
         mGeoDataClient.getPlaceById(placeId).addOnCompleteListener(new OnCompleteListener<PlaceBufferResponse>() {
             @Override
             public void onComplete(@NonNull Task<PlaceBufferResponse> task) {
@@ -330,12 +407,28 @@ public class MapPointActivity extends AppCompatActivity implements
         super.onBackPressed();
         Intent intent = new Intent(MapPointActivity.this, LandingActivity.class);
         if(hasPickup) {
+            Log.d(TAG, "dropoffName: " + getIntent().getStringExtra("pickupName"));
             intent.putExtra("hasPickup", 1);
-            intent.putExtra("pickupPlaceId", pickupPlaceId);
+            if(getIntent().getStringExtra("pickupName") != null) {
+                intent.putExtra("pickupName", getIntent().getStringExtra("pickupName"));
+                intent.putExtra("pickupLatLng", getIntent().getStringExtra("pickupLatLng"));
+                intent.putExtra("pickupLat", getIntent().getDoubleExtra("pickupLat", 0));
+                intent.putExtra("pickupLng", getIntent().getDoubleExtra("pickupLng", 0));
+            } else {
+                intent.putExtra("pickupPlaceId", pickupPlaceId);
+            }
         }
         if(hasDropoff) {
+            Log.d(TAG, "dropoffName: " + getIntent().getStringExtra("dropoffName"));
             intent.putExtra("hasDropoff", 1);
-            intent.putExtra("dropoffPlaceId", dropoffPlaceId);
+            if(getIntent().getStringExtra("dropoffName") != null) {
+                intent.putExtra("dropoffName", getIntent().getStringExtra("dropoffName"));
+                intent.putExtra("dropoffLatLng", getIntent().getStringExtra("dropoffLatLng"));
+                intent.putExtra("dropoffLat", getIntent().getDoubleExtra("dropoffLat", 0));
+                intent.putExtra("dropoffLng", getIntent().getDoubleExtra("dropoffLng", 0));
+            } else {
+                intent.putExtra("dropoffPlaceId", dropoffPlaceId);
+            }
         }
         startActivity(intent);
         finish();

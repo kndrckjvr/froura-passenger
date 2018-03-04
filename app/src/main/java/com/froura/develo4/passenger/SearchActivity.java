@@ -52,16 +52,15 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
 
         from = getIntent().getIntExtra("from", -1);
 
-        if(getIntent().getStringExtra("pickupPlaceId") != null) {
+        if(getIntent().getIntExtra("hasPickup", -1) == 1) {
             hasPickup = 1;
             pickupPlaceId = getIntent().getStringExtra("pickupPlaceId");
         }
 
-        if(getIntent().getStringExtra("dropoffPlaceId") != null){
+        if(getIntent().getIntExtra("hasDropoff", -1) == 1){
             hasDropoff = 1;
             dropoffPlaceId = getIntent().getStringExtra("dropoffPlaceId");
         }
-
 
         searchET = findViewById(R.id.searchET);
         clearImgVw = findViewById(R.id.clearImgVw);
@@ -150,11 +149,24 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(SearchActivity.this, MapPointActivity.class);
-                Log.d(TAG, hasPickup + " " + hasDropoff + " " + pickupPlaceId + " " + dropoffPlaceId);
-                if(hasPickup == 1)
+                if(getIntent().getStringExtra("pickupPlaceId") != null)
                     intent.putExtra("pickupPlaceId", pickupPlaceId);
-                if(hasDropoff == 1)
+                if(getIntent().getStringExtra("dropoffPlacePlaceId") != null)
                     intent.putExtra("dropoffPlaceId", dropoffPlaceId);
+
+                if(getIntent().getStringExtra("pickupName") != null) {
+                    intent.putExtra("pickupName", getIntent().getStringExtra("pickupName"));
+                    intent.putExtra("pickupLatLng", getIntent().getStringExtra("pickupLatLng"));
+                    intent.putExtra("pickupLat", getIntent().getDoubleExtra("pickupLat", 0));
+                    intent.putExtra("pickupLng", getIntent().getDoubleExtra("pickupLng", 0));
+                }
+
+                if(getIntent().getStringExtra("dropoffName") != null) {
+                    intent.putExtra("dropoffName", getIntent().getStringExtra("dropoffName"));
+                    intent.putExtra("dropoffLatLng", getIntent().getStringExtra("dropoffLatLng"));
+                    intent.putExtra("dropoffLat", getIntent().getDoubleExtra("dropoffLat", 0));
+                    intent.putExtra("dropoffLng", getIntent().getDoubleExtra("dropoffLng", 0));
+                }
                 intent.putExtra("from", from);
                 startActivity(intent);
                 finish();
@@ -216,12 +228,28 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
         super.onBackPressed();
         Intent intent = new Intent(SearchActivity.this, LandingActivity.class);
         if(hasPickup == 1) {
+            Log.d(TAG, "dropoffName: " + getIntent().getStringExtra("pickupName"));
             intent.putExtra("hasPickup", 1);
-            intent.putExtra("pickupPlaceId", pickupPlaceId);
+            if(getIntent().getStringExtra("pickupName") != null) {
+                intent.putExtra("pickupName", getIntent().getStringExtra("pickupName"));
+                intent.putExtra("pickupLatLng", getIntent().getStringExtra("pickupLatLng"));
+                intent.putExtra("pickupLat", getIntent().getDoubleExtra("pickupLat", 0));
+                intent.putExtra("pickupLng", getIntent().getDoubleExtra("pickupLng", 0));
+            } else {
+                intent.putExtra("pickupPlaceId", pickupPlaceId);
+            }
         }
         if(hasDropoff == 1) {
+            Log.d(TAG, "dropoffName: " + getIntent().getStringExtra("dropoffName"));
             intent.putExtra("hasDropoff", 1);
-            intent.putExtra("dropoffPlaceId", dropoffPlaceId);
+            if(getIntent().getStringExtra("dropoffName") != null) {
+                intent.putExtra("dropoffName", getIntent().getStringExtra("dropoffName"));
+                intent.putExtra("dropoffLatLng", getIntent().getStringExtra("dropoffLatLng"));
+                intent.putExtra("dropoffLat", getIntent().getDoubleExtra("dropoffLat", 0));
+                intent.putExtra("dropoffLng", getIntent().getDoubleExtra("dropoffLng", 0));
+            } else {
+                intent.putExtra("dropoffPlaceId", dropoffPlaceId);
+            }
         }
         startActivity(intent);
         finish();

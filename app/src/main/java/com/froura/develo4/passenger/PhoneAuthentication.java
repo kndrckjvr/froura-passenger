@@ -35,6 +35,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import org.apache.commons.lang3.text.WordUtils;
+import org.json.JSONObject;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -54,7 +55,8 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
     private String email;
     private String name;
     private String profpic = "default";
-    private String trusted = "null";
+    private String trusted_id = "null";
+    private String database_id = "null";
     private String auth = "mobile";
     private boolean phoneReg;
     private CountDownTimer requestCodeTimer;
@@ -149,7 +151,7 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         SharedPreferences.Editor editor = sharedPref.edit();
         String JSON_DETAILS_KEY = "userDetails";
-        String jsonDetails = "{ \"name\" : \"" + WordUtils.capitalize(name.toLowerCase()) + "\", \"email\" : \"" + email + "\", \"mobnum\" : \"" + mobnum + "\", \"profile_pic\" : \"" + profpic + "\", \"trusted\" : " + WordUtils.capitalize(trusted) + " , \"auth\" : \"" + auth + "\"}";
+        String jsonDetails = "{ \"name\" : \"" + WordUtils.capitalize(name.toLowerCase()) + "\", \"email\" : \"" + email + "\", \"mobnum\" : \"" + mobnum + "\", \"profile_pic\" : \"" + profpic + "\", \"trusted_id\" : " + WordUtils.capitalize(trusted_id) + ", \"auth\" : \"" + auth + "\", \"database_id\": \" "+ database_id +"\"}";
         editor.putString(JSON_DETAILS_KEY, jsonDetails);
         editor.apply();
         progressDialog.dismiss();
@@ -204,102 +206,52 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
     }
 
     private void registerUser() {
-        final String user_id = mAuth.getCurrentUser().getUid();
-        DatabaseReference usersRef = FirebaseDatabase.getInstance().getReference("users");
-        usersRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        String user_id = mAuth.getCurrentUser().getUid();
+        final DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(user_id);
+        dbRef.child("name").setValue(WordUtils.capitalize(name.toLowerCase()));
+        dbRef.child("auth").setValue(auth);
+        dbRef.child("profile_pic").setValue(profpic);
+        dbRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                boolean userFound = false;
-                for(DataSnapshot users: dataSnapshot.getChildren()) {
-                    if(users.getKey().equals("passenger")) {
-                        for(DataSnapshot passenger : users.getChildren()) {
-                            if(user_id.equals(passenger.getKey())) {
-                                userFound = true;
-                                final DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(user_id);
-                                dbRef.child("name").setValue(WordUtils.capitalize(name.toLowerCase()));
-                                dbRef.child("auth").setValue(auth);
-                                dbRef.child("profile_pic").setValue(profpic);
-                                dbRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                                    @Override
-                                    public void onDataChange(DataSnapshot dataSnapshot) {
-                                        if(dataSnapshot.exists()) {
-                                            Map<String, Object> value = (Map<String, Object>) dataSnapshot.getValue();
-                                            Log.d("landingAc", value+"");
-                                            if(value.get("mobnum") != null) {
-                                                if(!value.get("mobnum").toString().equals("null")) {
-                                                    mobnum = value.get("mobnum").toString();
-                                                } else {
-                                                    mobnum = "null";
-                                                }
-                                            } else {
-                                                dbRef.child("mobnum").setValue(mobnum);
-                                            }
-                                            if(value.get("email") != null) {
-                                                if(!value.get("email").toString().equals("null")) {
-                                                    email = value.get("email").toString();
-                                                } else {
-                                                    email= "null";
-                                                }
-                                            } else {
-                                                dbRef.child("email").setValue(email);
-                                            }
-                                            if(value.get("trusted") != null) {
-                                                if(!value.get("trusted").toString().equals("null")) {
-                                                    trusted = value.get("trusted").toString();
-                                                } else {
-                                                    trusted= "null";
-                                                }
-                                            } else {
-                                                dbRef.child("trusted").setValue(trusted);
-                                            }
-                                            saveUserDetails();
-                                        }
-                                    }
-
-                                    @Override
-                                    public void onCancelled(DatabaseError databaseError) { }
-                                });
-                                saveUserDetails();
-                                SuperTask.execute(PhoneAuthentication.this,
-                                        TaskConfig.CHECK_USER_URL,
-                                        "check_user");
-                                break;
-                            }
+                if(dataSnapshot.exists()) {
+                    Map<String, Object> value = (Map<String, Object>) dataSnapshot.getValue();
+                    if(value.get("mobnum") != null) {
+                        if(!value.get("mobnum").toString().equals("null")) {
+                            mobnum = value.get("mobnum").toString();
+                        } else {
+                            mobnum = "null";
                         }
-                    } else if(users.getKey().equals("driver")){
-                        for(DataSnapshot drivers : users.getChildren()) {
-                            if(user_id.equals(drivers.getKey())) {
-                                userFound = true;
-                                progressDialog.dismiss();
-                                mAuth.signOut();
-                                Intent intent = new Intent(PhoneAuthentication.this, SignUpActivity.class);
-                                intent.putExtra("loginError", 1);
-                                startActivity(intent);
-                                finish();
-                                break;
-                            }
-                        }
+                    } else {
+                        dbRef.child("mobnum").setValue(mobnum);
                     }
-                    if(userFound) break;
-                }
-                if(!userFound) {
-                    DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference().child("users").child("driver").child(user_id);
-                    dbRef.child("name").setValue(WordUtils.capitalize(name.toLowerCase()));
-                    dbRef.child("email").setValue(email);
-                    dbRef.child("mobnum").setValue(mobnum);
-                    dbRef.child("auth").setValue(auth);
-                    dbRef.child("profile_pic").setValue(profpic);
-                    saveUserDetails();
+
+                    if(value.get("email") != null) {
+                        if(!value.get("email").toString().equals("null")) {
+                            email = value.get("email").toString();
+                        } else {
+                            email= "null";
+                        }
+                    } else {
+                        dbRef.child("email").setValue(email);
+                    }
+                    if(value.get("trusted") != null) {
+                        if(!value.get("trusted").toString().equals("null")) {
+                            trusted_id = value.get("trusted").toString();
+                        } else {
+                            trusted_id = "null";
+                        }
+                    } else {
+                        dbRef.child("trusted").setValue(trusted_id);
+                    }
                     SuperTask.execute(PhoneAuthentication.this,
-                            TaskConfig.CHECK_USER_URL,
-                            "check_user");
+                            TaskConfig.REGISTER_USER_URL,
+                            "register");
                 }
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
+            public void onCancelled(DatabaseError databaseError) { }
         });
     }
 
@@ -316,17 +268,33 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
     }
 
     @Override
-    public void onTaskRespond(String json, String id, int resultcode) { }
+    public void onTaskRespond(String json, String id) {
+        switch (id) {
+            case "register":
+                try {
+                    JSONObject jsonObject = new JSONObject(json);
+                    String status = jsonObject.getString("status");
+                    if(status.equals("success")) {
+                        database_id = jsonObject.getString("database_id");
+                    } else {
+                        Toast.makeText(this, jsonObject.getString("status"), Toast.LENGTH_SHORT).show();
+                    }
+                    saveUserDetails();
+                } catch (Exception e) { }
+                break;
+        }
+    }
 
     @Override
     public ContentValues setRequestValues(ContentValues contentValues, String id) {
         switch (id) {
             case "check_user":
                 contentValues.put("android", 1);
+                contentValues.put("firebase_uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
                 contentValues.put("name", name);
                 contentValues.put("email", email);
-                contentValues.put("mobile", mobnum);
-                contentValues.put("firebase_id", mAuth.getCurrentUser().getUid());
+                contentValues.put("contact", mobnum);
+                contentValues.put("img_path", profpic);
                 return contentValues;
             default:
                 return null;

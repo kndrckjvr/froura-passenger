@@ -13,6 +13,7 @@ import android.view.View;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
+import com.froura.develo4.passenger.config.TaskConfig;
 import com.froura.develo4.passenger.libraries.DialogCreator;
 import com.froura.develo4.passenger.tasks.SuperTask;
 import com.google.firebase.auth.FirebaseAuth;
@@ -37,6 +38,7 @@ public class MainActivity extends AppCompatActivity implements DialogCreator.Dia
     private String mobnum;
     private String profpic;
     private String trusted_id;
+    private String database_id;
     private String auth;
 
     @Override
@@ -85,7 +87,9 @@ public class MainActivity extends AppCompatActivity implements DialogCreator.Dia
                         if(details.getKey().equals("profile_pic")) profpic = details.getValue().toString();
                         if(details.getKey().equals("trusted")) trusted_id = details.getValue().toString();
                     }
-                    saveUserDetails();
+                    SuperTask.execute(MainActivity.this,
+                            TaskConfig.REGISTER_USER_URL,
+                            "register");
                 }
             }
 
@@ -97,44 +101,47 @@ public class MainActivity extends AppCompatActivity implements DialogCreator.Dia
 
     }
 
-
-
     private void saveUserDetails() {
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         SharedPreferences.Editor editor = sharedPref.edit();
         String JSON_DETAILS_KEY = "userDetails";
-        Log.d("setac", profpic);
-        String jsonDetails = "{ \"name\" : \"" + WordUtils.capitalize(name.toLowerCase()) + "\", \"email\" : \"" + email + "\", \"mobnum\" : \"" + mobnum + "\", \"profile_pic\" : \"" + profpic + "\", \"trusted_id\" : " + trusted_id + ", \"auth\" : \"" + auth + "\"}";
+        String jsonDetails = "{ \"name\" : \"" + WordUtils.capitalize(name.toLowerCase()) + "\", \"email\" : \"" + email + "\", \"mobnum\" : \"" + mobnum + "\", \"profile_pic\" : \"" + profpic + "\", \"trusted_id\" : " + WordUtils.capitalize(trusted_id) + ", \"auth\" : \"" + auth + "\", \"database_id\": \" "+ database_id +"\"}";
         editor.putString(JSON_DETAILS_KEY, jsonDetails);
         editor.apply();
         Intent intent = new Intent(MainActivity.this, LandingActivity.class);
         startActivity(intent);
         finish();
-        //SuperTask.execute(MainActivity.this, TaskConfig.CHECK_CONNECTION_URL, "check_connection");
     }
 
     @Override
-    public void onTaskRespond(String json, String id, int resultcode) {
-        if(resultcode == 503) {
-            /*Intent intent = new Intent(MainActivity.this, SMSActivity.class);
-            startactivity(intent);
-            finish();*/
-            return;
+    public void onTaskRespond(String json, String id) {
+        switch (id) {
+            case "register":
+                try {
+                    JSONObject jsonObject = new JSONObject(json);
+                    if(jsonObject.getString("status").equals("success")) {
+                        database_id = jsonObject.getString("database_id");
+                        saveUserDetails();
+                    }
+                } catch (Exception e) { }
+                break;
         }
-        try {
-            JSONObject jsonObject = new JSONObject(json);
-            if(jsonObject.getString("status").equals("SUCCESS")) {
-                Intent intent = new Intent(MainActivity.this, LandingActivity.class);
-                startActivity(intent);
-                finish();
-            }
-        } catch (Exception e) { }
     }
 
     @Override
     public ContentValues setRequestValues(ContentValues contentValues, String id) {
-        contentValues.put("android", 1);
-        return contentValues;
+        switch (id) {
+            case "register":
+                contentValues.put("android", 1);
+                contentValues.put("firebase_uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
+                contentValues.put("name", name);
+                contentValues.put("email", email);
+                contentValues.put("contact", mobnum);
+                contentValues.put("img_path", profpic);
+                return contentValues;
+            default:
+                return null;
+        }
     }
 
     public int getImage(String imageName) {

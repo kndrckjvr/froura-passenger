@@ -150,12 +150,17 @@ public class TrustedContactAdapter extends RecyclerView.Adapter<TrustedContactAd
     @Override
     public void onBindViewHolder(ViewHolder holder, final int position) {
         if(resultList == null) lastPosition = -1;
-        holder.name_txt_vw.setText(resultList.get(position).getName());
-        holder.email_txt_vw.setText(resultList.get(position).getEmail());
-        holder.mobnum_txt_vw.setText(resultList.get(position).getMobnum());
+        holder.name_txt_vw.setText(resultList.get(position).getName().equals("null") ? "None" : resultList.get(position).getName());
+        holder.email_txt_vw.setText(resultList.get(position).getEmail().equals("null") ? "None" : resultList.get(position).getEmail());
+        holder.mobnum_txt_vw.setText(resultList.get(position).getMobnum().equals("null") ? "None" : resultList.get(position).getMobnum());
         if(!resultList.get(position).getProf_pic().equals("default"))
             Glide.with(context)
                     .load(resultList.get(position).getProf_pic())
+                    .apply(RequestOptions.circleCropTransform())
+                    .into(holder.profpic_img_vw);
+        else
+            Glide.with(context)
+                    .load(getImage("placeholder"))
                     .apply(RequestOptions.circleCropTransform())
                     .into(holder.profpic_img_vw);
         holder.row_layout.setOnClickListener(new View.OnClickListener() {
@@ -170,6 +175,12 @@ public class TrustedContactAdapter extends RecyclerView.Adapter<TrustedContactAd
     @Override
     public int getItemCount() {
         return resultList != null ? resultList.size() : 0;
+    }
+
+    public int getImage(String imageName) {
+        int drawableResourceId = context.getResources()
+                .getIdentifier(imageName, "drawable", context.getPackageName());
+        return drawableResourceId;
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {

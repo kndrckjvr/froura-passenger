@@ -1,6 +1,7 @@
 package com.froura.develo4.passenger;
 
 import android.app.ProgressDialog;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
@@ -10,6 +11,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
@@ -20,7 +22,9 @@ import com.facebook.GraphResponse;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
+import com.froura.develo4.passenger.config.TaskConfig;
 import com.froura.develo4.passenger.libraries.SnackBarCreator;
+import com.froura.develo4.passenger.tasks.SuperTask;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -45,7 +49,7 @@ import org.json.JSONObject;
 
 import java.util.Map;
 
-public class SignUpActivity extends AppCompatActivity {
+public class SignUpActivity extends AppCompatActivity implements SuperTask.TaskListener {
 
     private Button mobLogin;
     private Button googLogin;
@@ -62,6 +66,7 @@ public class SignUpActivity extends AppCompatActivity {
     private String profpic = "null";
     private String mobnum = "null";
     private String trusted_id = "null";
+    private String database_id = "null";
     private String auth;
     private static final int RC_SIGN_IN = 1;
 
@@ -234,7 +239,9 @@ public class SignUpActivity extends AppCompatActivity {
                     } else {
                         dbRef.child("trusted").setValue(trusted_id);
                     }
-                    saveUserDetails();
+                    SuperTask.execute(SignUpActivity.this,
+                            TaskConfig.REGISTER_USER_URL,
+                            "register");
                 }
             }
 
@@ -243,11 +250,45 @@ public class SignUpActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    public void onTaskRespond(String json, String id) {
+        switch (id) {
+            case "register":
+                try {
+                    JSONObject jsonObject = new JSONObject(json);
+                    String status = jsonObject.getString("status");
+                    if(status.equals("success")) {
+                        database_id = jsonObject.getString("database_id");
+                    } else {
+                        Toast.makeText(this, jsonObject.getString("status"), Toast.LENGTH_SHORT).show();
+                    }
+                    saveUserDetails();
+                } catch (Exception e) { }
+                break;
+        }
+    }
+
+    @Override
+    public ContentValues setRequestValues(ContentValues contentValues, String id) {
+        switch (id) {
+            case "register":
+                contentValues.put("android", 1);
+                contentValues.put("firebase_uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
+                contentValues.put("name", name);
+                contentValues.put("email", email);
+                contentValues.put("contact", mobnum);
+                contentValues.put("img_path", profpic);
+                return contentValues;
+            default:
+                return null;
+        }
+    }
+
     private void saveUserDetails() {
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         SharedPreferences.Editor editor = sharedPref.edit();
         String JSON_DETAILS_KEY = "userDetails";
-        String jsonDetails = "{ \"name\" : \"" + WordUtils.capitalize(name.toLowerCase()) + "\", \"email\" : \"" + email + "\", \"mobnum\" : \"" + mobnum + "\", \"profile_pic\" : \"" + profpic + "\", \"trusted_id\" : " + WordUtils.capitalize(trusted_id) + ", \"auth\" : \"" + auth + "\"}";
+        String jsonDetails = "{ \"name\" : \"" + WordUtils.capitalize(name.toLowerCase()) + "\", \"email\" : \"" + email + "\", \"mobnum\" : \"" + mobnum + "\", \"profile_pic\" : \"" + profpic + "\", \"trusted_id\" : " + WordUtils.capitalize(trusted_id) + ", \"auth\" : \"" + auth + "\", \"database_id\": \" "+ database_id +"\"}";
         editor.putString(JSON_DETAILS_KEY, jsonDetails);
         editor.apply();
         progressDialog.dismiss();
