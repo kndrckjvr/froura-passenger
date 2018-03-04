@@ -6,9 +6,6 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-
-import com.froura.develo4.passenger.config.TaskConfig;
-
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -37,7 +34,7 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
     private int resultcode;
     private String id;
 
-    public SuperTask(Context context, String url, String id, String message) {
+    private SuperTask(Context context, String url, String id, String message) {
         this.context = context;
         this.url = url;
         this.message = message;
@@ -49,7 +46,7 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
         new SuperTask(context,url,id,message).execute();
     }
 
-    public SuperTask(Context context, String url, String id) {
+    private SuperTask(Context context, String url, String id) {
         this.context = context;
         this.url = url;
         this.id = id;
@@ -64,7 +61,7 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
         ContentValues setRequestValues(ContentValues contentValues, String id);
     }
 
-    public static String createPostString(Set<Map.Entry<String, Object>> set) throws UnsupportedEncodingException {
+    private String createPostString(Set<Map.Entry<String, Object>> set) throws UnsupportedEncodingException {
         StringBuilder stringBuilder = new StringBuilder();
         boolean flag = true;
 
@@ -85,7 +82,7 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
         if(progressDialog != null) {
             progressDialog.setMessage(this.message);
             progressDialog.setIndeterminate(false);
-            //progressDialog.setCancelable(false);
+            progressDialog.setCancelable(false);
             progressDialog.show();
         }
     }
@@ -101,11 +98,10 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
 
             OutputStream outputStream = new BufferedOutputStream(httpURLConnection.getOutputStream());
             BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream));
-            Log.d("Error Tag", ((AppCompatActivity)context).getPackageName());
+            Log.d("Error Tag", (context).getPackageName());
             String postString = createPostString(((TaskListener)this.context).setRequestValues(new ContentValues(), id).valueSet());
             bufferedWriter.write(postString);
 
-            // clear
             bufferedWriter.flush();
             bufferedWriter.close();
             outputStream.close();
@@ -113,7 +109,7 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
             InputStream inputStream = new BufferedInputStream(httpURLConnection.getInputStream());
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
             StringBuilder stringBuilder = new StringBuilder();
-            String line = "";
+            String line;
 
             while ((line = bufferedReader.readLine()) != null){
                 stringBuilder.append(line);
@@ -121,7 +117,6 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
 
             resultcode = httpURLConnection.getResponseCode();
 
-            // clear
             bufferedReader.close();
             inputStream.close();
 
