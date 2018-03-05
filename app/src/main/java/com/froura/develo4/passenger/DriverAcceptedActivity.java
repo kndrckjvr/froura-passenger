@@ -1,5 +1,6 @@
 package com.froura.develo4.passenger;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -21,6 +22,7 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -50,6 +52,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import org.json.JSONObject;
+
 import java.util.List;
 import java.util.Map;
 
@@ -75,8 +79,10 @@ public class DriverAcceptedActivity extends AppCompatActivity
     private DrawerLayout drawer;
     private Toolbar toolbar;
     private TextView name;
-    private CircleImageView prof_pic;
+    private TextView email_txt_vw;
+    private ImageView prof_pic;
     private LinearLayout informationLayout;
+    private ProgressDialog progressDialog;
 
     private String driverId;
     private String driver_name;
@@ -84,17 +90,29 @@ public class DriverAcceptedActivity extends AppCompatActivity
     private String driver_mobnum;
     private String driver_profpic;
 
+    private String user_name;
+    private String user_mobnum;
+    private String user_email;
+    private String user_pic;
+    private String user_trusted_id;
+    private String user_trusted_name;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_driver_accepted);
-
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setCancelable(false);
+        progressDialog.setMessage("Fetching Data...");
+        progressDialog.setIndeterminate(false);
+        progressDialog.setCancelable(false);
+        progressDialog.show();
         toolbar = findViewById(R.id.toolbar_driver_accepted);
         toolbar.setTitle("Driver on the way");
         setSupportActionBar(toolbar);
         informationLayout = findViewById(R.id.information_layout);
 
-        driverId = getIntent().getStringExtra("driverId");
+        driverId = getIntent().getStringExtra("driver_id");
 
         drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -107,8 +125,11 @@ public class DriverAcceptedActivity extends AppCompatActivity
         navigationView.getMenu().getItem(0).setChecked(true);
         View v = navigationView.getHeaderView(0);
         name = v.findViewById(R.id.txtVw_name);
+        email_txt_vw = v.findViewById(R.id.email_txt_vw);
         prof_pic = v.findViewById(R.id.imgVw_profile_pic);
         AutofitHelper.create(name);
+
+        setDetails();
 
         mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -116,7 +137,30 @@ public class DriverAcceptedActivity extends AppCompatActivity
         mapFragment.getMapAsync(this);
 
         getDriverDetails();
-        showDriverLocation();
+    }
+
+    private void setDetails() {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        String JSON_DETAILS_KEY = "userDetails";
+        String userDetails = sharedPref.getString(JSON_DETAILS_KEY, "{ \"name\" : NULL }");
+        try {
+            JSONObject jsonObject = new JSONObject(userDetails);
+            if(!jsonObject.getString("name").equals("NULL")) {
+                if(!jsonObject.getString("profile_pic").equals("default")) {
+                    user_pic = jsonObject.getString("profile_pic");
+                    Glide.with(this)
+                            .load(user_pic)
+                            .apply(RequestOptions.circleCropTransform())
+                            .into(prof_pic);
+                }
+                user_name = jsonObject.getString("name");
+                user_email = jsonObject.getString("email").equals("null") ? "None" : jsonObject.getString("email");
+                user_mobnum = jsonObject.getString("mobnum").equals("null") ? "None" : jsonObject.getString("mobnum");
+                user_trusted_id = jsonObject.getString("trusted_id").equals("null") ? "None" : jsonObject.getString("trusted_id");
+                name.setText(jsonObject.getString("name"));
+                email_txt_vw.setText(user_email);
+            }
+        } catch (Exception e) { }
     }
 
     private void getDriverDetails() {
@@ -132,6 +176,17 @@ public class DriverAcceptedActivity extends AppCompatActivity
                         driver_profpic = data.get("profile_pic").toString();
                     }
                 }
+
+                if(data.get("name") != null)
+                    driver_name = data.get("name").toString();
+
+                if(data.get("plate") != null)
+                    driver_plate = data.get("plate").toString();
+
+                if(data.get("mobnum") != null)
+                    driver_mobnum = data.get("mobnum").toString();
+
+                showDriverLocation();
             }
 
             @Override
@@ -180,6 +235,7 @@ public class DriverAcceptedActivity extends AppCompatActivity
 
                 driverMarker = mMap.addMarker(new MarkerOptions().position(drvLatLng));
                 loadMarkerIcon(driverMarker);
+                progressDialog.dismiss();
             }
 
             @Override
@@ -191,10 +247,10 @@ public class DriverAcceptedActivity extends AppCompatActivity
 
     private void loadMarkerIcon(final Marker marker) {
         if(driver_profpic.equals("default"))
-            Glide.with(this).asBitmap()
-                    .load(driver_profpic)
+            Glide.with(getApplicationContext()).asBitmap()
+                    .load(getImage("placeholder"))
                     .apply(RequestOptions.circleCropTransform())
-                    .into(new SimpleTarget<Bitmap>() {
+                    .into(new SimpleTarget<Bitmap>(150,150) {
                         @Override
                         public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
                             BitmapDescriptor icon = BitmapDescriptorFactory.fromBitmap(resource);
@@ -202,16 +258,22 @@ public class DriverAcceptedActivity extends AppCompatActivity
                         }
                     });
         else
-            Glide.with(this).asBitmap()
+            Glide.with(getApplicationContext()).asBitmap()
                 .load(driver_profpic)
                 .apply(RequestOptions.circleCropTransform())
-                .into(new SimpleTarget<Bitmap>() {
+                .into(new SimpleTarget<Bitmap>(100,100) {
             @Override
             public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
                     BitmapDescriptor icon = BitmapDescriptorFactory.fromBitmap(resource);
                     marker.setIcon(icon);
                 }
             });
+    }
+
+    public int getImage(String imageName) {
+        int drawableResourceId = this.getResources()
+                .getIdentifier(imageName, "drawable", this.getPackageName());
+        return drawableResourceId;
     }
 
     @Override

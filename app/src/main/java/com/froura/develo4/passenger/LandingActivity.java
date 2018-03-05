@@ -261,12 +261,15 @@ public class LandingActivity extends AppCompatActivity
         }
 
         if(hasPickup == 1 && hasDropoff == 1) {
+            Log.d("haspickupandropoff", "taer");
             if(getIntent().getStringExtra("pickupName") != null || getIntent().getStringExtra("dropoffName") != null) {
+                Log.d("haspickupandropoff", "pasok1");
                 SuperTask.execute(this,
                         TaskConfig.CREATE_TAXI_FARE_URL,
                         "get_fare_map_point",
                         "Calculating Fare...");
             } else {
+                Log.d("haspickupandropoff", "pasok2");
                 setFare();
             }
         }
@@ -732,6 +735,7 @@ public class LandingActivity extends AppCompatActivity
                 } else {
                     contentValues.put("destinations", dropoffPlaceId);
                 }
+                Log.d("haspickupandropoff", contentValues+"");
                 return contentValues;
             default:
                 return null;

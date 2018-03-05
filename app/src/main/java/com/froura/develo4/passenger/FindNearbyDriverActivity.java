@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.CountDownTimer;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -18,6 +19,8 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+
+import java.util.Map;
 
 public class FindNearbyDriverActivity extends AppCompatActivity {
 
@@ -81,32 +84,23 @@ public class FindNearbyDriverActivity extends AppCompatActivity {
         bookingRef.child("fare").setValue(getIntent().getStringExtra("fare"));
         findNearbyDriver();
 
-        acceptedRef = FirebaseDatabase.getInstance().getReference().child("services").child("booking").child(uid).child("accepted_by");
+        acceptedRef = FirebaseDatabase.getInstance().getReference("services/booking/"+uid+"/accepted_by");
         acceptedRef.addValueEventListener(new ValueEventListener() {
+            private boolean accepted = false;
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if(dataSnapshot.getValue() != null) {
+                if(dataSnapshot.getValue() != null && !accepted) {
+                    Log.d("accepted_by", "triggered");
                     Intent intent = new Intent(FindNearbyDriverActivity.this, DriverAcceptedActivity.class);
-                    intent.putExtra("driverId", dataSnapshot.getValue().toString());
-                    intent.putExtra("pickupLat", getIntent().getDoubleExtra("pickupLat", 0));
-                    intent.putExtra("pickupLng", getIntent().getDoubleExtra("pickupLng", 0));
+                    intent.putExtra("driver_id",dataSnapshot.getValue().toString());
                     startActivity(intent);
                     finish();
+                    accepted = true;
                 }
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-                bookingRef.removeValue();
-                Intent intent = new Intent(FindNearbyDriverActivity.this, LandingActivity.class);
-                intent.putExtra("hasPickup", 1);
-                intent.putExtra("pickupPlaceId", getIntent().getStringExtra("pickupPlaceId"));
-                intent.putExtra("hasDropoff", 1);
-                intent.putExtra("dropoffPlaceId", getIntent().getStringExtra("dropoffPlaceId"));
-                intent.putExtra("noDriver", 1);
-                startActivity(intent);
-                finish();
-            }
+            public void onCancelled(DatabaseError databaseError) { }
         });
     }
 
@@ -157,9 +151,23 @@ public class FindNearbyDriverActivity extends AppCompatActivity {
         bookingRef.removeValue();
         Intent intent = new Intent(FindNearbyDriverActivity.this, LandingActivity.class);
         intent.putExtra("hasPickup", 1);
-        intent.putExtra("pickupPlaceId", getIntent().getStringExtra("pickupPlaceId"));
         intent.putExtra("hasDropoff", 1);
-        intent.putExtra("dropoffPlaceId", getIntent().getStringExtra("dropoffPlaceId"));
+        if(getIntent().getStringExtra("pickupPlaceId") != null)
+            intent.putExtra("pickupPlaceId", getIntent().getStringExtra("pickupPlaceId"));
+        else {
+            intent.putExtra("pickupName", getIntent().getStringExtra("pickupName"));
+            intent.putExtra("pickupLatLng", getIntent().getDoubleExtra("pickupLat", 0) + "," + getIntent().getDoubleExtra("pickupLng", 0));
+            intent.putExtra("pickupLat", getIntent().getDoubleExtra("pickupLat", 0));
+            intent.putExtra("pickupLng", getIntent().getDoubleExtra("pickupLng", 0));
+        }
+        if(getIntent().getStringExtra("dropoffPlaceId") != null)
+            intent.putExtra("dropoffPlaceId", getIntent().getStringExtra("dropoffPlaceId"));
+        else {
+            intent.putExtra("dropoffName", getIntent().getStringExtra("dropoffName"));
+            intent.putExtra("dropoffLatLng", getIntent().getDoubleExtra("dropoffLat", 0) + "," + getIntent().getDoubleExtra("dropoffLng", 0));
+            intent.putExtra("dropoffLat", getIntent().getDoubleExtra("dropoffLat", 0));
+            intent.putExtra("dropoffLng", getIntent().getDoubleExtra("dropoffLng", 0));
+        }
         startActivity(intent);
         finish();
     }

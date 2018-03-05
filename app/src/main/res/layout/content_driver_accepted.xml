@@ -26,14 +26,13 @@
         android:layout_height="80dp"
         android:orientation="horizontal">
 
-        <de.hdodenhof.circleimageview.CircleImageView
-            xmlns:app="http://schemas.android.com/apk/res-auto"
+        <ImageView
             android:id="@+id/driver_prof_pic"
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:padding="12dp"
             android:layout_weight="0"
-            app:srcCompat="@mipmap/ic_launcher" />
+            android:src="@drawable/placeholder" />
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -43,7 +42,7 @@
             android:padding="4dp">
 
             <TextView
-                android:id="@+id/name_txt_vw"
+                android:id="@+id/driver_name_txt_vw"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="0.5"
@@ -54,7 +53,7 @@
                 android:textSize="18sp" />
 
             <TextView
-                android:id="@+id/mob_num_txt_vw"
+                android:id="@+id/driver_mob_num_txt_vw"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="0.25"
@@ -64,7 +63,7 @@
                 android:textColor="#212121" />
 
             <TextView
-                android:id="@+id/plate_number_txt_vw"
+                android:id="@+id/driver_plate_number_txt_vw"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="0.25"
@@ -88,7 +87,7 @@
                 android:src="@drawable/ic_star_yellow_24dp" />
 
             <TextView
-                android:id="@+id/textView5"
+                android:id="@+id/driver_rating_txt_vw"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textAlignment="center"
