@@ -49,7 +49,7 @@
             android:name=".PhoneAuthentication"
             android:label=""
             android:screenOrientation="portrait"
-            android:theme="@style/RegistrationTheme" />
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".FindNearbyDriverActivity"
             android:label=""

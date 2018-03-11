@@ -15,10 +15,12 @@
         map:cameraTargetLat="14.5330173"
         map:cameraTargetLng="121.0158656"
         map:cameraZoom="11"
-        map:uiCompass="true"
-        map:uiTiltGestures="false"
-        tools:layout_editor_absoluteX="0dp"
-        tools:layout_editor_absoluteY="0dp" />
+        map:layout_constraintEnd_toEndOf="parent"
+        map:layout_constraintStart_toStartOf="parent"
+        map:layout_constraintTop_toTopOf="parent"
+        map:layout_constraintTop_toBottomOf="parent"
+        map:uiCompass="false"
+        map:uiTiltGestures="false" />
 
     <ImageButton
         android:id="@+id/my_location_button"

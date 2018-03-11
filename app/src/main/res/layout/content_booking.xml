@@ -18,7 +18,7 @@
         map:cameraZoom="11"
         map:cameraTargetLat="14.5330173"
         map:cameraTargetLng="121.0158656"
-        map:uiCompass="true"
+        map:uiCompass="false"
         map:uiTiltGestures="false"
         />
 
@@ -27,7 +27,7 @@
         android:layout_height="match_parent">
 
         <android.support.v7.widget.CardView
-            android:id="@+id/details"
+            android:id="@+id/fare_details_card_vw"
             android:layout_width="match_parent"
             android:layout_height="35dp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -42,7 +42,7 @@
                 android:weightSum="3">
 
                 <TextView
-                    android:id="@+id/txtVw_taxi_fare"
+                    android:id="@+id/fare_details_txt_vw"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -54,7 +54,7 @@
                     android:textSize="16sp" />
 
                 <TextView
-                    android:id="@+id/txtVw_distance"
+                    android:id="@+id/distance_details_txt_vw"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -66,7 +66,7 @@
                     android:textSize="16sp" />
 
                 <TextView
-                    android:id="@+id/txtVw_duration"
+                    android:id="@+id/duration_details_txt_vw"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -81,7 +81,7 @@
         </android.support.v7.widget.CardView>
 
         <android.support.v7.widget.CardView
-            android:id="@+id/cardView"
+            android:id="@+id/booking_details_card_vw"
             android:layout_width="match_parent"
             android:layout_height="225dp"
             app:layout_constraintBottom_toBottomOf="parent">
@@ -97,7 +97,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content">
                     <LinearLayout
-                        android:id="@+id/pickupLayout"
+                        android:id="@+id/pickup_layout"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:focusable="true"
@@ -120,7 +120,7 @@
                             android:src="@drawable/ic_pin_yellow_24dp" />
 
                         <TextView
-                            android:id="@+id/txtVw_pickup"
+                            android:id="@+id/pickup_txt_vw"
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_weight="1"
@@ -141,17 +141,17 @@
                     </LinearLayout>
 
                     <View
-                        android:layout_below="@id/pickupLayout"
+                        android:layout_below="@id/pickup_layout"
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:clickable="false"
                         android:background="#000"/>
 
                     <LinearLayout
-                        android:id="@+id/dropoffLayout"
+                        android:id="@+id/dropoff_layout"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_below="@+id/pickupLayout"
+                        android:layout_below="@+id/pickup_layout"
                         android:focusable="true"
                         android:clickable="true"
                         android:focusableInTouchMode="true"
@@ -171,7 +171,7 @@
                             android:src="@drawable/ic_places_black_24dp" />
 
                         <TextView
-                            android:id="@+id/txtVw_dropoff"
+                            android:id="@+id/dropoff_txt_vw"
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_weight="1"
@@ -193,7 +193,7 @@
                 </RelativeLayout>
 
                 <Button
-                    android:id="@+id/bookingButton"
+                    android:id="@+id/booking_btn"
                     style="@style/Widget.AppCompat.Button.Colored"
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
@@ -207,7 +207,7 @@
         </android.support.v7.widget.CardView>
 
         <ImageButton
-            android:id="@+id/myLocation"
+            android:id="@+id/go_to_my_location"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="7dp"
@@ -215,11 +215,11 @@
             android:layout_marginRight="12dp"
             android:background="#95FFFFFF"
             android:src="@drawable/ic_my_location_black_24dp"
-            app:layout_constraintBottom_toTopOf="@+id/cardView"
+            app:layout_constraintBottom_toTopOf="@+id/booking_details_card_vw"
             app:layout_constraintEnd_toEndOf="parent" />
 
         <ImageButton
-            android:id="@+id/traffic"
+            android:id="@+id/show_traffic"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
@@ -227,7 +227,7 @@
             android:background="#95FFFFFF"
             android:padding="7dp"
             android:src="@drawable/ic_traffic_black_24dp"
-            app:layout_constraintBottom_toTopOf="@+id/myLocation"
+            app:layout_constraintBottom_toTopOf="@+id/go_to_my_location"
             app:layout_constraintEnd_toEndOf="parent" />
 
 

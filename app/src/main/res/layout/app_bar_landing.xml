@@ -25,7 +25,7 @@
         android:layout_width="match_parent"
         android:layout_height="fill_parent"
         android:layout_marginTop="?attr/actionBarSize"
-        android:id="@+id/vf">
+        android:id="@+id/viewFlipper">
 
         <include
             layout="@layout/content_booking"

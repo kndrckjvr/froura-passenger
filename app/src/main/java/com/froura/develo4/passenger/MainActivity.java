@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity implements DialogCreator.Dia
     private String email;
     private String mobnum;
     private String profpic;
-    private String trusted_id;
+    private String trusted_id = "null";
     private String database_id;
     private String auth;
 
@@ -56,16 +56,11 @@ public class MainActivity extends AppCompatActivity implements DialogCreator.Dia
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                 if(user == null) {
-                    final Handler handler = new Handler();
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            Intent intent = new Intent(MainActivity.this, SignUpActivity.class);
-                            startActivity(intent);
-                            finish();
-                            return;
-                        }
-                    }, 10);
+                    //Check network connection
+                    Intent intent = new Intent(MainActivity.this, SignUpActivity.class);
+                    startActivity(intent);
+                    finish();
+                    return;
                 } else {
                     updateUserdetails();
                 }
@@ -74,7 +69,8 @@ public class MainActivity extends AppCompatActivity implements DialogCreator.Dia
     }
 
     private void updateUserdetails() {
-        DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference("users/passenger/"+FirebaseAuth.getInstance().getUid());
+        DatabaseReference dbRef = FirebaseDatabase.getInstance()
+                .getReference("users/passenger/"+FirebaseAuth.getInstance().getUid());
         dbRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -94,9 +90,7 @@ public class MainActivity extends AppCompatActivity implements DialogCreator.Dia
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
+            public void onCancelled(DatabaseError databaseError) { }
         });
 
     }
@@ -105,7 +99,13 @@ public class MainActivity extends AppCompatActivity implements DialogCreator.Dia
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         SharedPreferences.Editor editor = sharedPref.edit();
         String JSON_DETAILS_KEY = "userDetails";
-        String jsonDetails = "{ \"name\" : \"" + WordUtils.capitalize(name.toLowerCase()) + "\", \"email\" : \"" + email + "\", \"mobnum\" : \"" + mobnum + "\", \"profile_pic\" : \"" + profpic + "\", \"trusted_id\" : " + WordUtils.capitalize(trusted_id) + ", \"auth\" : \"" + auth + "\", \"database_id\": \" "+ database_id +"\"}";
+        String jsonDetails = "{ \"name\" : \"" + WordUtils.capitalize(name.toLowerCase()) + "\", " +
+                "\"email\" : \"" + email + "\", " +
+                "\"mobnum\" : \"" + mobnum + "\", " +
+                "\"profile_pic\" : \"" + profpic + "\", " +
+                "\"trusted_id\" : " + trusted_id + ", " +
+                "\"auth\" : \"" + auth + "\", " +
+                "\"database_id\": \" "+ database_id +"\"}";
         editor.putString(JSON_DETAILS_KEY, jsonDetails);
         editor.apply();
         Intent intent = new Intent(MainActivity.this, LandingActivity.class);
@@ -147,7 +147,6 @@ public class MainActivity extends AppCompatActivity implements DialogCreator.Dia
     public int getImage(String imageName) {
         int drawableResourceId = this.getResources()
                 .getIdentifier(imageName, "drawable", this.getPackageName());
-
         return drawableResourceId;
     }
 

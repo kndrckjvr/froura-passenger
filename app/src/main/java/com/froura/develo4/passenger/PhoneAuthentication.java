@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.os.CountDownTimer;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.design.widget.TextInputEditText;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Html;
@@ -45,11 +46,13 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
 
-    private TextView requestCode;
-    private TextView mob_num;
-    private Button verify;
-    private EditText verifCode;
     private ProgressDialog progressDialog;
+    private TextView mobnum_txt_vw;
+    private Button edit_btn;
+    private TextInputEditText verification_code_et;
+    private Button verifcation_btn;
+    private TextView cntdwn_txt_vw;
+    private Button resend_btn;
 
     private String mobnum;
     private String email;
@@ -70,10 +73,11 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_phone_authentication);
 
-        requestCode = findViewById(R.id.txtVw_request_code);
-        verify = findViewById(R.id.btn_verify);
-        verifCode = findViewById(R.id.et_verif_code);
-        mob_num = findViewById(R.id.txtVw_mob_num);
+        cntdwn_txt_vw = findViewById(R.id.cntdwn_txt_vw);
+        verifcation_btn = findViewById(R.id.verifcation_btn);
+        verification_code_et = findViewById(R.id.verification_code_et);
+        mobnum_txt_vw = findViewById(R.id.mobnum_txt_vw);
+        resend_btn = findViewById(R.id.resend_btn);
 
         progressDialog = new ProgressDialog(this);
         progressDialog.setTitle("Login");
@@ -97,16 +101,17 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
             }
         };
 
-        verify.setOnClickListener(new View.OnClickListener() {
+        verifcation_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String mCode = verifCode.getText().toString();
+                String mCode = verification_code_et.getText().toString();
                 if(!mCode.isEmpty()) {
+                    progressDialog.show();
                     signInWithPhoneAuthCredential(PhoneAuthProvider.getCredential(mVerificationId, mCode));
-                    verifCode.setError(null);
-                    verifCode.setCompoundDrawablesWithIntrinsicBounds(0,0, 0,0);
+                    verification_code_et.setError(null);
+                    verification_code_et.setCompoundDrawablesWithIntrinsicBounds(0,0, 0,0);
                 } else {
-                    verifCode.setError("Code is required.", getResources().getDrawable(R.drawable.ic_warning_red_24dp));
+                    verification_code_et.setError("Code is required.", getResources().getDrawable(R.drawable.ic_warning_red_24dp));
                 }
 
             }
@@ -115,33 +120,36 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
         requestCodeTimer = new CountDownTimer(60000, 1000) {
                     @Override
                     public void onTick(long l) {
-                        requestCode.setText("Request a new code in 00:"+ l/1000);
-                        requestCode.setTextColor(getResources().getColor(R.color.textViewColor));
+                        cntdwn_txt_vw.setText("Request a new code in 00:"+ (l < 10000 ? "0" + l/1000 : l/1000));
                     }
 
                     @Override
                     public void onFinish() {
-                        requestCode.setText(Html.fromHtml("<u>Request a new code.</u>"));
-                        requestCode.setTextColor(getResources().getColor(R.color.textLinkColor));
-
-                        requestCode.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View view) {
-                                requestCode();
-                            }
-                        });
+                        cntdwn_txt_vw.setVisibility(View.GONE);
+                        resend_btn.setVisibility(View.VISIBLE);
                     }
                 };
 
+        resend_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                requestCode();
+                requestCodeTimer.start();
+                cntdwn_txt_vw.setVisibility(View.VISIBLE);
+                resend_btn.setVisibility(View.GONE);
+            }
+        });
+
         if(mobnum.matches("^(09)\\d{9}$")) {
-            mob_num.setText("+63 " + mobnum.substring(1));
+            mobnum_txt_vw.setText("+63 " + mobnum.substring(1));
+            mobnum = "+63" + mobnum.substring(1);
         } else if(mobnum.matches("^(\\+639)\\d{9}$")) {
-            mob_num.setText("+63 " + mobnum.substring(3));
+            mobnum_txt_vw.setText(mobnum = "+63 " + mobnum.substring(3));
+            mobnum = "+63" + mobnum.substring(3);
         }
 
         if(phoneReg) {
             requestCode();
-            requestCode.setOnClickListener(null);
             requestCodeTimer.start();
             phoneReg = false;
         }
@@ -151,7 +159,13 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         SharedPreferences.Editor editor = sharedPref.edit();
         String JSON_DETAILS_KEY = "userDetails";
-        String jsonDetails = "{ \"name\" : \"" + WordUtils.capitalize(name.toLowerCase()) + "\", \"email\" : \"" + email + "\", \"mobnum\" : \"" + mobnum + "\", \"profile_pic\" : \"" + profpic + "\", \"trusted_id\" : " + WordUtils.capitalize(trusted_id) + ", \"auth\" : \"" + auth + "\", \"database_id\": \" "+ database_id +"\"}";
+        String jsonDetails = "{ \"name\" : \"" + WordUtils.capitalize(name.toLowerCase()) + "\", " +
+                "\"email\" : \"" + email + "\", " +
+                "\"mobnum\" : \"" + mobnum + "\", " +
+                "\"profile_pic\" : \"" + profpic + "\", " +
+                "\"trusted_id\" : " + trusted_id + ", " +
+                "\"auth\" : \"" + auth + "\", " +
+                "\"database_id\": \" "+ database_id +"\"}";
         editor.putString(JSON_DETAILS_KEY, jsonDetails);
         editor.apply();
         progressDialog.dismiss();
@@ -165,9 +179,7 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            registerUser();
-                        }
+                        if (task.isSuccessful()) { }
                     }
                 });
     }
@@ -188,11 +200,7 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
                     @Override
                     public void onVerificationFailed(FirebaseException e) {
                         Log.w(TAG, "onVerificationFailed", e);
-                        if (e instanceof FirebaseAuthInvalidCredentialsException) {
-                            //Phone number is incorrect
-                            Toast.makeText(PhoneAuthentication.this, "Phone number is incorrect!", Toast.LENGTH_SHORT).show();
-                        } else if (e instanceof FirebaseTooManyRequestsException) {
-                            //Quota has been reached
+                        if (e instanceof FirebaseTooManyRequestsException) {
                             Toast.makeText(PhoneAuthentication.this, "Server Overload! A request has been sent.", Toast.LENGTH_SHORT).show();
                         }
                     }
@@ -299,5 +307,13 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
             default:
                 return null;
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        Intent intent = new Intent(PhoneAuthentication.this, MainActivity.class);
+        startActivity(intent);
+        finish();
     }
 }

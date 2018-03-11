@@ -28,13 +28,11 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.view.animation.Animation;
-import android.view.animation.Transformation;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewFlipper;
@@ -102,21 +100,21 @@ public class LandingActivity extends AppCompatActivity
         SuperTask.TaskListener {
 
     private DrawerLayout drawer;
-    private TextView name;
-    private TextView email_txt_vw;
-    private ImageView prof_pic;
-    private CardView cardView;
-    private CardView viewDetails;
-    private Button bookBtn;
-    private TextView pickupTxtVw;
-    private TextView dropoffTxtVw;
-    private LinearLayout pickupLayout;
-    private LinearLayout dropoffLayout;
-    private TextView taxifareTxtVw;
-    private TextView distanceTxtVw;
-    private TextView durationTxtVw;
-    private ImageButton myLocation;
-    private ImageButton traffic;
+    private TextView name_header_txt_vw;
+    private TextView email_header_txt_vw;
+    private TextView pickup_txt_vw;
+    private TextView dropoff_txt_vw;
+    private TextView fare_details_txt_vw;
+    private TextView distance_details_txt_vw;
+    private TextView duration_details_txt_vw;
+    private ImageView profile_pic_header_img_vw;
+    private CardView booking_details_card_vw;
+    private CardView fare_details_card_vw;
+    private Button booking_btn;
+    private ImageButton go_to_my_location;
+    private ImageButton show_traffic;
+    private LinearLayout pickup_layout;
+    private LinearLayout dropoff_layout;
     private MenuItem clear_history;
     private GoogleMap mMap;
     private CameraPosition cameraPosition;
@@ -128,18 +126,18 @@ public class LandingActivity extends AppCompatActivity
     private LatLng dropoffLocation;
     private HistoryAdapter historyAdapter;
     private DatabaseReference historyRef;
+    private int hasPickup = -1;
+    private int hasDropoff = -1;
+    private int noDriver = -1;
+    private boolean cameraUpdated = false;
+    private boolean is_traffic_shown = false;
+    private boolean from_update_activity = false;
+    private boolean google_client_built = false;
     private String uid;
     private String pickupName;
     private String dropoffName;
     private String pickupPlaceId;
     private String dropoffPlaceId;
-    private int hasPickup = -1;
-    private int hasDropoff = -1;
-    private int noDriver = -1;
-    private boolean cameraUpdated = false;
-    private boolean isTraffic = false;
-    private boolean fromUpdate = false;
-    final int LOCATION_REQUEST_CODE = 1;
     private String user_name;
     private String user_mobnum;
     private String user_email;
@@ -151,15 +149,12 @@ public class LandingActivity extends AppCompatActivity
     private String distance = "0M";
     private ViewFlipper viewFlipper;
     private Toolbar toolbar;
+    final int LOCATION_REQUEST_CODE = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_landing);
-
-        mGeoDataClient = Places.getGeoDataClient(this, null);
-        viewFlipper = findViewById(R.id.app_bar_include).findViewById(R.id.vf);
-
         toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle("Booking");
         setSupportActionBar(toolbar);
@@ -174,11 +169,11 @@ public class LandingActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
         navigationView.getMenu().getItem(0).setChecked(true);
         View v = navigationView.getHeaderView(0);
-        name = v.findViewById(R.id.txtVw_name);
-        email_txt_vw = v.findViewById(R.id.email_txt_vw);
-        prof_pic = v.findViewById(R.id.imgVw_profile_pic);
-        AutofitHelper.create(name);
-        prof_pic.setOnClickListener(new View.OnClickListener() {
+        name_header_txt_vw = v.findViewById(R.id.txtVw_name);
+        email_header_txt_vw = v.findViewById(R.id.email_txt_vw);
+        profile_pic_header_img_vw = v.findViewById(R.id.imgVw_profile_pic);
+        AutofitHelper.create(name_header_txt_vw);
+        profile_pic_header_img_vw.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 setAccountProfile();
@@ -190,28 +185,29 @@ public class LandingActivity extends AppCompatActivity
         Glide.with(this)
                 .load(getImage("placeholder"))
                 .apply(RequestOptions.circleCropTransform())
-                .into(prof_pic);
+                .into(profile_pic_header_img_vw);
         uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
         setDetails();
 
-        bookBtn = findViewById(R.id.bookingButton);
-        viewDetails = findViewById(R.id.details);
-        cardView = findViewById(R.id.cardView);
-        pickupLayout = findViewById(R.id.pickupLayout);
-        dropoffLayout = findViewById(R.id.dropoffLayout);
-        pickupTxtVw = findViewById(R.id.txtVw_pickup);
-        dropoffTxtVw = findViewById(R.id.txtVw_dropoff);
-        taxifareTxtVw = findViewById(R.id.txtVw_taxi_fare);
-        distanceTxtVw = findViewById(R.id.txtVw_distance);
-        durationTxtVw = findViewById(R.id.txtVw_duration);
-        myLocation = findViewById(R.id.myLocation);
-        traffic = findViewById(R.id.traffic);
-        collapse(viewDetails);
-        pickupTxtVw.setSelected(true);
-        dropoffTxtVw.setSelected(true);
-        taxifareTxtVw.setText(taxi_fare);
-        distanceTxtVw.setText(distance);
-        durationTxtVw.setText(duration);
+        mGeoDataClient = Places.getGeoDataClient(this, null);
+        viewFlipper = findViewById(R.id.app_bar_include).findViewById(R.id.viewFlipper);
+        booking_btn = findViewById(R.id.booking_btn);
+        fare_details_card_vw = findViewById(R.id.fare_details_card_vw);
+        booking_details_card_vw = findViewById(R.id.booking_details_card_vw);
+        pickup_layout = findViewById(R.id.pickup_layout);
+        dropoff_layout = findViewById(R.id.dropoff_layout);
+        pickup_txt_vw = findViewById(R.id.pickup_txt_vw);
+        dropoff_txt_vw = findViewById(R.id.dropoff_txt_vw);
+        fare_details_txt_vw = findViewById(R.id.fare_details_txt_vw);
+        distance_details_txt_vw = findViewById(R.id.distance_details_txt_vw);
+        duration_details_txt_vw = findViewById(R.id.duration_details_txt_vw);
+        go_to_my_location = findViewById(R.id.go_to_my_location);
+        show_traffic = findViewById(R.id.show_traffic);
+        pickup_txt_vw.setSelected(true);
+        dropoff_txt_vw.setSelected(true);
+        fare_details_txt_vw.setText(taxi_fare);
+        distance_details_txt_vw.setText(distance);
+        duration_details_txt_vw.setText(duration);
 
         mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -238,7 +234,7 @@ public class LandingActivity extends AppCompatActivity
         }
 
         if(getIntent().getStringExtra("pickupName") != null) {
-            setText(pickupTxtVw, pickupName = getIntent().getStringExtra("pickupName"));
+            setText(pickup_txt_vw, pickupName = getIntent().getStringExtra("pickupName"));
             pickupLocation = new LatLng(getIntent().getDoubleExtra("pickupLat", 0), getIntent().getDoubleExtra("pickupLng", 0));
         } else {
             if(hasPickup == 1) {
@@ -248,7 +244,7 @@ public class LandingActivity extends AppCompatActivity
         }
 
         if(getIntent().getStringExtra("dropoffName") != null) {
-            setText(dropoffTxtVw, dropoffName = getIntent().getStringExtra("dropoffName"));
+            setText(dropoff_txt_vw, dropoffName = getIntent().getStringExtra("dropoffName"));
             dropoffLocation = new LatLng(getIntent().getDoubleExtra("dropoffLat", 0), getIntent().getDoubleExtra("dropoffLng", 0));
             changeBookBtn();
         } else {
@@ -261,24 +257,17 @@ public class LandingActivity extends AppCompatActivity
         }
 
         if(hasPickup == 1 && hasDropoff == 1) {
-            Log.d("haspickupandropoff", "taer");
             if(getIntent().getStringExtra("pickupName") != null || getIntent().getStringExtra("dropoffName") != null) {
-                Log.d("haspickupandropoff", "pasok1");
                 SuperTask.execute(this,
                         TaskConfig.CREATE_TAXI_FARE_URL,
                         "get_fare_map_point",
                         "Calculating Fare...");
             } else {
-                Log.d("haspickupandropoff", "pasok2");
                 setFare();
             }
         }
 
-        if(getIntent().getIntExtra("MapPointActivity", -1) == 1)
-
-
-
-        pickupLayout.setOnClickListener(new View.OnClickListener() {
+        pickup_layout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(LandingActivity.this, SearchActivity.class);
@@ -313,14 +302,14 @@ public class LandingActivity extends AppCompatActivity
             }
         });
 
-        dropoffLayout.setOnClickListener(new View.OnClickListener() {
+        dropoff_layout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 setDropoff();
             }
         });
 
-        myLocation.setOnClickListener(new View.OnClickListener() {
+        go_to_my_location.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if(locationEnabled()) {
@@ -341,27 +330,31 @@ public class LandingActivity extends AppCompatActivity
             }
         });
 
-        traffic.setOnClickListener(new View.OnClickListener() {
+        show_traffic.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                isTraffic = !isTraffic;
-                mMap.setTrafficEnabled(isTraffic);
+                is_traffic_shown = !is_traffic_shown;
+                mMap.setTrafficEnabled(is_traffic_shown);
             }
         });
     }
 
+    private void setReservation() {
+
+    }
+
     private void changeBookBtn() {
         if(hasDropoff == 1) {
-            bookBtn.setText("Book");
-            bookBtn.setOnClickListener(new View.OnClickListener() {
+            booking_btn.setText("Book");
+            booking_btn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     prepareBooking(false);
                 }
             });
         } else {
-            bookBtn.setText("Set Drop-off Point");
-            bookBtn.setOnClickListener(new View.OnClickListener() {
+            booking_btn.setText("Set Drop-off Point");
+            booking_btn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     setDropoff();
@@ -371,97 +364,105 @@ public class LandingActivity extends AppCompatActivity
     }
 
     private void setHistoryList() {
-        final ProgressDialog progressDialog = new ProgressDialog(this);
-        progressDialog.setCancelable(false);
-        progressDialog.setMessage("Fetching Data...");
-        progressDialog.setIndeterminate(false);
-        progressDialog.setCancelable(false);
-        progressDialog.show();
+        viewFlipper.setDisplayedChild(2);
+        toolbar.setTitle("History");
+        showOptionsMenu(R.id.history);
+        final RecyclerView history_rec_vw = findViewById(R.id.history_rec_vw);
+        final RelativeLayout loading_view = findViewById(R.id.loading_view);
+        final RelativeLayout blank_view = findViewById(R.id.blank_view);
+        blank_view.setVisibility(View.VISIBLE);
         historyAdapter = new HistoryAdapter(this, this);
-        historyRef = FirebaseDatabase.getInstance().getReference("history/"+FirebaseAuth.getInstance().getCurrentUser().getUid());
-        historyRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                historyAdapter.clearHistory();
-                for(DataSnapshot historyIds : dataSnapshot.getChildren()) {
-                    String history_id = historyIds.getKey();
-                    String driver_id = "";
-                    String pickup_name = "";
-                    LatLng pickup_location = new LatLng(0,0);
-                    String dropoff_name = "";
-                    LatLng dropoff_location = new LatLng(0,0);
-                    int driver_rating = 0;
-                    String date = "";
-                    String time = "";
-                    double lat = 0;
-                    double lng = 0;
-                    for(DataSnapshot userHistory : historyIds.getChildren()) {
-                        switch (userHistory.getKey()) {
-                            case "driver_id":
-                                driver_id = userHistory.getValue().toString();
-                                break;
-                            case "dropoff":
-                                for(DataSnapshot dropoff: userHistory.getChildren()) {
-                                    switch (dropoff.getKey()) {
-                                        case "name":
-                                            dropoff_name = dropoff.getValue().toString();
-                                            break;
-                                        case "lat":
-                                            lat = Double.parseDouble(dropoff.getValue().toString());
-                                            break;
-                                        case "lng":
-                                            lng = Double.parseDouble(dropoff.getValue().toString());
-                                            break;
-                                    }
-                                }
-                                dropoff_location = new LatLng(lat, lng);
-                                break;
-                            case "pickup":
-                                for(DataSnapshot pickup : userHistory.getChildren()) {
-                                    switch (pickup.getKey()) {
-                                        case "name":
-                                            pickup_name = pickup.getValue().toString();
-                                            break;
-                                        case "lat":
-                                            lat = Double.parseDouble(pickup.getValue().toString());
-                                            break;
-                                        case "lng":
-                                            lng = Double.parseDouble(pickup.getValue().toString());
-                                            break;
-                                    }
-                                }
-                                pickup_location = new LatLng(lat, lng);
-                                break;
-                            case "driver_rating":
-                                driver_rating = Integer.parseInt(userHistory.getValue().toString());
-                                break;
-                            case "date":
-                                date = userHistory.getValue().toString();
-                                break;
-                            case "time" :
-                                time = userHistory.getValue().toString();
-                                break;
-                        }
-                    }
-                    HistoryAdapter.historyList.add(new HistoryObject(history_id, driver_id, dropoff_name, pickup_name, pickup_location, dropoff_location, date, time, driver_rating));
-                    historyAdapter.notifyDataSetChanged();
-                }
-                progressDialog.dismiss();
-                viewFlipper.setDisplayedChild(2);
-                toolbar.setTitle("History");
-                showOptionsMenu(R.id.history);
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-        RecyclerView history_rec_vw = findViewById(R.id.history_rec_vw);
         history_rec_vw.setAdapter(historyAdapter);
         history_rec_vw.setHasFixedSize(true);
         history_rec_vw.setLayoutManager(new LinearLayoutManager(this));
         history_rec_vw.addItemDecoration(new SimpleDividerItemDecoration(this));
+        historyRef = FirebaseDatabase.getInstance().getReference("history/"+uid);
+        historyRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                historyAdapter.clearHistory();
+                if(dataSnapshot != null) {
+                    history_rec_vw.setVisibility(View.GONE);
+                    loading_view.setVisibility(View.VISIBLE);
+                    for(DataSnapshot historyIds : dataSnapshot.getChildren()) {
+                        String history_id = historyIds.getKey();
+                        String driver_id = "";
+                        String pickup_name = "";
+                        LatLng pickup_location = new LatLng(0,0);
+                        String dropoff_name = "";
+                        LatLng dropoff_location = new LatLng(0,0);
+                        int driver_rating = 0;
+                        String date = "";
+                        String time = "";
+                        double lat = 0;
+                        double lng = 0;
+                        for(DataSnapshot userHistory : historyIds.getChildren()) {
+                            switch (userHistory.getKey()) {
+                                case "driver":
+                                    for(DataSnapshot driverDetails: userHistory.getChildren()) {
+                                        switch (driverDetails.getKey()) {
+                                            case "id":
+                                                driver_id = driverDetails.getValue().toString();
+                                                break;
+                                            case "rating":
+                                                driver_rating = Integer.parseInt(driverDetails.getValue().toString());
+                                                break;
+                                        }
+                                    }
+                                    driver_id = userHistory.getValue().toString();
+                                    break;
+                                case "dropoff":
+                                    for(DataSnapshot dropoffDetails: userHistory.getChildren()) {
+                                        switch (dropoffDetails.getKey()) {
+                                            case "name":
+                                                dropoff_name = dropoffDetails.getValue().toString();
+                                                break;
+                                            case "lat":
+                                                lat = Double.parseDouble(dropoffDetails.getValue().toString());
+                                                break;
+                                            case "lng":
+                                                lng = Double.parseDouble(dropoffDetails.getValue().toString());
+                                                break;
+                                        }
+                                    }
+                                    dropoff_location = new LatLng(lat, lng);
+                                    break;
+                                case "pickup":
+                                    for(DataSnapshot pickupDetails : userHistory.getChildren()) {
+                                        switch (pickupDetails.getKey()) {
+                                            case "name":
+                                                pickup_name = pickupDetails.getValue().toString();
+                                                break;
+                                            case "lat":
+                                                lat = Double.parseDouble(pickupDetails.getValue().toString());
+                                                break;
+                                            case "lng":
+                                                lng = Double.parseDouble(pickupDetails.getValue().toString());
+                                                break;
+                                        }
+                                    }
+                                    pickup_location = new LatLng(lat, lng);
+                                    break;
+                                case "date":
+                                    date = userHistory.getValue().toString();
+                                    break;
+                                case "time" :
+                                    time = userHistory.getValue().toString();
+                                    break;
+                            }
+                        }
+                        HistoryAdapter.historyList.add(new HistoryObject(history_id, driver_id, dropoff_name, pickup_name, pickup_location, dropoff_location, date, time, driver_rating));
+                        historyAdapter.notifyDataSetChanged();
+                        blank_view.setVisibility(View.GONE);
+                    }
+                }
+                loading_view.setVisibility(View.GONE);
+                history_rec_vw.setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) { }
+        });
     }
 
     @Override
@@ -489,7 +490,7 @@ public class LandingActivity extends AppCompatActivity
 
     @Override
     public void onHistoryClick(ArrayList<HistoryObject> resultList, int position) {
-
+        //new activity
     }
 
     private void showOptionsMenu(int id) {
@@ -580,7 +581,7 @@ public class LandingActivity extends AppCompatActivity
         update.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                fromUpdate = true;
+                from_update_activity = true;
                 Intent intent = new Intent(LandingActivity.this, UpdateAccountActivity.class);
                 startActivity(intent);
             }
@@ -627,11 +628,11 @@ public class LandingActivity extends AppCompatActivity
             startActivity(intent);
             finish();
         } else if(checkDetails() == -1) {
-            showSnackbarMessage(bookBtn, "Please set your Mobile Number.");
+            showSnackbarMessage(booking_btn, "Please set your Mobile Number.");
         } else if(checkDetails() == 2) {
-            showSnackbarMessage(bookBtn, "Please set your Email Address.");
+            showSnackbarMessage(booking_btn, "Please set your Email Address.");
         } else if(checkDetails() == -3) {
-            showSnackbarMessage(bookBtn, "Please set your Mobile Number and Email Address.");
+            showSnackbarMessage(booking_btn, "Please set your Mobile Number and Email Address.");
         } else if(checkDetails() == -4) {
             DialogCreator.create(this, "noTrusted")
                     .setTitle("No Trusted Contact")
@@ -694,13 +695,12 @@ public class LandingActivity extends AppCompatActivity
                         distance = jsonObject.getString("distance");
                         duration = jsonObject.getString("duration");
 
-                        taxifareTxtVw.setText(taxi_fare);
-                        distanceTxtVw.setText(distance);
-                        durationTxtVw.setText(duration);
-                        expand(viewDetails);
+                        fare_details_txt_vw.setText(taxi_fare);
+                        distance_details_txt_vw.setText(distance);
+                        duration_details_txt_vw.setText(duration);
                     } else if(jsonObject.getString("status").equals("STATUS: SERVER ERROR!")) {
                         SnackBarCreator.set("Sorry! Place is not available right now.");
-                        SnackBarCreator.show(bookBtn);
+                        SnackBarCreator.show(booking_btn);
                     }
 
                     LatLngBounds.Builder builder = new LatLngBounds.Builder();
@@ -735,7 +735,6 @@ public class LandingActivity extends AppCompatActivity
                 } else {
                     contentValues.put("destinations", dropoffPlaceId);
                 }
-                Log.d("haspickupandropoff", contentValues+"");
                 return contentValues;
             default:
                 return null;
@@ -744,7 +743,6 @@ public class LandingActivity extends AppCompatActivity
 
     private void findPlaceById(String placeId, int from) {
         final int setTo = from;
-        Log.d("LANDING_AC", "placeId: " + placeId + " from: "+ from);
         mGeoDataClient.getPlaceById(placeId).addOnCompleteListener(new OnCompleteListener<PlaceBufferResponse>() {
             @Override
             public void onComplete(@NonNull Task<PlaceBufferResponse> task) {
@@ -753,11 +751,11 @@ public class LandingActivity extends AppCompatActivity
                     Place myPlace = places.get(0);
                     if(setTo == 0) {
                         pickupName = myPlace.getName().toString();
-                        setText(pickupTxtVw, pickupName);
+                        setText(pickup_txt_vw, pickupName);
                         pickupLocation = myPlace.getLatLng();
                     } else {
                         dropoffName = myPlace.getName().toString();
-                        setText(dropoffTxtVw, dropoffName);
+                        setText(dropoff_txt_vw, dropoffName);
                         dropoffLocation = myPlace.getLatLng();
                         setFare();
                     }
@@ -794,6 +792,7 @@ public class LandingActivity extends AppCompatActivity
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
+        google_client_built = true;
         LocationRequest mLocationRequest = new LocationRequest();
         mLocationRequest.setInterval(5000);
         mLocationRequest.setFastestInterval(1000);
@@ -826,7 +825,7 @@ public class LandingActivity extends AppCompatActivity
                                     pickupName = placeLikelihood.getPlace().getName().toString();
                                     pickupLocation = placeLikelihood.getPlace().getLatLng();
                                     pickupPlaceId = placeLikelihood.getPlace().getId();
-                                    setText(pickupTxtVw, pickupName);
+                                    setText(pickup_txt_vw, pickupName);
                                     setMarkers(true);
                                     if(!cameraUpdated) {
                                         cameraPosition = new CameraPosition.Builder()
@@ -857,14 +856,14 @@ public class LandingActivity extends AppCompatActivity
                     Glide.with(this)
                             .load(user_pic)
                             .apply(RequestOptions.circleCropTransform())
-                            .into(prof_pic);
+                            .into(profile_pic_header_img_vw);
                 }
                 user_name = jsonObject.getString("name");
                 user_email = jsonObject.getString("email").equals("null") ? "None" : jsonObject.getString("email");
                 user_mobnum = jsonObject.getString("mobnum").equals("null") ? "None" : jsonObject.getString("mobnum");
                 user_trusted_id = jsonObject.getString("trusted_id").equals("null") ? "None" : jsonObject.getString("trusted_id");
-                name.setText(jsonObject.getString("name"));
-                email_txt_vw.setText(user_email);
+                name_header_txt_vw.setText(jsonObject.getString("name"));
+                email_header_txt_vw.setText(user_email);
             }
         } catch (Exception e) { }
     }
@@ -901,8 +900,8 @@ public class LandingActivity extends AppCompatActivity
         mMap.getUiSettings().setMapToolbarEnabled(false);
         mMap.getUiSettings().setZoomControlsEnabled(false);
         mMap.getUiSettings().setMyLocationButtonEnabled(false);
-        mMap.setPadding(0, hasDropoff == 1 ? viewDetails.getLayoutParams().height : 0 , 0 , cardView.getLayoutParams().height);
-        buildGoogleApiClient();
+        mMap.setPadding(0, hasDropoff == 1 ? fare_details_card_vw.getLayoutParams().height : 0 , 0 , booking_details_card_vw.getLayoutParams().height);
+        if(!google_client_built) buildGoogleApiClient();
         setMarkers(false);
     }
 
@@ -914,12 +913,6 @@ public class LandingActivity extends AppCompatActivity
                 .build();
         mGoogleApiClient.connect();
     }
-
-    @Override
-    public void onConnectionSuspended(int i) { }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) { }
 
     @Override
     public void onLocationChanged(Location location) {
@@ -1006,15 +999,6 @@ public class LandingActivity extends AppCompatActivity
         }
     }
 
-    @Override
-    public void onClickNeutralButton(String actionId) { }
-
-    @Override
-    public void onClickMultiChoiceItem(String actionId, int which, boolean isChecked) { }
-
-    @Override
-    public void onCreateDialogView(String actionId, View view) { }
-
     public int getImage(String imageName) {
         int drawableResourceId = this.getResources()
                 .getIdentifier(imageName, "drawable", this.getPackageName());
@@ -1036,10 +1020,10 @@ public class LandingActivity extends AppCompatActivity
     }
 
     private void permissionDenied() {
-        bookBtn.setOnClickListener(new View.OnClickListener() {
+        booking_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                showSnackbarMessage(bookBtn, "Permissions denied.");
+                showSnackbarMessage(booking_btn, "Permissions denied.");
             }
         });
     }
@@ -1071,61 +1055,27 @@ public class LandingActivity extends AppCompatActivity
     }
 
 
-    public static void expand(final View v) {
-        v.measure(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        final int targetHeight = v.getMeasuredHeight();
-
-        v.getLayoutParams().height = 1;
-        v.setVisibility(View.VISIBLE);
-        Animation a = new Animation() {
-            @Override
-            protected void applyTransformation(float interpolatedTime, Transformation t) {
-                v.getLayoutParams().height = interpolatedTime == 1
-                        ? ViewGroup.LayoutParams.WRAP_CONTENT
-                        : (int)(targetHeight * interpolatedTime);
-                v.requestLayout();
-            }
-
-            @Override
-            public boolean willChangeBounds() {
-                return true;
-            }
-        };
-
-        a.setDuration((int)(targetHeight / v.getContext().getResources().getDisplayMetrics().density));
-        v.startAnimation(a);
-    }
-
-    public static void collapse(final View v) {
-        final int initialHeight = v.getMeasuredHeight();
-
-        Animation a = new Animation() {
-            @Override
-            protected void applyTransformation(float interpolatedTime, Transformation t) {
-                if(interpolatedTime == 1){
-                    v.setVisibility(View.GONE);
-                }else{
-                    v.getLayoutParams().height = initialHeight - (int)(initialHeight * interpolatedTime);
-                    v.requestLayout();
-                }
-            }
-
-            @Override
-            public boolean willChangeBounds() {
-                return true;
-            }
-        };
-
-        a.setDuration((int)(initialHeight / v.getContext().getResources().getDisplayMetrics().density));
-        v.startAnimation(a);
-    }
-
     @Override
     protected void onResume() {
         super.onResume();
-        if(fromUpdate) {
+        if(from_update_activity) {
             setAccountProfile();
-            fromUpdate = false;
+            from_update_activity = false;
         }
     }
+
+    @Override
+    public void onConnectionSuspended(int i) { }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) { }
+
+    @Override
+    public void onClickNeutralButton(String actionId) { }
+
+    @Override
+    public void onClickMultiChoiceItem(String actionId, int which, boolean isChecked) { }
+
+    @Override
+    public void onCreateDialogView(String actionId, View view) { }
 }

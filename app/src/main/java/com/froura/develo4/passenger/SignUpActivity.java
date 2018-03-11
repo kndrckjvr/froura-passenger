@@ -90,7 +90,7 @@ public class SignUpActivity extends AppCompatActivity implements SuperTask.TaskL
         loginButton = findViewById(R.id.login_button);
 
         if(getIntent().getIntExtra("loginError", -1) == 1) {
-            SnackBarCreator.set("Sorry! You're not a Driver.");
+            SnackBarCreator.set("Sorry! You're not a Passenger.");
             SnackBarCreator.show(mobLogin);
         }
 
@@ -193,7 +193,7 @@ public class SignUpActivity extends AppCompatActivity implements SuperTask.TaskL
                         } else if(task.getException() instanceof FirebaseAuthUserCollisionException) {
                             progressDialog.dismiss();
                             LoginManager.getInstance().logOut();
-                            SnackBarCreator.set("email is in-use");
+                            SnackBarCreator.set("Email is in-use");
                             SnackBarCreator.show(mobLogin);
                         }
                     }
@@ -202,7 +202,8 @@ public class SignUpActivity extends AppCompatActivity implements SuperTask.TaskL
 
     private void registerUser() {
         String user_id = mAuth.getCurrentUser().getUid();
-        final DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(user_id);
+        final DatabaseReference dbRef = FirebaseDatabase.getInstance()
+                .getReference("users/passenger/"+user_id);
         dbRef.child("name").setValue(WordUtils.capitalize(name.toLowerCase()));
         dbRef.child("auth").setValue(auth);
         dbRef.child("profile_pic").setValue(profpic);
@@ -259,10 +260,8 @@ public class SignUpActivity extends AppCompatActivity implements SuperTask.TaskL
                     String status = jsonObject.getString("status");
                     if(status.equals("success")) {
                         database_id = jsonObject.getString("database_id");
-                    } else {
-                        Toast.makeText(this, jsonObject.getString("status"), Toast.LENGTH_SHORT).show();
+                        saveUserDetails();
                     }
-                    saveUserDetails();
                 } catch (Exception e) { }
                 break;
         }
@@ -288,7 +287,13 @@ public class SignUpActivity extends AppCompatActivity implements SuperTask.TaskL
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         SharedPreferences.Editor editor = sharedPref.edit();
         String JSON_DETAILS_KEY = "userDetails";
-        String jsonDetails = "{ \"name\" : \"" + WordUtils.capitalize(name.toLowerCase()) + "\", \"email\" : \"" + email + "\", \"mobnum\" : \"" + mobnum + "\", \"profile_pic\" : \"" + profpic + "\", \"trusted_id\" : " + WordUtils.capitalize(trusted_id) + ", \"auth\" : \"" + auth + "\", \"database_id\": \" "+ database_id +"\"}";
+        String jsonDetails = "{ \"name\" : \"" + WordUtils.capitalize(name.toLowerCase()) + "\", " +
+                "\"email\" : \"" + email + "\", " +
+                "\"mobnum\" : \"" + mobnum + "\", " +
+                "\"profile_pic\" : \"" + profpic + "\", " +
+                "\"trusted_id\" : " + trusted_id + ", " +
+                "\"auth\" : \"" + auth + "\", " +
+                "\"database_id\": \" "+ database_id +"\"}";
         editor.putString(JSON_DETAILS_KEY, jsonDetails);
         editor.apply();
         progressDialog.dismiss();
@@ -303,9 +308,7 @@ public class SignUpActivity extends AppCompatActivity implements SuperTask.TaskL
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
-                        if(!task.isSuccessful()) {
-                            Log.e("firebaseGoogle", task.getException().toString());
-                        }
+                        if(!task.isSuccessful()) { }
                     }
                 });
     }
