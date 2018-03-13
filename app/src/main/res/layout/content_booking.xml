@@ -92,7 +92,7 @@
                 android:layout_height="wrap_content">
 
                 <RelativeLayout
-                    android:id="@+id/bookings"
+                    android:id="@+id/booking_layout"
                     android:background="@drawable/background_border"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content">
@@ -194,14 +194,14 @@
 
                 <Button
                     android:id="@+id/booking_btn"
-                    style="@style/Widget.AppCompat.Button.Colored"
                     android:layout_width="match_parent"
                     android:layout_height="60dp"
-                    android:backgroundTint="@color/colorPrimaryDark"
-                    android:layout_below="@+id/bookings"
+                    android:background="@drawable/background_border_sharp"
+                    android:fontFamily="@font/fjalla_one_regular"
+                    android:layout_below="@+id/booking_layout"
                     android:layout_marginTop="10dp"
-                    android:text="BOOK"
-                    android:textColor="#FFFFFF"/>
+                    android:textSize="25sp"
+                    android:text="BOOK"/>
             </RelativeLayout>
 
         </android.support.v7.widget.CardView>
@@ -229,7 +229,6 @@
             android:src="@drawable/ic_traffic_black_24dp"
             app:layout_constraintBottom_toTopOf="@+id/go_to_my_location"
             app:layout_constraintEnd_toEndOf="parent" />
-
 
     </android.support.constraint.ConstraintLayout>
 

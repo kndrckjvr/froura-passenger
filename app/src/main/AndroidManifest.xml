@@ -92,14 +92,16 @@
         <activity
             android:name=".DriverAcceptedActivity"
             android:theme="@style/AppTheme.NoActionBar" />
-        <activity android:name=".MapPointActivity"
-            android:label="Select a Location"/>
+        <activity
+            android:name=".MapPointActivity"
+            android:label="Select a Location" />
         <activity
             android:name=".UpdateAccountActivity"
             android:label="Update Account" />
         <activity
             android:name=".TrustedContactActivity"
-            android:label="Trusted Contact"/>
+            android:label="Trusted Contact" />
+        <activity android:name=".ReservationActivity"></activity>
     </application>
 
 </manifest>

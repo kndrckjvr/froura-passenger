@@ -118,24 +118,29 @@ public class LandingActivity extends AppCompatActivity
     private MenuItem clear_history;
     private GoogleMap mMap;
     private CameraPosition cameraPosition;
-    private SupportMapFragment mapFragment;
+    private SupportMapFragment bookingmapFragment;
+    private SupportMapFragment reservationmapFragment;
     private GoogleApiClient mGoogleApiClient;
     private GeoDataClient mGeoDataClient;
     private Location mLastLocation;
     private LatLng pickupLocation;
     private LatLng dropoffLocation;
+    private LatLng destinationLocation;
     private HistoryAdapter historyAdapter;
     private DatabaseReference historyRef;
     private int hasPickup = -1;
     private int hasDropoff = -1;
+    private int hasDestination;
     private int noDriver = -1;
     private boolean cameraUpdated = false;
     private boolean is_traffic_shown = false;
     private boolean from_update_activity = false;
     private boolean google_client_built = false;
     private String uid;
+    private String destinationName;
     private String pickupName;
     private String dropoffName;
+    private String destinationPlaceId;
     private String pickupPlaceId;
     private String dropoffPlaceId;
     private String user_name;
@@ -155,6 +160,26 @@ public class LandingActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_landing);
+        uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+        DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference("services/booking/" + uid);
+        dbRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot driverId : dataSnapshot.getChildren()) {
+                    if(driverId.getKey().equals("accepted_by")) {
+                        Intent intent = new Intent(LandingActivity.this, DriverAcceptedActivity.class);
+                        intent.putExtra("driver_id", driverId.getValue().toString());
+                        startActivity(intent);
+                        finish();
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) { }
+        });
+
         toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle("Booking");
         setSupportActionBar(toolbar);
@@ -186,7 +211,6 @@ public class LandingActivity extends AppCompatActivity
                 .load(getImage("placeholder"))
                 .apply(RequestOptions.circleCropTransform())
                 .into(profile_pic_header_img_vw);
-        uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
         setDetails();
 
         mGeoDataClient = Places.getGeoDataClient(this, null);
@@ -209,11 +233,6 @@ public class LandingActivity extends AppCompatActivity
         distance_details_txt_vw.setText(distance);
         duration_details_txt_vw.setText(duration);
 
-        mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
-
-        mapFragment.getMapAsync(this);
-
         if(!locationEnabled())
             DialogCreator.create(this, "requestLocation")
                     .setTitle("Access Location")
@@ -223,6 +242,7 @@ public class LandingActivity extends AppCompatActivity
 
         hasPickup = getIntent().getIntExtra("hasPickup", -1);
         hasDropoff = getIntent().getIntExtra("hasDropoff", -1);
+        hasDestination = getIntent().getIntExtra("hasDestination", -1);
         noDriver = getIntent().getIntExtra("noDriver", -1);
 
         if(noDriver == 1) {
@@ -233,37 +253,49 @@ public class LandingActivity extends AppCompatActivity
                     .show();
         }
 
-        if(getIntent().getStringExtra("pickupName") != null) {
-            setText(pickup_txt_vw, pickupName = getIntent().getStringExtra("pickupName"));
-            pickupLocation = new LatLng(getIntent().getDoubleExtra("pickupLat", 0), getIntent().getDoubleExtra("pickupLng", 0));
+        if(hasDestination == 1) {
+            navigationView.getMenu().getItem(1).setChecked(true);
+            setReservation();
         } else {
-            if(hasPickup == 1) {
-                pickupPlaceId = getIntent().getStringExtra("pickupPlaceId");
-                findPlaceById(getIntent().getStringExtra("pickupPlaceId"), 0);
-            }
-        }
+            bookingmapFragment = (SupportMapFragment) getSupportFragmentManager()
+                    .findFragmentById(R.id.map);
 
-        if(getIntent().getStringExtra("dropoffName") != null) {
-            setText(dropoff_txt_vw, dropoffName = getIntent().getStringExtra("dropoffName"));
-            dropoffLocation = new LatLng(getIntent().getDoubleExtra("dropoffLat", 0), getIntent().getDoubleExtra("dropoffLng", 0));
-            changeBookBtn();
-        } else {
-            if(hasDropoff == 1) {
-                cameraUpdated = true;
-                dropoffPlaceId = getIntent().getStringExtra("dropoffPlaceId");
-                findPlaceById(getIntent().getStringExtra("dropoffPlaceId"), 1);
-            }
-            changeBookBtn();
-        }
+            bookingmapFragment.getMapAsync(this);
 
-        if(hasPickup == 1 && hasDropoff == 1) {
-            if(getIntent().getStringExtra("pickupName") != null || getIntent().getStringExtra("dropoffName") != null) {
-                SuperTask.execute(this,
-                        TaskConfig.CREATE_TAXI_FARE_URL,
-                        "get_fare_map_point",
-                        "Calculating Fare...");
+            if(getIntent().getStringExtra("pickupName") != null) {
+                setText(pickup_txt_vw, pickupName = getIntent().getStringExtra("pickupName"));
+                pickupLocation = new LatLng(getIntent().getDoubleExtra("pickupLat", 0),
+                        getIntent().getDoubleExtra("pickupLng", 0));
             } else {
-                setFare();
+                if(hasPickup == 1) {
+                    pickupPlaceId = getIntent().getStringExtra("pickupPlaceId");
+                    findPlaceById(getIntent().getStringExtra("pickupPlaceId"), 0);
+                }
+            }
+
+            if(getIntent().getStringExtra("dropoffName") != null) {
+                setText(dropoff_txt_vw, dropoffName = getIntent().getStringExtra("dropoffName"));
+                dropoffLocation = new LatLng(getIntent().getDoubleExtra("dropoffLat", 0),
+                        getIntent().getDoubleExtra("dropoffLng", 0));
+                changeBookBtn();
+            } else {
+                if(hasDropoff == 1) {
+                    cameraUpdated = true;
+                    dropoffPlaceId = getIntent().getStringExtra("dropoffPlaceId");
+                    findPlaceById(getIntent().getStringExtra("dropoffPlaceId"), 1);
+                }
+                changeBookBtn();
+            }
+
+            if(hasPickup == 1 && hasDropoff == 1) {
+                if(getIntent().getStringExtra("pickupName") != null || getIntent().getStringExtra("dropoffName") != null) {
+                    SuperTask.execute(this,
+                            TaskConfig.CREATE_TAXI_FARE_URL,
+                            "get_fare_map_point",
+                            "Calculating Fare...");
+                } else {
+                    setFare();
+                }
             }
         }
 
@@ -340,7 +372,158 @@ public class LandingActivity extends AppCompatActivity
     }
 
     private void setReservation() {
+        cameraUpdated = false;
+        viewFlipper.setDisplayedChild(1);
+        toolbar.setTitle("Reservation");
+        final CardView reservation_details_card_vw = findViewById(R.id.reseravation_details_card_vw);
+        final TextView destination_txt_vw = findViewById(R.id.destination_txt_vw);
+        Button reserve_btn = findViewById(R.id.reservation_btn);
+        LinearLayout destination_layout = findViewById(R.id.destination_layout);
+        destination_txt_vw.setSelected(true);
 
+        reservationmapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.reserve_map);
+
+        reservationmapFragment.getMapAsync(new OnMapReadyCallback() {
+            @Override
+            public void onMapReady(GoogleMap googleMap) {
+                try {
+                    googleMap.setMapStyle(
+                            MapStyleOptions.loadRawResourceStyle(
+                                    LandingActivity.this, R.raw.mapstyle));
+                } catch (Resources.NotFoundException e) { }
+                mMap = googleMap;
+                mMap.getUiSettings().setMapToolbarEnabled(false);
+                mMap.getUiSettings().setZoomControlsEnabled(false);
+                mMap.getUiSettings().setMyLocationButtonEnabled(false);
+                mMap.setPadding(0,0,
+                        0, reservation_details_card_vw.getLayoutParams().height);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
+                    if (ActivityCompat.checkSelfPermission(LandingActivity.this,
+                            android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                            ActivityCompat.checkSelfPermission(LandingActivity.this,
+                                    android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        DialogCreator.create(LandingActivity.this, "locationPermission")
+                                .setMessage("We need to access your location and device state to continue using FROURÁ.")
+                                .setPositiveButton("OK")
+                                .show();
+                        return;
+                    }
+                mMap.setMyLocationEnabled(true);
+                mMap.clear();
+                if(hasDestination == -1) {
+                    PlaceDetectionClient mPlaceDetectionClient = Places.getPlaceDetectionClient(LandingActivity.this,
+                            null);
+                    final Task<PlaceLikelihoodBufferResponse> placeResult =
+                            mPlaceDetectionClient.getCurrentPlace(null);
+                    placeResult.addOnCompleteListener
+                            (new OnCompleteListener<PlaceLikelihoodBufferResponse>() {
+                                @Override
+                                public void onComplete(@NonNull Task<PlaceLikelihoodBufferResponse> task) {
+                                    if (task.isSuccessful() && task.getResult() != null) {
+                                        PlaceLikelihoodBufferResponse likelyPlaces = task.getResult();
+                                        for (PlaceLikelihood placeLikelihood : likelyPlaces) {
+                                            destinationName = placeLikelihood.getPlace().getName().toString();
+                                            destinationLocation = placeLikelihood.getPlace().getLatLng();
+                                            destinationPlaceId = placeLikelihood.getPlace().getId();
+                                            setText(destination_txt_vw, destinationName);
+                                            if(!cameraUpdated) {
+                                                cameraPosition = new CameraPosition.Builder()
+                                                        .target(destinationLocation)
+                                                        .zoom(14)
+                                                        .bearing(0)
+                                                        .build();
+                                                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+                                                cameraUpdated = true;
+                                            }
+                                        }
+                                        likelyPlaces.release();
+                                        mMap.addMarker(new MarkerOptions()
+                                                .position(destinationLocation)
+                                                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.yellow_marker)));
+                                    }
+                                }
+                            });
+                } else {
+                    if(getIntent().getStringExtra("destinationName") != null) {
+                        destinationLocation = new LatLng(getIntent().getDoubleExtra("destinationLat", 0),
+                                getIntent().getDoubleExtra("destinationLng", 0));
+                        destinationName = getIntent().getStringExtra("destinationName");
+                        setText(destination_txt_vw, destinationName);
+                        mMap.addMarker(new MarkerOptions()
+                                .position(destinationLocation)
+                                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.yellow_marker)));
+                        cameraPosition = new CameraPosition.Builder()
+                                .target(destinationLocation)
+                                .zoom(14)
+                                .bearing(0)
+                                .build();
+                        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+                    } else {
+                        destinationPlaceId = getIntent().getStringExtra("destinationPlaceId");
+                        findPlaceById(destinationPlaceId, 2);
+                    }
+                }
+            }
+        });
+
+        reserve_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                reserveLocation();
+            }
+        });
+
+        destination_layout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                setDestination();
+            }
+        });
+
+        destination_txt_vw.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                setDestination();
+            }
+        });
+    }
+
+    private void reserveLocation() {
+        Intent intent = new Intent(LandingActivity.this, ReservationActivity.class);
+        if(destinationPlaceId != null) {
+            intent.putExtra("destinationPlaceId", destinationPlaceId);
+            intent.putExtra("hasDestination", 1);
+        }
+
+        if(getIntent().getStringExtra("destinationName") != null) {
+            intent.putExtra("destinationName", destinationName);
+            intent.putExtra("destinationLatLng", destinationLocation.latitude + "," + destinationLocation.longitude);
+            intent.putExtra("destinationLat", destinationLocation.latitude);
+            intent.putExtra("destinationLng", destinationLocation.longitude);
+            intent.putExtra("hasDestination", 1);
+        }
+        startActivity(intent);
+        finish();
+    }
+
+    private void setDestination() {
+        Intent intent = new Intent(LandingActivity.this, SearchActivity.class);
+        intent.putExtra("from", 1);
+        if(destinationPlaceId != null) {
+            intent.putExtra("destinationPlaceId", destinationPlaceId);
+            intent.putExtra("hasDestination", 1);
+        }
+
+        if(getIntent().getStringExtra("destinationName") != null) {
+            intent.putExtra("destinationName", destinationName);
+            intent.putExtra("destinationLatLng", destinationLocation.latitude + "," + destinationLocation.longitude);
+            intent.putExtra("destinationLat", destinationLocation.latitude);
+            intent.putExtra("destinationLng", destinationLocation.longitude);
+            intent.putExtra("hasDestination", 1);
+        }
+        startActivity(intent);
+        finish();
     }
 
     private void changeBookBtn() {
@@ -451,7 +634,9 @@ public class LandingActivity extends AppCompatActivity
                                     break;
                             }
                         }
-                        HistoryAdapter.historyList.add(new HistoryObject(history_id, driver_id, dropoff_name, pickup_name, pickup_location, dropoff_location, date, time, driver_rating));
+                        HistoryAdapter.historyList.add(new HistoryObject(history_id,
+                                driver_id, dropoff_name, pickup_name,
+                                pickup_location, dropoff_location, date, time, driver_rating));
                         historyAdapter.notifyDataSetChanged();
                         blank_view.setVisibility(View.GONE);
                     }
@@ -508,12 +693,15 @@ public class LandingActivity extends AppCompatActivity
         showOptionsMenu(item.getItemId());
         switch (item.getItemId()) {
             case R.id.booking:
+                bookingmapFragment = (SupportMapFragment) getSupportFragmentManager()
+                        .findFragmentById(R.id.map);
+
+                bookingmapFragment.getMapAsync(this);
                 viewFlipper.setDisplayedChild(0);
                 toolbar.setTitle("Booking");
                 break;
             case R.id.reservation:
-                viewFlipper.setDisplayedChild(1);
-                toolbar.setTitle("Reservation");
+                setReservation();
                 break;
             case R.id.history:
                 setHistoryList();
@@ -741,23 +929,39 @@ public class LandingActivity extends AppCompatActivity
         }
     }
 
-    private void findPlaceById(String placeId, int from) {
-        final int setTo = from;
+    private void findPlaceById(String placeId,final int from) {
         mGeoDataClient.getPlaceById(placeId).addOnCompleteListener(new OnCompleteListener<PlaceBufferResponse>() {
             @Override
             public void onComplete(@NonNull Task<PlaceBufferResponse> task) {
                 if (task.isSuccessful()) {
                     PlaceBufferResponse places = task.getResult();
                     Place myPlace = places.get(0);
-                    if(setTo == 0) {
+                    if(from == 0) {
                         pickupName = myPlace.getName().toString();
                         setText(pickup_txt_vw, pickupName);
                         pickupLocation = myPlace.getLatLng();
-                    } else {
+                    } else if (from == 1) {
                         dropoffName = myPlace.getName().toString();
                         setText(dropoff_txt_vw, dropoffName);
                         dropoffLocation = myPlace.getLatLng();
                         setFare();
+                    } else if (from == 2){
+                        destinationName = myPlace.getName().toString();
+                        destinationLocation = myPlace.getLatLng();
+                        TextView destination_txt_vw = findViewById(R.id.destination_txt_vw);
+                        places.release();
+                        setText(destination_txt_vw, destinationName);
+                        mMap.addMarker(new MarkerOptions()
+                                .position(destinationLocation)
+                                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.yellow_marker)));
+                        cameraPosition = new CameraPosition.Builder()
+                                .target(destinationLocation)
+                                .zoom(14)
+                                .bearing(0)
+                                .build();
+                        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+                        cameraUpdated = true;
+                        return;
                     }
                     setMarkers(false);
                     places.release();
@@ -900,7 +1104,9 @@ public class LandingActivity extends AppCompatActivity
         mMap.getUiSettings().setMapToolbarEnabled(false);
         mMap.getUiSettings().setZoomControlsEnabled(false);
         mMap.getUiSettings().setMyLocationButtonEnabled(false);
-        mMap.setPadding(0, hasDropoff == 1 ? fare_details_card_vw.getLayoutParams().height : 0 , 0 , booking_details_card_vw.getLayoutParams().height);
+        mMap.setPadding(0,
+                hasDropoff == 1 ? fare_details_card_vw.getLayoutParams().height : 0,
+                0 , booking_details_card_vw.getLayoutParams().height);
         if(!google_client_built) buildGoogleApiClient();
         setMarkers(false);
     }
@@ -939,7 +1145,7 @@ public class LandingActivity extends AppCompatActivity
         switch (requestCode) {
             case LOCATION_REQUEST_CODE:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    mapFragment.getMapAsync(this);
+
                 } else {
                     DialogCreator.create(this,"locationPermission")
                             .setMessage("We need to access your location and device state to continue using FROURÁ. Ask permission again?")
@@ -953,16 +1159,8 @@ public class LandingActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-        if(mGoogleApiClient != null) {
-            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
-        }
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
+    protected void onDestroy() {
+        super.onDestroy();
         if(mGoogleApiClient != null) {
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
         }

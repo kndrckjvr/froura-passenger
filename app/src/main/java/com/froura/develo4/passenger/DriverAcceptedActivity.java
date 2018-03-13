@@ -84,10 +84,15 @@ public class DriverAcceptedActivity extends AppCompatActivity
     private LinearLayout informationLayout;
     private ProgressDialog progressDialog;
 
-    private String driverId;
-    private String driver_name;
-    private String driver_plate;
-    private String driver_mobnum;
+    private ImageView driver_prof_pic;
+    private TextView driver_name_txt_vw;
+    private TextView driver_mob_num_txt_vw;
+    private TextView driver_plate_number_txt_vw;
+
+    private String driverId = null;
+    private String driver_name = null;
+    private String driver_plate = null;
+    private String driver_mobnum = null;
     private String driver_profpic;
 
     private String user_name;
@@ -135,6 +140,11 @@ public class DriverAcceptedActivity extends AppCompatActivity
                 .findFragmentById(R.id.map);
 
         mapFragment.getMapAsync(this);
+
+        driver_prof_pic = findViewById(R.id.driver_prof_pic);
+        driver_name_txt_vw = findViewById(R.id.driver_name_txt_vw);
+        driver_mob_num_txt_vw = findViewById(R.id.driver_mob_num_txt_vw);
+        driver_plate_number_txt_vw = findViewById(R.id.driver_plate_number_txt_vw);
 
         getDriverDetails();
     }
@@ -185,6 +195,22 @@ public class DriverAcceptedActivity extends AppCompatActivity
 
                 if(data.get("mobnum") != null)
                     driver_mobnum = data.get("mobnum").toString();
+
+                if(!driver_profpic.equals("default"))
+                    Glide.with(DriverAcceptedActivity.this)
+                            .load(driver_profpic)
+                            .apply(RequestOptions.circleCropTransform())
+                            .into(driver_prof_pic);
+
+                if(driver_name != null)
+                    driver_name_txt_vw.setText(driver_name);
+
+                if(driver_mobnum != null)
+                    driver_mob_num_txt_vw.setText(driver_mobnum);
+
+                if(driver_plate != null)
+                    driver_plate_number_txt_vw.setText(driver_plate);
+
 
                 showDriverLocation();
             }
