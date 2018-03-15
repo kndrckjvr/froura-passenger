@@ -10,7 +10,9 @@ import android.location.Location;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.TextInputEditText;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -18,10 +20,14 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -46,6 +52,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -62,7 +69,6 @@ import me.grantland.widget.AutofitHelper;
 
 public class DriverAcceptedActivity extends AppCompatActivity
         implements
-        NavigationView.OnNavigationItemSelectedListener,
         OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
@@ -76,13 +82,11 @@ public class DriverAcceptedActivity extends AppCompatActivity
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation;
 
-    private DrawerLayout drawer;
     private Toolbar toolbar;
-    private TextView name;
-    private TextView email_txt_vw;
-    private ImageView prof_pic;
+    private Button cancel_btn;
     private LinearLayout informationLayout;
     private ProgressDialog progressDialog;
+    private FloatingActionButton alert_trusted_btn;
 
     private ImageView driver_prof_pic;
     private TextView driver_name_txt_vw;
@@ -95,12 +99,14 @@ public class DriverAcceptedActivity extends AppCompatActivity
     private String driver_mobnum = null;
     private String driver_profpic;
 
+    private String user_id;
     private String user_name;
     private String user_mobnum;
     private String user_email;
-    private String user_pic;
+    private String user_pic = "default";
     private String user_trusted_id;
     private String user_trusted_name;
+    private String user_reason;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,23 +122,8 @@ public class DriverAcceptedActivity extends AppCompatActivity
         toolbar.setTitle("Driver on the way");
         setSupportActionBar(toolbar);
         informationLayout = findViewById(R.id.information_layout);
-
+        user_id = FirebaseAuth.getInstance().getCurrentUser().getUid();
         driverId = getIntent().getStringExtra("driver_id");
-
-        drawer = findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.addDrawerListener(toggle);
-        toggle.syncState();
-
-        NavigationView navigationView = findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
-        navigationView.getMenu().getItem(0).setChecked(true);
-        View v = navigationView.getHeaderView(0);
-        name = v.findViewById(R.id.txtVw_name);
-        email_txt_vw = v.findViewById(R.id.email_txt_vw);
-        prof_pic = v.findViewById(R.id.imgVw_profile_pic);
-        AutofitHelper.create(name);
 
         setDetails();
 
@@ -145,6 +136,19 @@ public class DriverAcceptedActivity extends AppCompatActivity
         driver_name_txt_vw = findViewById(R.id.driver_name_txt_vw);
         driver_mob_num_txt_vw = findViewById(R.id.driver_mob_num_txt_vw);
         driver_plate_number_txt_vw = findViewById(R.id.driver_plate_number_txt_vw);
+        cancel_btn = findViewById(R.id.cancel_btn);
+
+        cancel_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                DialogCreator.create(DriverAcceptedActivity.this, "cancel")
+                        .setMessage("Are you sure to cancel this trip?")
+                        .setCancelable(false)
+                        .setPositiveButton("Yes")
+                        .setNegativeButton("No")
+                        .show();
+            }
+        });
 
         getDriverDetails();
     }
@@ -158,17 +162,31 @@ public class DriverAcceptedActivity extends AppCompatActivity
             if(!jsonObject.getString("name").equals("NULL")) {
                 if(!jsonObject.getString("profile_pic").equals("default")) {
                     user_pic = jsonObject.getString("profile_pic");
-                    Glide.with(this)
-                            .load(user_pic)
-                            .apply(RequestOptions.circleCropTransform())
-                            .into(prof_pic);
                 }
                 user_name = jsonObject.getString("name");
-                user_email = jsonObject.getString("email").equals("null") ? "None" : jsonObject.getString("email");
-                user_mobnum = jsonObject.getString("mobnum").equals("null") ? "None" : jsonObject.getString("mobnum");
-                user_trusted_id = jsonObject.getString("trusted_id").equals("null") ? "None" : jsonObject.getString("trusted_id");
-                name.setText(jsonObject.getString("name"));
-                email_txt_vw.setText(user_email);
+                user_email = jsonObject.getString("email").equals("null") ?
+                        "None" : jsonObject.getString("email");
+                user_mobnum = jsonObject.getString("mobnum").equals("null") ?
+                        "None" : jsonObject.getString("mobnum");
+                user_trusted_id = jsonObject.getString("trusted_id").equals("null") ?
+                        "None" : jsonObject.getString("trusted_id");
+
+                if(user_trusted_id.equals("None")) {
+                    alert_trusted_btn.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            Toast.makeText(DriverAcceptedActivity.this,
+                                    "You don't have a Trusted Contact to alert.", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                } else {
+                    alert_trusted_btn.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+
+                        }
+                    });
+                }
             }
         } catch (Exception e) { }
     }
@@ -220,6 +238,22 @@ public class DriverAcceptedActivity extends AppCompatActivity
         });
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.driver_accepted_activity_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.message:
+
+                break;
+        }
+        return true;
+    }
+
     private void showDriverLocation() {
         DatabaseReference driverLoc = FirebaseDatabase.getInstance().getReference("available_drivers/" + driverId + "/l");
         driverLoc.addValueEventListener(new ValueEventListener() {
@@ -254,9 +288,11 @@ public class DriverAcceptedActivity extends AppCompatActivity
 
                 float dist = pickupLoc.distanceTo(drvLoc);
                 if(dist <= 100) {
-                    Toast.makeText(DriverAcceptedActivity.this, "Your Driver has arrived", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(DriverAcceptedActivity.this,
+                            "Your Driver has arrived", Toast.LENGTH_SHORT).show();
                 } else {
-                    Toast.makeText(DriverAcceptedActivity.this, "Your driver is approximately " + dist + " meters", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(DriverAcceptedActivity.this,
+                            "Your driver is approximately " + dist + " meters", Toast.LENGTH_SHORT).show();
                 }
 
                 driverMarker = mMap.addMarker(new MarkerOptions().position(drvLatLng));
@@ -265,9 +301,7 @@ public class DriverAcceptedActivity extends AppCompatActivity
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
+            public void onCancelled(DatabaseError databaseError) { }
         });
     }
 
@@ -278,7 +312,8 @@ public class DriverAcceptedActivity extends AppCompatActivity
                     .apply(RequestOptions.circleCropTransform())
                     .into(new SimpleTarget<Bitmap>(150,150) {
                         @Override
-                        public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
+                        public void onResourceReady(@NonNull Bitmap resource,
+                                                    @Nullable Transition<? super Bitmap> transition) {
                             BitmapDescriptor icon = BitmapDescriptorFactory.fromBitmap(resource);
                             marker.setIcon(icon);
                         }
@@ -311,24 +346,20 @@ public class DriverAcceptedActivity extends AppCompatActivity
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
-
         try {
-            boolean success = googleMap.setMapStyle(
+            googleMap.setMapStyle(
                     MapStyleOptions.loadRawResourceStyle(
                             this, R.raw.mapstyle));
-
-            if (!success) {
-                Log.e("Booking", "Style parsing failed.");
-            }
-        } catch (Resources.NotFoundException e) {
-            Log.e("Booking", "Can't find style. Error: ", e);
-        }
+        } catch (Resources.NotFoundException e) { }
         mMap = googleMap;
         mMap.getUiSettings().setMapToolbarEnabled(false);
         mMap.getUiSettings().setZoomControlsEnabled(false);
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
         mMap.setPadding(0,0,0,informationLayout.getLayoutParams().height);
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION)
+                        != PackageManager.PERMISSION_GRANTED) {
             DialogCreator.create(this, "locationPermission")
                     .setMessage("We need to access your location and device state to continue using FROURÁ.")
                     .setPositiveButton("OK")
@@ -346,15 +377,6 @@ public class DriverAcceptedActivity extends AppCompatActivity
                 .addApi(LocationServices.API)
                 .build();
         mGoogleApiClient.connect();
-    }
-
-    @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) { }
-
-        drawer = findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
     }
 
     @Override
@@ -397,19 +419,31 @@ public class DriverAcceptedActivity extends AppCompatActivity
     @Override
     public void onClickPositiveButton(String actionId) {
         switch (actionId) {
-            case "":
+            case "locationPermission":
                 ActivityCompat.requestPermissions(DriverAcceptedActivity
                                 .this,
                         new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION},
                         1);
                 break;
+            case "cancel":
+                DialogCreator.create(this, "reason")
+                        .setTitle("State your reason:")
+                        .setView(R.layout.dialog_reason)
+                        .setPositiveButton("Send")
+                        .setNegativeButton("Cancel")
+                        .show();
+                break;
+            case "reason":
+                DatabaseReference dbRef = FirebaseDatabase.getInstance()
+                        .getReference("services/booking/" + user_id +"/cancelled_by");
+                dbRef.child("passenger").setValue(true);
+                dbRef.child("reason").setValue(user_reason);
+                break;
         }
     }
 
     @Override
-    public void onClickNegativeButton(String actionId) {
-
-    }
+    public void onClickNegativeButton(String actionId) { }
 
     @Override
     public void onClickNeutralButton(String actionId) { }
@@ -418,7 +452,25 @@ public class DriverAcceptedActivity extends AppCompatActivity
     public void onClickMultiChoiceItem(String actionId, int which, boolean isChecked) { }
 
     @Override
-    public void onCreateDialogView(String actionId, View view) { }
+    public void onCreateDialogView(String actionId, View view) {
+        switch (actionId) {
+            case "reason":
+                final TextInputEditText reason_et = view.findViewById(R.id.reason_et);
+                reason_et.addTextChangedListener(new TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) { }
+
+                    @Override
+                    public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                        user_reason = reason_et.getText().toString();
+                    }
+
+                    @Override
+                    public void afterTextChanged(Editable editable) { }
+                });
+                break;
+        }
+    }
 
     @Override
     public void onConnectionSuspended(int i) { }

@@ -23,6 +23,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 import org.apache.commons.lang3.text.WordUtils;
 import org.json.JSONObject;
@@ -46,6 +47,8 @@ public class MainActivity extends AppCompatActivity implements DialogCreator.Dia
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ImageView imageView = findViewById(R.id.loader);
+
+        TaskConfig.CURRENT_TOKEN = FirebaseInstanceId.getInstance().getToken();
 
         Glide.with(this).load(getImage("loader")).into(imageView);
 
@@ -71,6 +74,7 @@ public class MainActivity extends AppCompatActivity implements DialogCreator.Dia
     private void updateUserdetails() {
         DatabaseReference dbRef = FirebaseDatabase.getInstance()
                 .getReference("users/passenger/"+FirebaseAuth.getInstance().getUid());
+        dbRef.child("token").setValue(TaskConfig.CURRENT_TOKEN);
         dbRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {

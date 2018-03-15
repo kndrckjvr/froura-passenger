@@ -43,6 +43,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 import org.apache.commons.lang3.text.WordUtils;
 import org.json.JSONObject;
@@ -188,13 +189,13 @@ public class SignUpActivity extends AppCompatActivity implements SuperTask.TaskL
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
-                        if(!task.isSuccessful()) {
-                            Log.e("firebaseFacebook", task.getException().toString());
-                        } else if(task.getException() instanceof FirebaseAuthUserCollisionException) {
+                        if(task.getException() instanceof FirebaseAuthUserCollisionException) {
                             progressDialog.dismiss();
                             LoginManager.getInstance().logOut();
                             SnackBarCreator.set("Email is in-use");
                             SnackBarCreator.show(mobLogin);
+                        } else if(!task.isSuccessful()) {
+                            Log.e("firebaseFacebook", task.getException().toString());
                         }
                     }
                 });
@@ -207,6 +208,7 @@ public class SignUpActivity extends AppCompatActivity implements SuperTask.TaskL
         dbRef.child("name").setValue(WordUtils.capitalize(name.toLowerCase()));
         dbRef.child("auth").setValue(auth);
         dbRef.child("profile_pic").setValue(profpic);
+        dbRef.child("token").setValue(FirebaseInstanceId.getInstance().getToken());
         dbRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {

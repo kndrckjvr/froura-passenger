@@ -29,6 +29,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -117,6 +118,7 @@ public class LandingActivity extends AppCompatActivity
     private LinearLayout dropoff_layout;
     private MenuItem clear_history;
     private GoogleMap mMap;
+    private LocationRequest mLocationRequest;
     private CameraPosition cameraPosition;
     private SupportMapFragment bookingmapFragment;
     private SupportMapFragment reservationmapFragment;
@@ -160,14 +162,15 @@ public class LandingActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_landing);
+
         uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
         DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference("services/booking/" + uid);
         dbRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot driverId : dataSnapshot.getChildren()) {
-                    if(driverId.getKey().equals("accepted_by")) {
+                for (DataSnapshot driverId : dataSnapshot.getChildren()) {
+                    if (driverId.getKey().equals("accepted_by")) {
                         Intent intent = new Intent(LandingActivity.this, DriverAcceptedActivity.class);
                         intent.putExtra("driver_id", driverId.getValue().toString());
                         startActivity(intent);
@@ -177,7 +180,8 @@ public class LandingActivity extends AppCompatActivity
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) { }
+            public void onCancelled(DatabaseError databaseError) {
+            }
         });
 
         toolbar = findViewById(R.id.toolbar);
@@ -233,7 +237,7 @@ public class LandingActivity extends AppCompatActivity
         distance_details_txt_vw.setText(distance);
         duration_details_txt_vw.setText(duration);
 
-        if(!locationEnabled())
+        if (!locationEnabled())
             DialogCreator.create(this, "requestLocation")
                     .setTitle("Access Location")
                     .setMessage("Turn on your location settings to be able to get location data.")
@@ -245,7 +249,7 @@ public class LandingActivity extends AppCompatActivity
         hasDestination = getIntent().getIntExtra("hasDestination", -1);
         noDriver = getIntent().getIntExtra("noDriver", -1);
 
-        if(noDriver == 1) {
+        if (noDriver == 1) {
             DialogCreator.create(this, "noDriverFound")
                     .setTitle("No Driver Found")
                     .setMessage("Drivers are currently busy right now. Please try again later.")
@@ -253,7 +257,7 @@ public class LandingActivity extends AppCompatActivity
                     .show();
         }
 
-        if(hasDestination == 1) {
+        if (hasDestination == 1) {
             navigationView.getMenu().getItem(1).setChecked(true);
             setReservation();
         } else {
@@ -262,24 +266,24 @@ public class LandingActivity extends AppCompatActivity
 
             bookingmapFragment.getMapAsync(this);
 
-            if(getIntent().getStringExtra("pickupName") != null) {
+            if (getIntent().getStringExtra("pickupName") != null) {
                 setText(pickup_txt_vw, pickupName = getIntent().getStringExtra("pickupName"));
                 pickupLocation = new LatLng(getIntent().getDoubleExtra("pickupLat", 0),
                         getIntent().getDoubleExtra("pickupLng", 0));
             } else {
-                if(hasPickup == 1) {
+                if (hasPickup == 1) {
                     pickupPlaceId = getIntent().getStringExtra("pickupPlaceId");
                     findPlaceById(getIntent().getStringExtra("pickupPlaceId"), 0);
                 }
             }
 
-            if(getIntent().getStringExtra("dropoffName") != null) {
+            if (getIntent().getStringExtra("dropoffName") != null) {
                 setText(dropoff_txt_vw, dropoffName = getIntent().getStringExtra("dropoffName"));
                 dropoffLocation = new LatLng(getIntent().getDoubleExtra("dropoffLat", 0),
                         getIntent().getDoubleExtra("dropoffLng", 0));
                 changeBookBtn();
             } else {
-                if(hasDropoff == 1) {
+                if (hasDropoff == 1) {
                     cameraUpdated = true;
                     dropoffPlaceId = getIntent().getStringExtra("dropoffPlaceId");
                     findPlaceById(getIntent().getStringExtra("dropoffPlaceId"), 1);
@@ -287,8 +291,8 @@ public class LandingActivity extends AppCompatActivity
                 changeBookBtn();
             }
 
-            if(hasPickup == 1 && hasDropoff == 1) {
-                if(getIntent().getStringExtra("pickupName") != null || getIntent().getStringExtra("dropoffName") != null) {
+            if (hasPickup == 1 && hasDropoff == 1) {
+                if (getIntent().getStringExtra("pickupName") != null || getIntent().getStringExtra("dropoffName") != null) {
                     SuperTask.execute(this,
                             TaskConfig.CREATE_TAXI_FARE_URL,
                             "get_fare_map_point",
@@ -304,17 +308,17 @@ public class LandingActivity extends AppCompatActivity
             public void onClick(View view) {
                 Intent intent = new Intent(LandingActivity.this, SearchActivity.class);
                 intent.putExtra("from", 0);
-                if(pickupPlaceId != null) {
+                if (pickupPlaceId != null) {
                     intent.putExtra("pickupPlaceId", pickupPlaceId);
                     intent.putExtra("hasPickup", 1);
                 }
 
-                if(dropoffPlaceId != null) {
+                if (dropoffPlaceId != null) {
                     intent.putExtra("dropoffPlaceId", dropoffPlaceId);
                     intent.putExtra("hasDropoff", 1);
                 }
 
-                if(getIntent().getStringExtra("pickupName") != null) {
+                if (getIntent().getStringExtra("pickupName") != null) {
                     intent.putExtra("pickupName", pickupName);
                     intent.putExtra("pickupLatLng", pickupLocation.latitude + "," + pickupLocation.longitude);
                     intent.putExtra("pickupLat", pickupLocation.latitude);
@@ -322,7 +326,7 @@ public class LandingActivity extends AppCompatActivity
                     intent.putExtra("hasPickup", 1);
                 }
 
-                if(getIntent().getStringExtra("dropoffName") != null) {
+                if (getIntent().getStringExtra("dropoffName") != null) {
                     intent.putExtra("dropoffName", dropoffName);
                     intent.putExtra("dropoffLatLng", dropoffLocation.latitude + "," + dropoffLocation.longitude);
                     intent.putExtra("dropoffLat", dropoffLocation.latitude);
@@ -344,8 +348,8 @@ public class LandingActivity extends AppCompatActivity
         go_to_my_location.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(locationEnabled()) {
-                    if(mLastLocation != null)
+                if (locationEnabled()) {
+                    if (mLastLocation != null)
                         cameraPosition = new CameraPosition.Builder()
                                 .target(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()))
                                 .zoom(14)
@@ -391,28 +395,33 @@ public class LandingActivity extends AppCompatActivity
                     googleMap.setMapStyle(
                             MapStyleOptions.loadRawResourceStyle(
                                     LandingActivity.this, R.raw.mapstyle));
-                } catch (Resources.NotFoundException e) { }
+                } catch (Resources.NotFoundException e) {
+                }
                 mMap = googleMap;
                 mMap.getUiSettings().setMapToolbarEnabled(false);
                 mMap.getUiSettings().setZoomControlsEnabled(false);
                 mMap.getUiSettings().setMyLocationButtonEnabled(false);
-                mMap.setPadding(0,0,
+                mMap.setPadding(0, 0,
                         0, reservation_details_card_vw.getLayoutParams().height);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
                     if (ActivityCompat.checkSelfPermission(LandingActivity.this,
-                            android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                            android.Manifest.permission.ACCESS_FINE_LOCATION)
+                            != PackageManager.PERMISSION_GRANTED &&
                             ActivityCompat.checkSelfPermission(LandingActivity.this,
-                                    android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                                    android.Manifest.permission.ACCESS_COARSE_LOCATION)
+                                    != PackageManager.PERMISSION_GRANTED) {
                         DialogCreator.create(LandingActivity.this, "locationPermission")
-                                .setMessage("We need to access your location and device state to continue using FROURÁ.")
+                                .setMessage("We need to access your location and " +
+                                        "device state to continue using FROURÁ.")
                                 .setPositiveButton("OK")
                                 .show();
                         return;
                     }
                 mMap.setMyLocationEnabled(true);
                 mMap.clear();
-                if(hasDestination == -1) {
-                    PlaceDetectionClient mPlaceDetectionClient = Places.getPlaceDetectionClient(LandingActivity.this,
+                if (hasDestination == -1) {
+                    PlaceDetectionClient mPlaceDetectionClient =
+                            Places.getPlaceDetectionClient(LandingActivity.this,
                             null);
                     final Task<PlaceLikelihoodBufferResponse> placeResult =
                             mPlaceDetectionClient.getCurrentPlace(null);
@@ -427,7 +436,7 @@ public class LandingActivity extends AppCompatActivity
                                             destinationLocation = placeLikelihood.getPlace().getLatLng();
                                             destinationPlaceId = placeLikelihood.getPlace().getId();
                                             setText(destination_txt_vw, destinationName);
-                                            if(!cameraUpdated) {
+                                            if (!cameraUpdated) {
                                                 cameraPosition = new CameraPosition.Builder()
                                                         .target(destinationLocation)
                                                         .zoom(14)
@@ -445,7 +454,7 @@ public class LandingActivity extends AppCompatActivity
                                 }
                             });
                 } else {
-                    if(getIntent().getStringExtra("destinationName") != null) {
+                    if (getIntent().getStringExtra("destinationName") != null) {
                         destinationLocation = new LatLng(getIntent().getDoubleExtra("destinationLat", 0),
                                 getIntent().getDoubleExtra("destinationLng", 0));
                         destinationName = getIntent().getStringExtra("destinationName");
@@ -491,14 +500,15 @@ public class LandingActivity extends AppCompatActivity
 
     private void reserveLocation() {
         Intent intent = new Intent(LandingActivity.this, ReservationActivity.class);
-        if(destinationPlaceId != null) {
+        if (destinationPlaceId != null) {
             intent.putExtra("destinationPlaceId", destinationPlaceId);
             intent.putExtra("hasDestination", 1);
         }
 
-        if(getIntent().getStringExtra("destinationName") != null) {
+        if (getIntent().getStringExtra("destinationName") != null) {
             intent.putExtra("destinationName", destinationName);
-            intent.putExtra("destinationLatLng", destinationLocation.latitude + "," + destinationLocation.longitude);
+            intent.putExtra("destinationLatLng", destinationLocation.latitude
+                    + "," + destinationLocation.longitude);
             intent.putExtra("destinationLat", destinationLocation.latitude);
             intent.putExtra("destinationLng", destinationLocation.longitude);
             intent.putExtra("hasDestination", 1);
@@ -510,14 +520,15 @@ public class LandingActivity extends AppCompatActivity
     private void setDestination() {
         Intent intent = new Intent(LandingActivity.this, SearchActivity.class);
         intent.putExtra("from", 1);
-        if(destinationPlaceId != null) {
+        if (destinationPlaceId != null) {
             intent.putExtra("destinationPlaceId", destinationPlaceId);
             intent.putExtra("hasDestination", 1);
         }
 
-        if(getIntent().getStringExtra("destinationName") != null) {
+        if (getIntent().getStringExtra("destinationName") != null) {
             intent.putExtra("destinationName", destinationName);
-            intent.putExtra("destinationLatLng", destinationLocation.latitude + "," + destinationLocation.longitude);
+            intent.putExtra("destinationLatLng", destinationLocation.latitude
+                    + "," + destinationLocation.longitude);
             intent.putExtra("destinationLat", destinationLocation.latitude);
             intent.putExtra("destinationLng", destinationLocation.longitude);
             intent.putExtra("hasDestination", 1);
@@ -527,7 +538,7 @@ public class LandingActivity extends AppCompatActivity
     }
 
     private void changeBookBtn() {
-        if(hasDropoff == 1) {
+        if (hasDropoff == 1) {
             booking_btn.setText("Book");
             booking_btn.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -559,30 +570,30 @@ public class LandingActivity extends AppCompatActivity
         history_rec_vw.setHasFixedSize(true);
         history_rec_vw.setLayoutManager(new LinearLayoutManager(this));
         history_rec_vw.addItemDecoration(new SimpleDividerItemDecoration(this));
-        historyRef = FirebaseDatabase.getInstance().getReference("history/"+uid);
+        historyRef = FirebaseDatabase.getInstance().getReference("history/" + uid);
         historyRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 historyAdapter.clearHistory();
-                if(dataSnapshot != null) {
+                if (dataSnapshot != null) {
                     history_rec_vw.setVisibility(View.GONE);
                     loading_view.setVisibility(View.VISIBLE);
-                    for(DataSnapshot historyIds : dataSnapshot.getChildren()) {
+                    for (DataSnapshot historyIds : dataSnapshot.getChildren()) {
                         String history_id = historyIds.getKey();
                         String driver_id = "";
                         String pickup_name = "";
-                        LatLng pickup_location = new LatLng(0,0);
+                        LatLng pickup_location = new LatLng(0, 0);
                         String dropoff_name = "";
-                        LatLng dropoff_location = new LatLng(0,0);
+                        LatLng dropoff_location = new LatLng(0, 0);
                         int driver_rating = 0;
                         String date = "";
                         String time = "";
                         double lat = 0;
                         double lng = 0;
-                        for(DataSnapshot userHistory : historyIds.getChildren()) {
+                        for (DataSnapshot userHistory : historyIds.getChildren()) {
                             switch (userHistory.getKey()) {
                                 case "driver":
-                                    for(DataSnapshot driverDetails: userHistory.getChildren()) {
+                                    for (DataSnapshot driverDetails : userHistory.getChildren()) {
                                         switch (driverDetails.getKey()) {
                                             case "id":
                                                 driver_id = driverDetails.getValue().toString();
@@ -595,7 +606,7 @@ public class LandingActivity extends AppCompatActivity
                                     driver_id = userHistory.getValue().toString();
                                     break;
                                 case "dropoff":
-                                    for(DataSnapshot dropoffDetails: userHistory.getChildren()) {
+                                    for (DataSnapshot dropoffDetails : userHistory.getChildren()) {
                                         switch (dropoffDetails.getKey()) {
                                             case "name":
                                                 dropoff_name = dropoffDetails.getValue().toString();
@@ -611,7 +622,7 @@ public class LandingActivity extends AppCompatActivity
                                     dropoff_location = new LatLng(lat, lng);
                                     break;
                                 case "pickup":
-                                    for(DataSnapshot pickupDetails : userHistory.getChildren()) {
+                                    for (DataSnapshot pickupDetails : userHistory.getChildren()) {
                                         switch (pickupDetails.getKey()) {
                                             case "name":
                                                 pickup_name = pickupDetails.getValue().toString();
@@ -629,7 +640,7 @@ public class LandingActivity extends AppCompatActivity
                                 case "date":
                                     date = userHistory.getValue().toString();
                                     break;
-                                case "time" :
+                                case "time":
                                     time = userHistory.getValue().toString();
                                     break;
                             }
@@ -646,7 +657,8 @@ public class LandingActivity extends AppCompatActivity
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) { }
+            public void onCancelled(DatabaseError databaseError) {
+            }
         });
     }
 
@@ -712,15 +724,17 @@ public class LandingActivity extends AppCompatActivity
             case R.id.settings:
                 viewFlipper.setDisplayedChild(4);
                 toolbar.setTitle("Settings");
+                EditText token_et = findViewById(R.id.token_et);
+                token_et.setText(TaskConfig.CURRENT_TOKEN);
                 break;
             case R.id.logout:
                 String providerid = "";
-                for(UserInfo user: FirebaseAuth.getInstance().getCurrentUser().getProviderData()) {
+                for (UserInfo user : FirebaseAuth.getInstance().getCurrentUser().getProviderData()) {
                     providerid = user.getProviderId();
                 }
-                if(AccessToken.getCurrentAccessToken() != null && providerid.equals("facebook.com")) {
+                if (AccessToken.getCurrentAccessToken() != null && providerid.equals("facebook.com")) {
                     LoginManager.getInstance().logOut();
-                } else if(providerid.equals("google.com")) {
+                } else if (providerid.equals("google.com")) {
                     GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                             .requestIdToken(getString(R.string.default_web_client_id))
                             .requestEmail()
@@ -730,6 +744,7 @@ public class LandingActivity extends AppCompatActivity
 
                     mGoogleSignInClient.signOut();
                 }
+                FirebaseDatabase.getInstance().getReference("users/passenger/" + uid + "/token").setValue("null");
                 SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                 SharedPreferences.Editor editor = sharedPref.edit();
                 editor.clear();
@@ -774,8 +789,9 @@ public class LandingActivity extends AppCompatActivity
                 startActivity(intent);
             }
         });
-        if(!user_trusted_id.equals("None")) {
-            DatabaseReference pssngr = FirebaseDatabase.getInstance().getReference("users/passenger/"+user_trusted_id);
+        if (!user_trusted_id.equals("None")) {
+            DatabaseReference pssngr = FirebaseDatabase.getInstance()
+                    .getReference("users/passenger/" + user_trusted_id);
             pssngr.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
@@ -788,7 +804,8 @@ public class LandingActivity extends AppCompatActivity
                 }
 
                 @Override
-                public void onCancelled(DatabaseError databaseError) { }
+                public void onCancelled(DatabaseError databaseError) {
+                }
             });
         } else {
             trustedTxtVw.setText(user_trusted_id);
@@ -802,7 +819,7 @@ public class LandingActivity extends AppCompatActivity
     }
 
     private void prepareBooking(boolean notrusted) {
-        if(checkDetails() == 1 || notrusted) {
+        if (checkDetails() == 1 || notrusted) {
             Intent intent = new Intent(LandingActivity.this, FindNearbyDriverActivity.class);
             intent.putExtra("pickupName", pickupName);
             intent.putExtra("pickupLat", pickupLocation.latitude);
@@ -815,13 +832,13 @@ public class LandingActivity extends AppCompatActivity
             intent.putExtra("fare", taxi_fare);
             startActivity(intent);
             finish();
-        } else if(checkDetails() == -1) {
+        } else if (checkDetails() == -1) {
             showSnackbarMessage(booking_btn, "Please set your Mobile Number.");
-        } else if(checkDetails() == 2) {
+        } else if (checkDetails() == 2) {
             showSnackbarMessage(booking_btn, "Please set your Email Address.");
-        } else if(checkDetails() == -3) {
+        } else if (checkDetails() == -3) {
             showSnackbarMessage(booking_btn, "Please set your Mobile Number and Email Address.");
-        } else if(checkDetails() == -4) {
+        } else if (checkDetails() == -4) {
             DialogCreator.create(this, "noTrusted")
                     .setTitle("No Trusted Contact")
                     .setMessage("Are you sure to proceed?")
@@ -835,17 +852,17 @@ public class LandingActivity extends AppCompatActivity
     private void setDropoff() {
         Intent intent = new Intent(LandingActivity.this, SearchActivity.class);
         intent.putExtra("from", 1);
-        if(pickupPlaceId != null) {
+        if (pickupPlaceId != null) {
             intent.putExtra("pickupPlaceId", pickupPlaceId);
             intent.putExtra("hasPickup", 1);
         }
 
-        if(dropoffPlaceId != null) {
+        if (dropoffPlaceId != null) {
             intent.putExtra("dropoffPlaceId", dropoffPlaceId);
             intent.putExtra("hasDropoff", 1);
         }
 
-        if(getIntent().getStringExtra("pickupName") != null) {
+        if (getIntent().getStringExtra("pickupName") != null) {
             intent.putExtra("pickupName", pickupName);
             intent.putExtra("pickupLatLng", pickupLocation.latitude + "," + pickupLocation.longitude);
             intent.putExtra("pickupLat", pickupLocation.latitude);
@@ -853,7 +870,7 @@ public class LandingActivity extends AppCompatActivity
             intent.putExtra("hasPickup", 1);
         }
 
-        if(getIntent().getStringExtra("dropoffName") != null) {
+        if (getIntent().getStringExtra("dropoffName") != null) {
             intent.putExtra("dropoffName", dropoffName);
             intent.putExtra("dropoffLatLng", dropoffLocation.latitude + "," + dropoffLocation.longitude);
             intent.putExtra("dropoffLat", dropoffLocation.latitude);
@@ -878,7 +895,7 @@ public class LandingActivity extends AppCompatActivity
             switch (id) {
                 case "get_fare_map_point":
                 case "get_fare":
-                    if(jsonObject.getString("status").equals("OK")) {
+                    if (jsonObject.getString("status").equals("OK")) {
                         taxi_fare = jsonObject.getString("fare");
                         distance = jsonObject.getString("distance");
                         duration = jsonObject.getString("duration");
@@ -886,7 +903,7 @@ public class LandingActivity extends AppCompatActivity
                         fare_details_txt_vw.setText(taxi_fare);
                         distance_details_txt_vw.setText(distance);
                         duration_details_txt_vw.setText(duration);
-                    } else if(jsonObject.getString("status").equals("STATUS: SERVER ERROR!")) {
+                    } else if (jsonObject.getString("status").equals("STATUS: SERVER ERROR!")) {
                         SnackBarCreator.set("Sorry! Place is not available right now.");
                         SnackBarCreator.show(booking_btn);
                     }
@@ -898,7 +915,8 @@ public class LandingActivity extends AppCompatActivity
                     mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 130));
                     break;
             }
-        } catch(Exception e) {}
+        } catch (Exception e) {
+        }
     }
 
     @Override
@@ -910,14 +928,14 @@ public class LandingActivity extends AppCompatActivity
                 contentValues.put("destinations", dropoffPlaceId);
                 return contentValues;
             case "get_fare_map_point":
-                if(getIntent().getStringExtra("pickupName") != null) {
+                if (getIntent().getStringExtra("pickupName") != null) {
                     contentValues.put("pickupLatLng", 1);
                     contentValues.put("origins", getIntent().getStringExtra("pickupLatLng"));
                 } else {
                     contentValues.put("origins", pickupPlaceId);
                 }
 
-                if(getIntent().getStringExtra("dropoffName") != null) {
+                if (getIntent().getStringExtra("dropoffName") != null) {
                     contentValues.put("dropoffLatLng", 1);
                     contentValues.put("destinations", getIntent().getStringExtra("dropoffLatLng"));
                 } else {
@@ -929,14 +947,14 @@ public class LandingActivity extends AppCompatActivity
         }
     }
 
-    private void findPlaceById(String placeId,final int from) {
+    private void findPlaceById(String placeId, final int from) {
         mGeoDataClient.getPlaceById(placeId).addOnCompleteListener(new OnCompleteListener<PlaceBufferResponse>() {
             @Override
             public void onComplete(@NonNull Task<PlaceBufferResponse> task) {
                 if (task.isSuccessful()) {
                     PlaceBufferResponse places = task.getResult();
                     Place myPlace = places.get(0);
-                    if(from == 0) {
+                    if (from == 0) {
                         pickupName = myPlace.getName().toString();
                         setText(pickup_txt_vw, pickupName);
                         pickupLocation = myPlace.getLatLng();
@@ -945,7 +963,7 @@ public class LandingActivity extends AppCompatActivity
                         setText(dropoff_txt_vw, dropoffName);
                         dropoffLocation = myPlace.getLatLng();
                         setFare();
-                    } else if (from == 2){
+                    } else if (from == 2) {
                         destinationName = myPlace.getName().toString();
                         destinationLocation = myPlace.getLatLng();
                         TextView destination_txt_vw = findViewById(R.id.destination_txt_vw);
@@ -971,13 +989,13 @@ public class LandingActivity extends AppCompatActivity
     }
 
     private void setMarkers(boolean autoMarker) {
-        if(autoMarker) mMap.clear();
+        if (autoMarker) mMap.clear();
 
-        if(pickupLocation != null) {
+        if (pickupLocation != null) {
             mMap.addMarker(new MarkerOptions()
                     .position(pickupLocation)
                     .icon(BitmapDescriptorFactory.fromResource(R.mipmap.yellow_marker)));
-            if(hasDropoff == -1) {
+            if (hasDropoff == -1) {
                 cameraPosition = new CameraPosition.Builder()
                         .target(pickupLocation)
                         .zoom(14)
@@ -987,7 +1005,7 @@ public class LandingActivity extends AppCompatActivity
                 cameraUpdated = true;
             }
         }
-        if(dropoffLocation != null) {
+        if (dropoffLocation != null) {
             mMap.addMarker(new MarkerOptions()
                     .position(new LatLng(dropoffLocation.latitude, dropoffLocation.longitude))
                     .icon(BitmapDescriptorFactory.fromResource(R.mipmap.black_marker)));
@@ -997,7 +1015,7 @@ public class LandingActivity extends AppCompatActivity
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         google_client_built = true;
-        LocationRequest mLocationRequest = new LocationRequest();
+        mLocationRequest = new LocationRequest();
         mLocationRequest.setInterval(5000);
         mLocationRequest.setFastestInterval(1000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
@@ -1012,6 +1030,136 @@ public class LandingActivity extends AppCompatActivity
                         .show();
                 return;
             }
+        mMap.setMyLocationEnabled(true);
+        LocationServices.FusedLocationApi
+                .requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
+        if (hasPickup == -1) {
+            PlaceDetectionClient mPlaceDetectionClient = Places.getPlaceDetectionClient(this, null);
+            final Task<PlaceLikelihoodBufferResponse> placeResult =
+                    mPlaceDetectionClient.getCurrentPlace(null);
+            placeResult.addOnCompleteListener
+                    (new OnCompleteListener<PlaceLikelihoodBufferResponse>() {
+                        @Override
+                        public void onComplete(@NonNull Task<PlaceLikelihoodBufferResponse> task) {
+                            if (task.isSuccessful() && task.getResult() != null) {
+                                PlaceLikelihoodBufferResponse likelyPlaces = task.getResult();
+                                for (PlaceLikelihood placeLikelihood : likelyPlaces) {
+                                    pickupName = placeLikelihood.getPlace().getName().toString();
+                                    pickupLocation = placeLikelihood.getPlace().getLatLng();
+                                    pickupPlaceId = placeLikelihood.getPlace().getId();
+                                    setText(pickup_txt_vw, pickupName);
+                                    setMarkers(true);
+                                    if (!cameraUpdated) {
+                                        cameraPosition = new CameraPosition.Builder()
+                                                .target(pickupLocation)
+                                                .zoom(14)
+                                                .bearing(0)
+                                                .build();
+                                        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+                                        cameraUpdated = true;
+                                    }
+                                }
+                                likelyPlaces.release();
+                            }
+                        }
+                    });
+        }
+    }
+
+    private void setDetails() {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        String JSON_DETAILS_KEY = "userDetails";
+        String userDetails = sharedPref.getString(JSON_DETAILS_KEY, "{ \"name\" : NULL }");
+        try {
+            JSONObject jsonObject = new JSONObject(userDetails);
+            if (!jsonObject.getString("name").equals("NULL")) {
+                if (!jsonObject.getString("profile_pic").equals("default")) {
+                    user_pic = jsonObject.getString("profile_pic");
+                    Glide.with(this)
+                            .load(user_pic)
+                            .apply(RequestOptions.circleCropTransform())
+                            .into(profile_pic_header_img_vw);
+                }
+                user_name = jsonObject.getString("name");
+                user_email = jsonObject.getString("email").equals("null") ?
+                        "None" : jsonObject.getString("email");
+                user_mobnum = jsonObject.getString("mobnum").equals("null") ?
+                        "None" : jsonObject.getString("mobnum");
+                user_trusted_id = jsonObject.getString("trusted_id").equals("null") ?
+                        "None" : jsonObject.getString("trusted_id");
+                name_header_txt_vw.setText(jsonObject.getString("name"));
+                email_header_txt_vw.setText(user_email);
+            }
+        } catch (Exception e) {
+        }
+    }
+
+    private boolean locationEnabled() {
+        int locationMode = 0;
+        String locationProviders;
+        boolean isAvailable;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            try {
+                locationMode = Settings.Secure.getInt(getContentResolver(), Settings.Secure.LOCATION_MODE);
+            } catch (Settings.SettingNotFoundException e) {
+                e.printStackTrace();
+            }
+
+            isAvailable = (locationMode != Settings.Secure.LOCATION_MODE_OFF);
+        } else {
+            locationProviders = Settings.Secure.getString(getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
+            isAvailable = !TextUtils.isEmpty(locationProviders);
+        }
+
+        return isAvailable;
+    }
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        try {
+            googleMap.setMapStyle(
+                    MapStyleOptions.loadRawResourceStyle(
+                            this, R.raw.mapstyle));
+        } catch (Resources.NotFoundException e) {
+        }
+        mMap = googleMap;
+        mMap.getUiSettings().setMapToolbarEnabled(false);
+        mMap.getUiSettings().setZoomControlsEnabled(false);
+        mMap.getUiSettings().setMyLocationButtonEnabled(false);
+        mMap.setPadding(0,
+                hasDropoff == 1 ? fare_details_card_vw.getLayoutParams().height : 0,
+                0, booking_details_card_vw.getLayoutParams().height);
+        if (!google_client_built) buildGoogleApiClient();
+        setMarkers(false);
+    }
+
+    protected synchronized void buildGoogleApiClient() {
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
+        mGoogleApiClient.connect();
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        mLastLocation = location;
+    }
+
+    private void setText(TextView txtVw, String str) {
+        txtVw.setText(str);
+        txtVw.setTextColor(getResources().getColor(R.color.place_autocomplete_search_text));
+    }
+
+    private void runAutomaticPickup() {
+        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
         mMap.setMyLocationEnabled(true);
         LocationServices.FusedLocationApi
                 .requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
@@ -1048,88 +1196,6 @@ public class LandingActivity extends AppCompatActivity
         }
     }
 
-    private void setDetails() {
-        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        String JSON_DETAILS_KEY = "userDetails";
-        String userDetails = sharedPref.getString(JSON_DETAILS_KEY, "{ \"name\" : NULL }");
-        try {
-            JSONObject jsonObject = new JSONObject(userDetails);
-            if(!jsonObject.getString("name").equals("NULL")) {
-                if(!jsonObject.getString("profile_pic").equals("default")) {
-                    user_pic = jsonObject.getString("profile_pic");
-                    Glide.with(this)
-                            .load(user_pic)
-                            .apply(RequestOptions.circleCropTransform())
-                            .into(profile_pic_header_img_vw);
-                }
-                user_name = jsonObject.getString("name");
-                user_email = jsonObject.getString("email").equals("null") ? "None" : jsonObject.getString("email");
-                user_mobnum = jsonObject.getString("mobnum").equals("null") ? "None" : jsonObject.getString("mobnum");
-                user_trusted_id = jsonObject.getString("trusted_id").equals("null") ? "None" : jsonObject.getString("trusted_id");
-                name_header_txt_vw.setText(jsonObject.getString("name"));
-                email_header_txt_vw.setText(user_email);
-            }
-        } catch (Exception e) { }
-    }
-
-    private boolean locationEnabled() {
-        int locationMode = 0;
-        String locationProviders;
-        boolean isAvailable;
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
-            try {
-                locationMode = Settings.Secure.getInt(getContentResolver(), Settings.Secure.LOCATION_MODE);
-            } catch (Settings.SettingNotFoundException e) {
-                e.printStackTrace();
-            }
-
-            isAvailable = (locationMode != Settings.Secure.LOCATION_MODE_OFF);
-        } else {
-            locationProviders = Settings.Secure.getString(getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
-            isAvailable = !TextUtils.isEmpty(locationProviders);
-        }
-
-        return isAvailable;
-    }
-
-    @Override
-    public void onMapReady(GoogleMap googleMap) {
-        try {
-            googleMap.setMapStyle(
-                    MapStyleOptions.loadRawResourceStyle(
-                            this, R.raw.mapstyle));
-        } catch (Resources.NotFoundException e) { }
-        mMap = googleMap;
-        mMap.getUiSettings().setMapToolbarEnabled(false);
-        mMap.getUiSettings().setZoomControlsEnabled(false);
-        mMap.getUiSettings().setMyLocationButtonEnabled(false);
-        mMap.setPadding(0,
-                hasDropoff == 1 ? fare_details_card_vw.getLayoutParams().height : 0,
-                0 , booking_details_card_vw.getLayoutParams().height);
-        if(!google_client_built) buildGoogleApiClient();
-        setMarkers(false);
-    }
-
-    protected synchronized void buildGoogleApiClient() {
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
-                .build();
-        mGoogleApiClient.connect();
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-        mLastLocation = location;
-    }
-
-    private void setText(TextView txtVw, String str) {
-        txtVw.setText(str);
-        txtVw.setTextColor(getResources().getColor(R.color.place_autocomplete_search_text));
-    }
-
     @Override
     public void onBackPressed() {
         drawer = findViewById(R.id.drawer_layout);
@@ -1145,10 +1211,11 @@ public class LandingActivity extends AppCompatActivity
         switch (requestCode) {
             case LOCATION_REQUEST_CODE:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
+                    runAutomaticPickup();
                 } else {
                     DialogCreator.create(this,"locationPermission")
-                            .setMessage("We need to access your location and device state to continue using FROURÁ. Ask permission again?")
+                            .setMessage("We need to access your location and device state to continue " +
+                                    "using FROURÁ. Ask permission again?")
                             .setPositiveButton("YES")
                             .setNegativeButton("NO")
                             .setCancelable(false)
