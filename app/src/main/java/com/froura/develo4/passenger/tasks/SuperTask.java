@@ -97,7 +97,6 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
 
             OutputStream outputStream = new BufferedOutputStream(httpURLConnection.getOutputStream());
             BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream));
-            Log.d("Error Tag", (context).getPackageName());
             String postString = createPostString(((TaskListener)this.context).setRequestValues(new ContentValues(), id).valueSet());
             bufferedWriter.write(postString);
 
@@ -118,11 +117,8 @@ public final class SuperTask extends AsyncTask<Void, Void, String> {
 
             httpURLConnection.disconnect();
 
-            Log.d("This is the return: ", stringBuilder.toString());
             return stringBuilder.toString();
-        } catch (Exception ignored) {
-            Log.e("Error here: ", "The error is: ", ignored);
-        }
+        } catch (Exception ignored) { }
         return null;
     }
 

@@ -60,6 +60,7 @@ public class UpdateAccountActivity extends AppCompatActivity {
     private String profpic;
     private String trusted_id;
     private String auth;
+    private String database_id;
     private Uri resultUri;
     private CountDownTimer typing;
 
@@ -195,7 +196,6 @@ public class UpdateAccountActivity extends AppCompatActivity {
         } else {
             email_error_match = true;
         }
-        Log.d("errors", mobnum_error_empty + " " + mobnum_error_match + " " + email_error_empty + " " + email_error_match);
         putErrors();
         return !(mobnum_error_empty && mobnum_error_match && email_error_empty && email_error_empty);
     }
@@ -298,6 +298,7 @@ public class UpdateAccountActivity extends AppCompatActivity {
                 mobnum = jsonObject.getString("mobnum");
                 profpic = jsonObject.getString("profile_pic");
                 trusted_id = jsonObject.getString("trusted_id");
+                database_id = jsonObject.getString("database_id");
                 auth = jsonObject.getString("auth");
                 if(!profpic.equals("default") && resultUri == null) {
                     Glide.with(this)
@@ -328,8 +329,13 @@ public class UpdateAccountActivity extends AppCompatActivity {
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         SharedPreferences.Editor editor = sharedPref.edit();
         String JSON_DETAILS_KEY = "userDetails";
-        Log.d("setac", profpic);
-        String jsonDetails = "{ \"name\" : \"" + WordUtils.capitalize(name.toLowerCase()) + "\", \"email\" : \"" + email + "\", \"mobnum\" : \"" + mobnum + "\", \"profile_pic\" : \"" + profpic + "\", \"trusted_id\" : " + trusted_id + ", \"auth\" : \"" + auth + "\"}";
+        String jsonDetails = "{ \"name\" : \"" + WordUtils.capitalize(name.toLowerCase()) + "\", " +
+                "\"email\" : \"" + email + "\", " +
+                "\"mobnum\" : \"" + mobnum + "\", " +
+                "\"profile_pic\" : \"" + profpic + "\", " +
+                "\"trusted_id\" : \"" + trusted_id + "\", " +
+                "\"auth\" : \"" + auth + "\", " +
+                "\"database_id\": \""+ database_id +"\"}";
         editor.putString(JSON_DETAILS_KEY, jsonDetails);
         editor.apply();
         finish();
@@ -341,7 +347,6 @@ public class UpdateAccountActivity extends AppCompatActivity {
         if(requestCode == 1 && resultCode == Activity.RESULT_OK){
             final Uri imageUri = data.getData();
             resultUri = imageUri;
-            Log.d("setac", profpic);
             Glide.with(UpdateAccountActivity.this)
                     .load(resultUri)
                     .apply(RequestOptions.circleCropTransform())

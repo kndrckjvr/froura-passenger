@@ -19,14 +19,18 @@ import com.google.firebase.messaging.RemoteMessage;
 
 public class FrouraMessagingService extends FirebaseMessagingService {
 
+    final private Intent intent = new Intent(this, LandingActivity.class);
+
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
         showNotification(remoteMessage.getNotification());
+        intent.putExtra("sender_id", remoteMessage.getData().get("sender_id"));
+
     }
 
     private void showNotification(RemoteMessage.Notification notification) {
-        Intent intent = new Intent(this, LandingActivity.class);
+        intent.putExtra("trustee", notification.getTitle());
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_ONE_SHOT);
 
@@ -35,6 +39,7 @@ public class FrouraMessagingService extends FirebaseMessagingService {
                 .setContentText(notification.getBody())
                 .setAutoCancel(true)
                 .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setContentIntent(pendingIntent);
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             builder.setSmallIcon(R.drawable.icon_transparent);

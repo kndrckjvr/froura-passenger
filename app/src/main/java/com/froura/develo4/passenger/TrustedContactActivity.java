@@ -37,6 +37,7 @@ public class TrustedContactActivity extends AppCompatActivity implements
     private String profpic;
     private String trusted_id;
     private String auth;
+    private String database_id;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -133,6 +134,7 @@ public class TrustedContactActivity extends AppCompatActivity implements
                 mobnum = jsonObject.getString("mobnum");
                 profpic = jsonObject.getString("profile_pic");
                 trusted_id = jsonObject.getString("trusted_id");
+                database_id = jsonObject.getString("database_id");
                 auth = jsonObject.getString("auth");
             }
         } catch (Exception e) { }
@@ -142,7 +144,13 @@ public class TrustedContactActivity extends AppCompatActivity implements
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         SharedPreferences.Editor editor = sharedPref.edit();
         String JSON_DETAILS_KEY = "userDetails";
-        String jsonDetails = "{ \"name\" : \"" + WordUtils.capitalize(name.toLowerCase()) + "\", \"email\" : \"" + email + "\", \"mobnum\" : \"" + mobnum + "\", \"profile_pic\" : \"" + profpic + "\", \"trusted_id\" : " + trusted_id + ", \"auth\" : \"" + auth + "\"}";
+        String jsonDetails = "{ \"name\" : \"" + WordUtils.capitalize(name.toLowerCase()) + "\", " +
+                "\"email\" : \"" + email + "\", " +
+                "\"mobnum\" : \"" + mobnum + "\", " +
+                "\"profile_pic\" : \"" + profpic + "\", " +
+                "\"trusted_id\" : \"" + trusted_id + "\", " +
+                "\"auth\" : \"" + auth + "\", " +
+                "\"database_id\": \""+ database_id +"\"}";
         editor.putString(JSON_DETAILS_KEY, jsonDetails);
         editor.apply();
         finish();

@@ -92,14 +92,12 @@ public class TrustedContactAdapter extends RecyclerView.Adapter<TrustedContactAd
                 if(userRefValueListener != null)
                     userRef.removeEventListener(userRefValueListener);
                 if(!charSequence.toString().isEmpty()) {
-                    Log.d("trustedAdapter", charSequence+"");
                     resultList = searchUser(charSequence);
                     if(resultList != null) {
                         results.values = resultList;
                         results.count = resultList.size();
                     }
                 } else {
-                    Log.d("trustedAdapter", "empty");
                     getUsers();
                     if(resultList != null) {
                         results.values = resultList;

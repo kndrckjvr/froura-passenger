@@ -279,6 +279,7 @@ public class SignUpActivity extends AppCompatActivity implements SuperTask.TaskL
                 contentValues.put("email", email);
                 contentValues.put("contact", mobnum);
                 contentValues.put("img_path", profpic);
+                contentValues.put("token", TaskConfig.CURRENT_TOKEN);
                 return contentValues;
             default:
                 return null;
@@ -293,9 +294,9 @@ public class SignUpActivity extends AppCompatActivity implements SuperTask.TaskL
                 "\"email\" : \"" + email + "\", " +
                 "\"mobnum\" : \"" + mobnum + "\", " +
                 "\"profile_pic\" : \"" + profpic + "\", " +
-                "\"trusted_id\" : " + trusted_id + ", " +
+                "\"trusted_id\" : \"" + trusted_id + "\", " +
                 "\"auth\" : \"" + auth + "\", " +
-                "\"database_id\": \" "+ database_id +"\"}";
+                "\"database_id\": \""+ database_id +"\"}";
         editor.putString(JSON_DETAILS_KEY, jsonDetails);
         editor.apply();
         progressDialog.dismiss();

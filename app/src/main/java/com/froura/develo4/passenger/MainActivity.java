@@ -74,7 +74,6 @@ public class MainActivity extends AppCompatActivity implements DialogCreator.Dia
     private void updateUserdetails() {
         DatabaseReference dbRef = FirebaseDatabase.getInstance()
                 .getReference("users/passenger/"+FirebaseAuth.getInstance().getUid());
-        dbRef.child("token").setValue(TaskConfig.CURRENT_TOKEN);
         dbRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -107,9 +106,9 @@ public class MainActivity extends AppCompatActivity implements DialogCreator.Dia
                 "\"email\" : \"" + email + "\", " +
                 "\"mobnum\" : \"" + mobnum + "\", " +
                 "\"profile_pic\" : \"" + profpic + "\", " +
-                "\"trusted_id\" : " + trusted_id + ", " +
+                "\"trusted_id\" : \"" + trusted_id + "\", " +
                 "\"auth\" : \"" + auth + "\", " +
-                "\"database_id\": \" "+ database_id +"\"}";
+                "\"database_id\": \""+ database_id +"\"}";
         editor.putString(JSON_DETAILS_KEY, jsonDetails);
         editor.apply();
         Intent intent = new Intent(MainActivity.this, LandingActivity.class);
@@ -142,6 +141,7 @@ public class MainActivity extends AppCompatActivity implements DialogCreator.Dia
                 contentValues.put("email", email);
                 contentValues.put("contact", mobnum);
                 contentValues.put("img_path", profpic);
+                contentValues.put("token", TaskConfig.CURRENT_TOKEN);
                 return contentValues;
             default:
                 return null;

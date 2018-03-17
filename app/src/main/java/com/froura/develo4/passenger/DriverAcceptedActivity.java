@@ -1,6 +1,7 @@
 package com.froura.develo4.passenger;
 
 import android.app.ProgressDialog;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -37,7 +38,9 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
+import com.froura.develo4.passenger.config.TaskConfig;
 import com.froura.develo4.passenger.libraries.DialogCreator;
+import com.froura.develo4.passenger.tasks.SuperTask;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
@@ -58,6 +61,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.messaging.RemoteMessage;
 
 import org.json.JSONObject;
 
@@ -73,6 +77,7 @@ public class DriverAcceptedActivity extends AppCompatActivity
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         com.google.android.gms.location.LocationListener,
+        SuperTask.TaskListener,
         DialogCreator.DialogActionListener {
 
     private GoogleMap mMap;
@@ -122,6 +127,7 @@ public class DriverAcceptedActivity extends AppCompatActivity
         toolbar.setTitle("Driver on the way");
         setSupportActionBar(toolbar);
         informationLayout = findViewById(R.id.information_layout);
+        alert_trusted_btn = findViewById(R.id.alert_trusted_btn);
         user_id = FirebaseAuth.getInstance().getCurrentUser().getUid();
         driverId = getIntent().getStringExtra("driver_id");
 
@@ -155,7 +161,7 @@ public class DriverAcceptedActivity extends AppCompatActivity
 
     private void setDetails() {
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        String JSON_DETAILS_KEY = "userDetails";
+        final String JSON_DETAILS_KEY = "userDetails";
         String userDetails = sharedPref.getString(JSON_DETAILS_KEY, "{ \"name\" : NULL }");
         try {
             JSONObject jsonObject = new JSONObject(userDetails);
@@ -183,12 +189,44 @@ public class DriverAcceptedActivity extends AppCompatActivity
                     alert_trusted_btn.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
-
+                            SuperTask.execute(DriverAcceptedActivity.this,
+                                    TaskConfig.SEND_NOTIFICATION,
+                                    "notification");
                         }
                     });
                 }
             }
         } catch (Exception e) { }
+    }
+
+    @Override
+    public void onTaskRespond(String json, String id) {
+        try {
+            switch (id) {
+                case "notification":
+                    JSONObject jsonObject = new JSONObject(json);
+                    if(jsonObject.getInt("success") == 1) {
+                        Toast.makeText(this, "We have sent your notification.",
+                                Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(this, "Hmm.",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+            }
+        } catch (Exception e) { }
+    }
+
+    @Override
+    public ContentValues setRequestValues(ContentValues contentValues, String id) {
+        contentValues.put("android", 1);
+        switch (id) {
+            case "notification":
+                contentValues.put("sender_uid", user_id);
+                contentValues.put("receiver_uid", user_trusted_id);
+                break;
+        }
+        return contentValues;
     }
 
     private void getDriverDetails() {
@@ -438,6 +476,9 @@ public class DriverAcceptedActivity extends AppCompatActivity
                         .getReference("services/booking/" + user_id +"/cancelled_by");
                 dbRef.child("passenger").setValue(true);
                 dbRef.child("reason").setValue(user_reason);
+                Intent intent = new Intent(DriverAcceptedActivity.this, LandingActivity.class);
+                startActivity(intent);
+                finish();
                 break;
         }
     }

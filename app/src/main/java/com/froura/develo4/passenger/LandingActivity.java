@@ -151,6 +151,7 @@ public class LandingActivity extends AppCompatActivity
     private String user_pic;
     private String user_trusted_id;
     private String user_trusted_name;
+    private String user_database_id;
     private String taxi_fare = "0.00";
     private String duration = "0KM";
     private String distance = "0M";
@@ -165,23 +166,33 @@ public class LandingActivity extends AppCompatActivity
 
         uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-        DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference("services/booking/" + uid);
-        dbRef.addListenerForSingleValueEvent(new ValueEventListener() {
+        final DatabaseReference bookRef = FirebaseDatabase.getInstance().getReference("services/booking/" + uid);
+        bookRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                boolean cancelled = false;
+                String driver_id = "";
                 for (DataSnapshot driverId : dataSnapshot.getChildren()) {
                     if (driverId.getKey().equals("accepted_by")) {
-                        Intent intent = new Intent(LandingActivity.this, DriverAcceptedActivity.class);
-                        intent.putExtra("driver_id", driverId.getValue().toString());
-                        startActivity(intent);
-                        finish();
+                        driver_id = driverId.getValue().toString();
                     }
+
+                    if(driverId.getKey().equals("cancelled_by")) {
+                        cancelled = true;
+                        bookRef.removeValue();
+                    }
+                }
+
+                if(!cancelled && dataSnapshot.exists()) {
+                    Intent intent = new Intent(LandingActivity.this, DriverAcceptedActivity.class);
+                    intent.putExtra("driver_id", driver_id);
+                    startActivity(intent);
+                    finish();
                 }
             }
 
             @Override
-            public void onCancelled(DatabaseError databaseError) {
-            }
+            public void onCancelled(DatabaseError databaseError) { }
         });
 
         toolbar = findViewById(R.id.toolbar);
@@ -744,12 +755,14 @@ public class LandingActivity extends AppCompatActivity
 
                     mGoogleSignInClient.signOut();
                 }
-                FirebaseDatabase.getInstance().getReference("users/passenger/" + uid + "/token").setValue("null");
                 SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
                 SharedPreferences.Editor editor = sharedPref.edit();
                 editor.clear();
                 editor.commit();
                 FirebaseAuth.getInstance().signOut();
+                SuperTask.execute(LandingActivity.this,
+                        TaskConfig.SIGNOUT_URL,
+                        "signout");
                 Intent intent = new Intent(LandingActivity.this, MainActivity.class);
                 startActivity(intent);
                 finish();
@@ -926,7 +939,7 @@ public class LandingActivity extends AppCompatActivity
             case "get_fare":
                 contentValues.put("origins", pickupPlaceId);
                 contentValues.put("destinations", dropoffPlaceId);
-                return contentValues;
+                break;
             case "get_fare_map_point":
                 if (getIntent().getStringExtra("pickupName") != null) {
                     contentValues.put("pickupLatLng", 1);
@@ -941,10 +954,12 @@ public class LandingActivity extends AppCompatActivity
                 } else {
                     contentValues.put("destinations", dropoffPlaceId);
                 }
-                return contentValues;
-            default:
-                return null;
+                break;
+            case "signout":
+                contentValues.put("database_id", user_database_id);
+                break;
         }
+        return contentValues;
     }
 
     private void findPlaceById(String placeId, final int from) {
@@ -1087,6 +1102,7 @@ public class LandingActivity extends AppCompatActivity
                         "None" : jsonObject.getString("mobnum");
                 user_trusted_id = jsonObject.getString("trusted_id").equals("null") ?
                         "None" : jsonObject.getString("trusted_id");
+                user_database_id = jsonObject.getString("database_id");
                 name_header_txt_vw.setText(jsonObject.getString("name"));
                 email_header_txt_vw.setText(user_email);
             }
