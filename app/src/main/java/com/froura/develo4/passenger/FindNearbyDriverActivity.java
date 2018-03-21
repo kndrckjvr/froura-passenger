@@ -87,16 +87,15 @@ public class FindNearbyDriverActivity extends AppCompatActivity {
 
         acceptedRef = FirebaseDatabase.getInstance().getReference("services/booking/"+uid+"/accepted_by");
         acceptedRef.addValueEventListener(new ValueEventListener() {
-            private boolean accepted = false;
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                if(dataSnapshot.getValue() != null && !accepted) {
+                if(dataSnapshot.getValue() != null) {
                     searchTimer.cancel();
                     Intent intent = new Intent(FindNearbyDriverActivity.this, DriverAcceptedActivity.class);
                     intent.putExtra("driver_id",dataSnapshot.getValue().toString());
                     startActivity(intent);
                     finish();
-                    accepted = true;
+                    acceptedRef.removeEventListener(this);
                 }
             }
 

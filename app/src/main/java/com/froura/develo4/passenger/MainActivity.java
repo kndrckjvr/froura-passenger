@@ -1,8 +1,11 @@
 package com.froura.develo4.passenger;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
@@ -59,13 +62,23 @@ public class MainActivity extends AppCompatActivity implements DialogCreator.Dia
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                 if(user == null) {
-                    //Check network connection
                     Intent intent = new Intent(MainActivity.this, SignUpActivity.class);
                     startActivity(intent);
                     finish();
                     return;
                 } else {
-                    updateUserdetails();
+                    if(SuperTask.isNetworkAvailable(MainActivity.this)) {
+                        SuperTask.execute(MainActivity.this,
+                                TaskConfig.CHECK_CONNECTION_URL,
+                                "check_connection");
+                    } else {
+                        DialogCreator.create(MainActivity.this, "connectionError")
+                                .setCancelable(false)
+                                .setTitle("No Internet Connection")
+                                .setMessage("This application needs an Internet Connection.")
+                                .setPositiveButton("Exit")
+                                .show();
+                    }
                 }
             }
         };
@@ -128,14 +141,29 @@ public class MainActivity extends AppCompatActivity implements DialogCreator.Dia
                     }
                 } catch (Exception e) { }
                 break;
+            case "check_connection":
+                try {
+                    JSONObject jsonObject = new JSONObject(json);
+                    if(jsonObject.getString("status").equals("success")) {
+                        updateUserdetails();
+                    }
+                } catch (NullPointerException e) {
+                    DialogCreator.create(MainActivity.this, "connectionError")
+                            .setCancelable(false)
+                            .setTitle("No Internet Connection")
+                            .setMessage("This application needs an Internet Connection.")
+                            .setPositiveButton("Exit")
+                            .show();
+                } catch (Exception e) { }
+                break;
         }
     }
 
     @Override
     public ContentValues setRequestValues(ContentValues contentValues, String id) {
+        contentValues.put("android", 1);
         switch (id) {
             case "register":
-                contentValues.put("android", 1);
                 contentValues.put("firebase_uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
                 contentValues.put("name", name);
                 contentValues.put("email", email);
@@ -143,9 +171,8 @@ public class MainActivity extends AppCompatActivity implements DialogCreator.Dia
                 contentValues.put("img_path", profpic);
                 contentValues.put("token", TaskConfig.CURRENT_TOKEN);
                 return contentValues;
-            default:
-                return null;
         }
+        return contentValues;
     }
 
     public int getImage(String imageName) {
@@ -167,7 +194,13 @@ public class MainActivity extends AppCompatActivity implements DialogCreator.Dia
     }
 
     @Override
-    public void onClickPositiveButton(String actionId) { }
+    public void onClickPositiveButton(String actionId) {
+        switch (actionId) {
+            case "connectionError":
+                finish();
+                break;
+        }
+    }
 
     @Override
     public void onClickNegativeButton(String actionId) { }

@@ -111,7 +111,8 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
                     verification_code_et.setError(null);
                     verification_code_et.setCompoundDrawablesWithIntrinsicBounds(0,0, 0,0);
                 } else {
-                    verification_code_et.setError("Code is required.", getResources().getDrawable(R.drawable.ic_warning_red_24dp));
+                    verification_code_et.setError("Code is required.",
+                            getResources().getDrawable(R.drawable.ic_warning_red_24dp));
                 }
 
             }
@@ -201,7 +202,9 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
                     public void onVerificationFailed(FirebaseException e) {
                         Log.w(TAG, "onVerificationFailed", e);
                         if (e instanceof FirebaseTooManyRequestsException) {
-                            Toast.makeText(PhoneAuthentication.this, "Server Overload! A request has been sent.", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(PhoneAuthentication.this,
+                                    "Server Overload! A request has been sent.",
+                                    Toast.LENGTH_SHORT).show();
                         }
                     }
 
@@ -215,7 +218,8 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
 
     private void registerUser() {
         String user_id = mAuth.getCurrentUser().getUid();
-        final DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference().child("users").child("passenger").child(user_id);
+        final DatabaseReference dbRef = FirebaseDatabase.getInstance().getReference().child("users")
+                .child("passenger").child(user_id);
         dbRef.child("name").setValue(WordUtils.capitalize(name.toLowerCase()));
         dbRef.child("auth").setValue(auth);
         dbRef.child("profile_pic").setValue(profpic);

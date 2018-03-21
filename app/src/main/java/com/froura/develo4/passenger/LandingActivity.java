@@ -118,11 +118,11 @@ public class LandingActivity extends AppCompatActivity
     private LinearLayout dropoff_layout;
     private MenuItem clear_history;
     private GoogleMap mMap;
-    private LocationRequest mLocationRequest;
     private CameraPosition cameraPosition;
     private SupportMapFragment bookingmapFragment;
     private SupportMapFragment reservationmapFragment;
     private GoogleApiClient mGoogleApiClient;
+    private LocationRequest mLocationRequest;
     private GeoDataClient mGeoDataClient;
     private Location mLastLocation;
     private LatLng pickupLocation;
@@ -180,6 +180,14 @@ public class LandingActivity extends AppCompatActivity
                     if(driverId.getKey().equals("cancelled_by")) {
                         cancelled = true;
                         bookRef.removeValue();
+                    }
+
+                    if(driverId.getKey().equals("in_transit")) {
+                        cancelled = false;
+                    }
+
+                    if(driver_id.isEmpty()) {
+                        cancelled = true;
                     }
                 }
 
@@ -665,6 +673,7 @@ public class LandingActivity extends AppCompatActivity
                 }
                 loading_view.setVisibility(View.GONE);
                 history_rec_vw.setVisibility(View.VISIBLE);
+                historyRef.removeEventListener(this);
             }
 
             @Override
