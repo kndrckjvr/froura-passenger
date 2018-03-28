@@ -2,7 +2,6 @@ package com.froura.develo4.passenger.adapter;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -136,7 +135,7 @@ public class TrustedContactAdapter extends RecyclerView.Adapter<TrustedContactAd
     @Override
     public TrustedContactAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LayoutInflater layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View convertView = layoutInflater.inflate(R.layout.user_adapter, parent, false);
+        View convertView = layoutInflater.inflate(R.layout.adapter_user, parent, false);
         ViewHolder mPredictionHolder = new ViewHolder(convertView);
         return mPredictionHolder;
     }

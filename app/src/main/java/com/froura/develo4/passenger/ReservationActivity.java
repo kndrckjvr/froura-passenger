@@ -1,31 +1,54 @@
 package com.froura.develo4.passenger;
 
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.method.ScrollingMovementMethod;
+import android.util.Log;
 import android.view.MenuItem;
+import android.widget.TextView;
 
+import com.froura.develo4.passenger.config.TaskConfig;
+import com.froura.develo4.passenger.tasks.SuperTask;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.MapStyleOptions;
 
-public class ReservationActivity extends AppCompatActivity {
+public class ReservationActivity extends AppCompatActivity implements SuperTask.TaskListener {
 
-    private GoogleMap mMap;
-    private SupportMapFragment mapFragment;
+    private String reservationAddress;
+    TextView response;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reservation);
-
+        response = findViewById(R.id.textView4);
+        response.setMovementMethod(new ScrollingMovementMethod());
         if(getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setDisplayShowHomeEnabled(true);
         }
 
+        reservationAddress = getIntent().getStringExtra("destinationName") != null ?
+                getIntent().getStringExtra("destinationName") :
+                getIntent().getStringExtra("destinationAddress");
+        Log.d(TaskConfig.TAG, reservationAddress);
+        SuperTask.execute(this, TaskConfig.CHECK_TARIFF_URL, "check", "Loading data...");
+    }
+
+    @Override
+    public void onTaskRespond(String json, String id) {
+        response.setText(json+"");
+    }
+
+    @Override
+    public ContentValues setRequestValues(ContentValues contentValues, String id) {
+        contentValues.put("place", reservationAddress);
+        return contentValues;
     }
 
     @Override

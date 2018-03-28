@@ -15,7 +15,6 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.froura.develo4.passenger.R;
-import com.froura.develo4.passenger.SearchActivity;
 import com.froura.develo4.passenger.object.PlaceAutocompleteObject;
 import com.google.android.gms.location.places.AutocompleteFilter;
 import com.google.android.gms.location.places.AutocompletePrediction;
@@ -67,7 +66,7 @@ public class PlaceAutocompleteAdapter extends RecyclerView.Adapter<PlaceAutocomp
     @Override
     public PlaceAutocompleteAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LayoutInflater layoutInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View convertView = layoutInflater.inflate(R.layout.place_adapter, parent, false);
+        View convertView = layoutInflater.inflate(R.layout.adapter_place, parent, false);
         ViewHolder mPredictionHolder = new ViewHolder(convertView);
         return mPredictionHolder;
     }

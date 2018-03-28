@@ -215,6 +215,9 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
         if(getIntent().getIntExtra("hasDestination", -1) == 1) {
             intent.putExtra("hasDestination", 1);
             intent.putExtra("destinationPlaceId", mResultList.get(position).getPlaceId());
+            intent.putExtra("destinationAddress", mResultList.get(position).getPrimaryText()
+                    + " " + mResultList.get(position).getSecondaryText());
+
         } else {
             if(from == 0) {
                 if(hasPickup == 1) {

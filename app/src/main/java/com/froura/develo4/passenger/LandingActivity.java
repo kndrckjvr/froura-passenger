@@ -155,6 +155,7 @@ public class LandingActivity extends AppCompatActivity
     private String taxi_fare = "0.00";
     private String duration = "0KM";
     private String distance = "0M";
+    private String destinationAddress;
     private ViewFlipper viewFlipper;
     private Toolbar toolbar;
     final int LOCATION_REQUEST_CODE = 1;
@@ -398,7 +399,7 @@ public class LandingActivity extends AppCompatActivity
         cameraUpdated = false;
         viewFlipper.setDisplayedChild(1);
         toolbar.setTitle("Reservation");
-        final CardView reservation_details_card_vw = findViewById(R.id.reseravation_details_card_vw);
+        final CardView reservation_details_card_vw = findViewById(R.id.reservation_details_card_vw);
         final TextView destination_txt_vw = findViewById(R.id.destination_txt_vw);
         Button reserve_btn = findViewById(R.id.reservation_btn);
         LinearLayout destination_layout = findViewById(R.id.destination_layout);
@@ -414,8 +415,7 @@ public class LandingActivity extends AppCompatActivity
                     googleMap.setMapStyle(
                             MapStyleOptions.loadRawResourceStyle(
                                     LandingActivity.this, R.raw.mapstyle));
-                } catch (Resources.NotFoundException e) {
-                }
+                } catch (Resources.NotFoundException e) { }
                 mMap = googleMap;
                 mMap.getUiSettings().setMapToolbarEnabled(false);
                 mMap.getUiSettings().setZoomControlsEnabled(false);
@@ -452,6 +452,7 @@ public class LandingActivity extends AppCompatActivity
                                         PlaceLikelihoodBufferResponse likelyPlaces = task.getResult();
                                         for (PlaceLikelihood placeLikelihood : likelyPlaces) {
                                             destinationName = placeLikelihood.getPlace().getName().toString();
+                                            destinationAddress = placeLikelihood.getPlace().getAddress().toString();
                                             destinationLocation = placeLikelihood.getPlace().getLatLng();
                                             destinationPlaceId = placeLikelihood.getPlace().getId();
                                             setText(destination_txt_vw, destinationName);
@@ -522,6 +523,9 @@ public class LandingActivity extends AppCompatActivity
         if (destinationPlaceId != null) {
             intent.putExtra("destinationPlaceId", destinationPlaceId);
             intent.putExtra("hasDestination", 1);
+            intent.putExtra("destinationAddress", getIntent().getStringExtra("destinationAddress") != null ?
+                    getIntent().getStringExtra("destinationAddress") != null: destinationAddress
+                    );
         }
 
         if (getIntent().getStringExtra("destinationName") != null) {

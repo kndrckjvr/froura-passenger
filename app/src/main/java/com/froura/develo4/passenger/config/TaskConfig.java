@@ -14,6 +14,7 @@ public final class TaskConfig {
     public static final String SEND_NOTIFICATION = HTTP_HOST + DIR_ACTION_URL + "send_notification";
     public static final String SIGNOUT_URL = HTTP_HOST + DIR_ACTION_URL + "sign_out";
     public static final String SEND_FEEDBACK = HTTP_HOST + DIR_ACTION_URL + "send_feedback";
+    public static final String CHECK_TARIFF_URL = HTTP_HOST + DIR_ACTION_URL + "check_tariff";
     public static final String TAG = "FROURA_LOG_TAG";
     public static String CURRENT_TOKEN = "";
 }

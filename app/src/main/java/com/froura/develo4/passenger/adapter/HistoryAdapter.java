@@ -2,7 +2,6 @@ package com.froura.develo4.passenger.adapter;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,10 +10,8 @@ import android.widget.TextView;
 
 import com.froura.develo4.passenger.R;
 import com.froura.develo4.passenger.object.HistoryObject;
-import java.text.SimpleDateFormat;
+
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.TimeZone;
 
 /**
  * Created by KendrickAndrew on 26/02/2018.
@@ -38,7 +35,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
     @Override
     public HistoryAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LayoutInflater layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View convertView = layoutInflater.inflate(R.layout.history_adapter, parent, false);
+        View convertView = layoutInflater.inflate(R.layout.adapter_history, parent, false);
         ViewHolder mPredictionHolder = new ViewHolder(convertView);
         return mPredictionHolder;
     }
