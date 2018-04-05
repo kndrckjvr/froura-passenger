@@ -1,4 +1,4 @@
-package com.froura.develo4.passenger;
+package com.froura.develo4.passenger.mapping;
 
 import android.content.Intent;
 import android.os.CountDownTimer;
@@ -8,14 +8,16 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
+import com.froura.develo4.passenger.LandingActivity;
+import com.froura.develo4.passenger.R;
 import com.froura.develo4.passenger.adapter.PlaceAutocompleteAdapter;
+import com.froura.develo4.passenger.libraries.SimpleDividerItemDecoration;
 import com.froura.develo4.passenger.object.PlaceAutocompleteObject;
 import com.google.android.gms.location.places.AutocompleteFilter;
 import com.google.android.gms.location.places.GeoDataClient;
@@ -44,8 +46,6 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
     private CharSequence text;
     private CountDownTimer timer;
 
-    private String TAG = "SEARCH_ACTIVTY_FROURA";
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,6 +71,7 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
         clearImgVw = findViewById(R.id.clearImgVw);
         listRecVw = findViewById(R.id.listRecVw);
         listRecVw.setHasFixedSize(true);
+        listRecVw.addItemDecoration(new SimpleDividerItemDecoration(this));
         listRecVw.setLayoutManager(new LinearLayoutManager(this));
         backImgVw = findViewById(R.id.backImgVw);
         openMap = findViewById(R.id.openMap);
@@ -159,11 +160,9 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
                 } else if(getIntent().getStringExtra("destinationName") != null) {
                     if(getIntent().getStringExtra("destinationName") != null) {
                         intent.putExtra("destinationName", getIntent().getStringExtra("destinationName"));
-                        intent.putExtra("destinationLatLng", getIntent().getStringExtra("destinationLatLng"));
                         intent.putExtra("destinationLat", getIntent().getDoubleExtra("destinationLat", 0));
                         intent.putExtra("destinationLng", getIntent().getDoubleExtra("destinationLng", 0));
                     }
-
                 } else {
                     if(getIntent().getStringExtra("pickupPlaceId") != null)
                         intent.putExtra("pickupPlaceId", pickupPlaceId);
@@ -215,9 +214,6 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
         if(getIntent().getIntExtra("hasDestination", -1) == 1) {
             intent.putExtra("hasDestination", 1);
             intent.putExtra("destinationPlaceId", mResultList.get(position).getPlaceId());
-            intent.putExtra("destinationAddress", mResultList.get(position).getPrimaryText()
-                    + " " + mResultList.get(position).getSecondaryText());
-
         } else {
             if(from == 0) {
                 if(hasPickup == 1) {
@@ -256,7 +252,6 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
             intent.putExtra("hasDestination", 1);
             if(getIntent().getStringExtra("destinationName") != null) {
                 intent.putExtra("destinationName", getIntent().getStringExtra("destinationName"));
-                intent.putExtra("destinationLatLng", getIntent().getStringExtra("destinationLatLng"));
                 intent.putExtra("destinationLat", getIntent().getDoubleExtra("destinationLat", 0));
                 intent.putExtra("destinationLng", getIntent().getDoubleExtra("destinationLng", 0));
             } else {

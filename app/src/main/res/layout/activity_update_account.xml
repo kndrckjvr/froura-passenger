@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#ffffff"
-    tools:context="com.froura.develo4.passenger.UpdateAccountActivity">
+    tools:context="com.froura.develo4.passenger.profile.UpdateAccountActivity">
 
     <ImageView
         android:id="@+id/profpic_img_vw"

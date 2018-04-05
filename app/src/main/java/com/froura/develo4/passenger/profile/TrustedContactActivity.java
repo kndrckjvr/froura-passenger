@@ -1,4 +1,4 @@
-package com.froura.develo4.passenger;
+package com.froura.develo4.passenger.profile;
 
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
@@ -13,6 +13,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 
+import com.froura.develo4.passenger.R;
 import com.froura.develo4.passenger.adapter.TrustedContactAdapter;
 import com.froura.develo4.passenger.libraries.DialogCreator;
 import com.froura.develo4.passenger.libraries.SimpleDividerItemDecoration;

@@ -1,4 +1,4 @@
-package com.froura.develo4.passenger;
+package com.froura.develo4.passenger.mapping;
 
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -13,12 +13,13 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.CardView;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import com.froura.develo4.passenger.LandingActivity;
+import com.froura.develo4.passenger.R;
 import com.froura.develo4.passenger.libraries.DialogCreator;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -98,7 +99,9 @@ public class MapPointActivity extends AppCompatActivity implements
         } else if(getIntent().getStringExtra("destinationName") != null) {
             hasDestination = true;
             destinationName = getIntent().getStringExtra("destinationName");
-            destinationLatLng = new LatLng(getIntent().getDoubleExtra("destinationLat", 0), getIntent().getDoubleExtra("destinationLng", 0));
+            destinationLatLng = new LatLng(
+                    getIntent().getDoubleExtra("destinationLat", 0),
+                    getIntent().getDoubleExtra("destinationLng", 0));
         } else {
             if(getIntent().getStringExtra("pickupPlaceId") != null) {
                 hasPickup = true;
@@ -181,7 +184,6 @@ public class MapPointActivity extends AppCompatActivity implements
         Intent intent = new Intent(MapPointActivity.this, LandingActivity.class);
         if(hasDestination) {
             intent.putExtra("destinationName", bestMatch.getAddressLine(0));
-            intent.putExtra("destinationLatLng", pointLatLng.latitude + "," + pointLatLng.longitude);
             intent.putExtra("destinationLat", pointLatLng.latitude);
             intent.putExtra("destinationLng", pointLatLng.longitude);
             intent.putExtra("hasDestination", 1);
@@ -460,26 +462,37 @@ public class MapPointActivity extends AppCompatActivity implements
     public void onBackPressed() {
         super.onBackPressed();
         Intent intent = new Intent(MapPointActivity.this, LandingActivity.class);
-        if(hasPickup) {
-            intent.putExtra("hasPickup", 1);
-            if(getIntent().getStringExtra("pickupName") != null) {
-                intent.putExtra("pickupName", getIntent().getStringExtra("pickupName"));
-                intent.putExtra("pickupLatLng", getIntent().getStringExtra("pickupLatLng"));
-                intent.putExtra("pickupLat", getIntent().getDoubleExtra("pickupLat", 0));
-                intent.putExtra("pickupLng", getIntent().getDoubleExtra("pickupLng", 0));
+        if(hasDestination) {
+            intent.putExtra("hasDestination", 1);
+            if(getIntent().getStringExtra("destinationName") != null) {
+                intent.putExtra("destinationName", getIntent().getStringExtra("destinationName"));
+                intent.putExtra("destinationLat", getIntent().getDoubleExtra("destinationLat", 0));
+                intent.putExtra("destinationLng", getIntent().getDoubleExtra("destinationLng", 0));
             } else {
-                intent.putExtra("pickupPlaceId", pickupPlaceId);
+                intent.putExtra("destinationPlaceId", destinationPlaceId);
             }
-        }
-        if(hasDropoff) {
-            intent.putExtra("hasDropoff", 1);
-            if(getIntent().getStringExtra("dropoffName") != null) {
-                intent.putExtra("dropoffName", getIntent().getStringExtra("dropoffName"));
-                intent.putExtra("dropoffLatLng", getIntent().getStringExtra("dropoffLatLng"));
-                intent.putExtra("dropoffLat", getIntent().getDoubleExtra("dropoffLat", 0));
-                intent.putExtra("dropoffLng", getIntent().getDoubleExtra("dropoffLng", 0));
-            } else {
-                intent.putExtra("dropoffPlaceId", dropoffPlaceId);
+        } else {
+            if (hasPickup) {
+                intent.putExtra("hasPickup", 1);
+                if (getIntent().getStringExtra("pickupName") != null) {
+                    intent.putExtra("pickupName", getIntent().getStringExtra("pickupName"));
+                    intent.putExtra("pickupLatLng", getIntent().getStringExtra("pickupLatLng"));
+                    intent.putExtra("pickupLat", getIntent().getDoubleExtra("pickupLat", 0));
+                    intent.putExtra("pickupLng", getIntent().getDoubleExtra("pickupLng", 0));
+                } else {
+                    intent.putExtra("pickupPlaceId", pickupPlaceId);
+                }
+            }
+            if (hasDropoff) {
+                intent.putExtra("hasDropoff", 1);
+                if (getIntent().getStringExtra("dropoffName") != null) {
+                    intent.putExtra("dropoffName", getIntent().getStringExtra("dropoffName"));
+                    intent.putExtra("dropoffLatLng", getIntent().getStringExtra("dropoffLatLng"));
+                    intent.putExtra("dropoffLat", getIntent().getDoubleExtra("dropoffLat", 0));
+                    intent.putExtra("dropoffLng", getIntent().getDoubleExtra("dropoffLng", 0));
+                } else {
+                    intent.putExtra("dropoffPlaceId", dropoffPlaceId);
+                }
             }
         }
         startActivity(intent);

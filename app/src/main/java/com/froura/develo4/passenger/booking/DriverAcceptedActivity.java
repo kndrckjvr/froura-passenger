@@ -1,4 +1,4 @@
-package com.froura.develo4.passenger;
+package com.froura.develo4.passenger.booking;
 
 import android.app.ProgressDialog;
 import android.content.ContentValues;
@@ -12,22 +12,16 @@ import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.NavigationView;
 import android.support.design.widget.TextInputEditText;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -39,6 +33,8 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
+import com.froura.develo4.passenger.LandingActivity;
+import com.froura.develo4.passenger.R;
 import com.froura.develo4.passenger.config.TaskConfig;
 import com.froura.develo4.passenger.libraries.DialogCreator;
 import com.froura.develo4.passenger.tasks.SuperTask;
@@ -62,17 +58,11 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.messaging.RemoteMessage;
 
 import org.json.JSONObject;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
-
-import de.hdodenhof.circleimageview.CircleImageView;
-import me.grantland.widget.AutofitHelper;
 
 public class DriverAcceptedActivity extends AppCompatActivity
         implements
@@ -338,7 +328,6 @@ public class DriverAcceptedActivity extends AppCompatActivity
         }
         contentValues.put("sender_uid", user_id);
         contentValues.put("receiver_uid", user_trusted_id);
-        Log.d("DRIVERACCEPTED_AC", contentValues+"");
         return contentValues;
     }
 

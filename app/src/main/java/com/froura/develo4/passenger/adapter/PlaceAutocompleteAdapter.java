@@ -1,6 +1,8 @@
 package com.froura.develo4.passenger.adapter;
 
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
@@ -46,12 +48,28 @@ public class PlaceAutocompleteAdapter extends RecyclerView.Adapter<PlaceAutocomp
     private LatLngBounds BOUNDS = new LatLngBounds(new LatLng(0,0), new LatLng(0,0));
     private AutocompleteFilter mPlaceFilter;
     private PlaceAutoCompleteInterface mListener;
+    private boolean naia = false;
+    private ProgressDialog progressDialog;
 
     public PlaceAutocompleteAdapter(Context mContext, GeoDataClient mGeoDataClient, AutocompleteFilter mPlaceFilter) {
         this.mContext = mContext;
         this.mGeoDataClient = mGeoDataClient;
         this.mPlaceFilter = mPlaceFilter;
         this.mListener = (PlaceAutoCompleteInterface) mContext;
+    }
+
+    public PlaceAutocompleteAdapter(Context mContext, GeoDataClient mGeoDataClient, AutocompleteFilter mPlaceFilter,
+                                    boolean naia) {
+        this.mContext = mContext;
+        this.mGeoDataClient = mGeoDataClient;
+        this.mPlaceFilter = mPlaceFilter;
+        this.mListener = (PlaceAutoCompleteInterface) mContext;
+        this.naia = naia;
+        progressDialog = new ProgressDialog(mContext);
+        progressDialog.setMessage("Loading Terminals...");
+        progressDialog.setIndeterminate(false);
+        progressDialog.setCancelable(false);
+        progressDialog.show();
     }
 
     public interface PlaceAutoCompleteInterface {
@@ -101,6 +119,11 @@ public class PlaceAutocompleteAdapter extends RecyclerView.Adapter<PlaceAutocomp
                     if (mResultList != null) {
                         results.values = mResultList;
                         results.count = mResultList.size();
+                        if(naia) {
+                            mResultList.remove(4);
+                            results.values = mResultList;
+                            results.count = mResultList.size();
+                        }
                     }
                 }
                 return results;
@@ -109,6 +132,8 @@ public class PlaceAutocompleteAdapter extends RecyclerView.Adapter<PlaceAutocomp
             @Override
             protected void publishResults(CharSequence constraint, FilterResults results) {
                 if (results != null && results.count > 0) {
+                    if(progressDialog != null)
+                        progressDialog.dismiss();
                     notifyDataSetChanged();
                 } else { }
             }

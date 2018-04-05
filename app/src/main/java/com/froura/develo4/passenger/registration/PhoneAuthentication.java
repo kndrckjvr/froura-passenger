@@ -1,4 +1,4 @@
-package com.froura.develo4.passenger;
+package com.froura.develo4.passenger.registration;
 
 import android.app.ProgressDialog;
 import android.content.ContentValues;
@@ -10,14 +10,15 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.TextInputEditText;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.Html;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.froura.develo4.passenger.LandingActivity;
+import com.froura.develo4.passenger.MainActivity;
+import com.froura.develo4.passenger.R;
 import com.froura.develo4.passenger.config.TaskConfig;
 import com.froura.develo4.passenger.tasks.SuperTask;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -26,7 +27,6 @@ import com.google.firebase.FirebaseException;
 import com.google.firebase.FirebaseTooManyRequestsException;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthProvider;
 import com.google.firebase.database.DataSnapshot;

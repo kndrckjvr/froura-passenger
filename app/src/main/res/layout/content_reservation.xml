@@ -107,12 +107,12 @@
             android:id="@+id/go_to_my_location"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:background="#95FFFFFF"
             android:padding="7dp"
             android:layout_marginBottom="8dp"
             android:layout_marginRight="12dp"
-            android:background="#95FFFFFF"
             android:src="@drawable/ic_my_location_black_24dp"
-            app:layout_constraintBottom_toTopOf="@+id/reseravation_details_card_vw"
+            app:layout_constraintBottom_toTopOf="@+id/reservation_details_card_vw"
             app:layout_constraintEnd_toEndOf="parent" />
 
 

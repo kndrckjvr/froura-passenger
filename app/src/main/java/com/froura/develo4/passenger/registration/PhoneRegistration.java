@@ -1,4 +1,4 @@
-package com.froura.develo4.passenger;
+package com.froura.develo4.passenger.registration;
 
 import android.content.Intent;
 import android.support.design.widget.TextInputLayout;
@@ -9,6 +9,8 @@ import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
+
+import com.froura.develo4.passenger.R;
 
 public class PhoneRegistration extends AppCompatActivity {
 

@@ -1,23 +1,19 @@
 package com.froura.develo4.passenger;
 
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
 import com.froura.develo4.passenger.config.TaskConfig;
 import com.froura.develo4.passenger.libraries.DialogCreator;
+import com.froura.develo4.passenger.registration.SignUpActivity;
 import com.froura.develo4.passenger.tasks.SuperTask;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;

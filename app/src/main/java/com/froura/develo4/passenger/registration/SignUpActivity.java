@@ -1,4 +1,4 @@
-package com.froura.develo4.passenger;
+package com.froura.develo4.passenger.registration;
 
 import android.app.ProgressDialog;
 import android.content.ContentValues;
@@ -11,7 +11,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.Toast;
 
 import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
@@ -22,6 +21,8 @@ import com.facebook.GraphResponse;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
+import com.froura.develo4.passenger.LandingActivity;
+import com.froura.develo4.passenger.R;
 import com.froura.develo4.passenger.config.TaskConfig;
 import com.froura.develo4.passenger.libraries.SnackBarCreator;
 import com.froura.develo4.passenger.tasks.SuperTask;

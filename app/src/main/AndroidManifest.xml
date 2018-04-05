@@ -16,18 +16,17 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <service
-            android:name=".service.FrouraMessagingService">
+        <service android:name=".service.FrouraMessagingService">
             <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
-        <service
-            android:name=".service.FrouraIdService">
+        <service android:name=".service.FrouraIdService">
             <intent-filter>
-                <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
+                <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
             </intent-filter>
         </service>
+
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
@@ -45,24 +44,25 @@
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name=".SignUpActivity"
+            android:name=".registration.SignUpActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar.Fullscreen" />
         <activity
-            android:name=".PhoneRegistration"
+            android:name=".registration.PhoneRegistration"
             android:label=""
             android:screenOrientation="portrait"
             android:theme="@style/RegistrationTheme" />
         <activity
-            android:name=".PhoneAuthentication"
+            android:name=".registration.PhoneAuthentication"
             android:label=""
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name=".FindNearbyDriverActivity"
+            android:name=".booking.FindNearbyDriverActivity"
             android:label=""
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar.Fullscreen" />
+
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
@@ -87,21 +87,27 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".SearchActivity"
+            android:name=".mapping.SearchActivity"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name=".DriverAcceptedActivity"
+            android:name=".booking.DriverAcceptedActivity"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity
-            android:name=".MapPointActivity"
+            android:name=".mapping.MapPointActivity"
             android:label="Select a Location" />
         <activity
-            android:name=".UpdateAccountActivity"
+            android:name=".profile.UpdateAccountActivity"
             android:label="Update Account" />
         <activity
-            android:name=".TrustedContactActivity"
+            android:name=".profile.TrustedContactActivity"
             android:label="Trusted Contact" />
-        <activity android:name=".ReservationActivity" />
+        <activity
+            android:name=".reservation.TarrifCheckActivity"
+            android:label="Reservation Details" />
+        <activity
+            android:name=".reservation.TerminalActivity"
+            android:label="" />
+        <activity android:name=".reservation.DateTimeNoteActivity"></activity>
     </application>
 
 </manifest>

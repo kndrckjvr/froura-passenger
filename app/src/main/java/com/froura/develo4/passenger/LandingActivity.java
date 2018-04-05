@@ -24,7 +24,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -43,11 +42,16 @@ import com.bumptech.glide.request.RequestOptions;
 import com.facebook.AccessToken;
 import com.facebook.login.LoginManager;
 import com.froura.develo4.passenger.adapter.HistoryAdapter;
+import com.froura.develo4.passenger.booking.DriverAcceptedActivity;
+import com.froura.develo4.passenger.booking.FindNearbyDriverActivity;
 import com.froura.develo4.passenger.config.TaskConfig;
 import com.froura.develo4.passenger.libraries.DialogCreator;
 import com.froura.develo4.passenger.libraries.SimpleDividerItemDecoration;
 import com.froura.develo4.passenger.libraries.SnackBarCreator;
+import com.froura.develo4.passenger.mapping.SearchActivity;
 import com.froura.develo4.passenger.object.HistoryObject;
+import com.froura.develo4.passenger.profile.UpdateAccountActivity;
+import com.froura.develo4.passenger.reservation.TarrifCheckActivity;
 import com.froura.develo4.passenger.tasks.SuperTask;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -441,7 +445,7 @@ public class LandingActivity extends AppCompatActivity
                 if (hasDestination == -1) {
                     PlaceDetectionClient mPlaceDetectionClient =
                             Places.getPlaceDetectionClient(LandingActivity.this,
-                            null);
+                                    null);
                     final Task<PlaceLikelihoodBufferResponse> placeResult =
                             mPlaceDetectionClient.getCurrentPlace(null);
                     placeResult.addOnCompleteListener
@@ -488,9 +492,12 @@ public class LandingActivity extends AppCompatActivity
                                 .bearing(0)
                                 .build();
                         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-                    } else {
+                    } else if(getIntent().getStringExtra("destinationPlaceId") != null) {
                         destinationPlaceId = getIntent().getStringExtra("destinationPlaceId");
                         findPlaceById(destinationPlaceId, 2);
+                    } else {
+                        hasDestination = -1;
+                        setReservation();
                     }
                 }
             }
@@ -519,22 +526,15 @@ public class LandingActivity extends AppCompatActivity
     }
 
     private void reserveLocation() {
-        Intent intent = new Intent(LandingActivity.this, ReservationActivity.class);
+        Intent intent = new Intent(LandingActivity.this, TarrifCheckActivity.class);
         if (destinationPlaceId != null) {
             intent.putExtra("destinationPlaceId", destinationPlaceId);
-            intent.putExtra("hasDestination", 1);
-            intent.putExtra("destinationAddress", getIntent().getStringExtra("destinationAddress") != null ?
-                    getIntent().getStringExtra("destinationAddress") != null: destinationAddress
-                    );
         }
 
         if (getIntent().getStringExtra("destinationName") != null) {
             intent.putExtra("destinationName", destinationName);
-            intent.putExtra("destinationLatLng", destinationLocation.latitude
-                    + "," + destinationLocation.longitude);
             intent.putExtra("destinationLat", destinationLocation.latitude);
             intent.putExtra("destinationLng", destinationLocation.longitude);
-            intent.putExtra("hasDestination", 1);
         }
         startActivity(intent);
         finish();
@@ -550,8 +550,6 @@ public class LandingActivity extends AppCompatActivity
 
         if (getIntent().getStringExtra("destinationName") != null) {
             intent.putExtra("destinationName", destinationName);
-            intent.putExtra("destinationLatLng", destinationLocation.latitude
-                    + "," + destinationLocation.longitude);
             intent.putExtra("destinationLat", destinationLocation.latitude);
             intent.putExtra("destinationLng", destinationLocation.longitude);
             intent.putExtra("hasDestination", 1);
@@ -941,8 +939,7 @@ public class LandingActivity extends AppCompatActivity
                     mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 130));
                     break;
             }
-        } catch (Exception e) {
-        }
+        } catch (Exception e) { }
     }
 
     @Override
@@ -992,8 +989,10 @@ public class LandingActivity extends AppCompatActivity
                         dropoffLocation = myPlace.getLatLng();
                         setFare();
                     } else if (from == 2) {
+                        destinationPlaceId =  myPlace.getId();
                         destinationName = myPlace.getName().toString();
                         destinationLocation = myPlace.getLatLng();
+                        destinationAddress = myPlace.getAddress().toString();
                         TextView destination_txt_vw = findViewById(R.id.destination_txt_vw);
                         places.release();
                         setText(destination_txt_vw, destinationName);
