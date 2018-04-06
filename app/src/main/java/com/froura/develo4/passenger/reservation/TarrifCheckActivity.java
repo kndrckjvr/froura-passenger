@@ -39,7 +39,7 @@ import me.grantland.widget.AutofitHelper;
 
 public class TarrifCheckActivity extends AppCompatActivity implements SuperTask.TaskListener {
 
-    private String destinationAddress;
+    private String destinationName;
     private ArrayList<StateObject> state_list = new ArrayList<>();
     private ArrayList<CityObject> city_list = new ArrayList<>();
     private ArrayList<String> state_name = new ArrayList<>();
@@ -86,12 +86,12 @@ public class TarrifCheckActivity extends AppCompatActivity implements SuperTask.
         if(getIntent().getStringExtra("destinationPlaceId") != null) {
             findPlaceById(getIntent().getStringExtra("destinationPlaceId"));
         } else {
-            progressDialog.dismiss();
+            destinationName = getIntent().getStringExtra("destinationName");
+            destinationLatLng = new LatLng(getIntent().getDoubleExtra("destinationLat", 0.0),
+                    getIntent().getDoubleExtra("destinationLng", 0.0));
+            SuperTask.execute(TarrifCheckActivity.this,
+                    TaskConfig.CHECK_TARIFF_URL, "get_tariff");
         }
-
-        destinationAddress = getIntent().getStringExtra("destinationName") != null ?
-                getIntent().getStringExtra("destinationName") :
-                getIntent().getStringExtra("destinationAddress");
 
         proceed_btn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -108,7 +108,7 @@ public class TarrifCheckActivity extends AppCompatActivity implements SuperTask.
                 if (task.isSuccessful()) {
                     PlaceBufferResponse places = task.getResult();
                     Place myPlace = places.get(0);
-                    destinationAddress = myPlace.getAddress().toString();
+                    destinationName = myPlace.getAddress().toString();
                     destinationLatLng = myPlace.getLatLng();
                     places.release();
 
@@ -122,9 +122,9 @@ public class TarrifCheckActivity extends AppCompatActivity implements SuperTask.
     private void proceed() {
         Intent intent = new Intent(TarrifCheckActivity.this, TerminalActivity.class);
         intent.putExtra("isPickup", pickup_rbtn.isChecked());
-        intent.putExtra("price", price_txt_vw.getText().toString());
+        intent.putExtra("fare", price_txt_vw.getText().toString().substring(4));
         intent.putExtra("destinationPlaceId", getIntent().getStringExtra("destinationPlaceId"));
-        intent.putExtra("destinationAddress", destinationAddress);
+        intent.putExtra("destinationName", destinationName);
         intent.putExtra("destinationLat", destinationLatLng.latitude);
         intent.putExtra("destinationLng", destinationLatLng.longitude);
         startActivity(intent);
@@ -228,7 +228,7 @@ public class TarrifCheckActivity extends AppCompatActivity implements SuperTask.
 
     @Override
     public ContentValues setRequestValues(ContentValues contentValues, String id) {
-        contentValues.put("place", destinationAddress);
+        contentValues.put("place", destinationName);
         return contentValues;
     }
 

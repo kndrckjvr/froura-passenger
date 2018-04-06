@@ -106,7 +106,7 @@
             android:label="Reservation Details" />
         <activity
             android:name=".reservation.TerminalActivity"
-            android:label="" />
+            android:label="Choose a Terminal" />
         <activity android:name=".reservation.DateTimeNoteActivity"></activity>
     </application>
 

@@ -1118,8 +1118,7 @@ public class LandingActivity extends AppCompatActivity
                 name_header_txt_vw.setText(jsonObject.getString("name"));
                 email_header_txt_vw.setText(user_email);
             }
-        } catch (Exception e) {
-        }
+        } catch (Exception e) { }
     }
 
     private boolean locationEnabled() {

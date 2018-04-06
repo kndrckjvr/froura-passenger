@@ -1,19 +1,27 @@
 package com.froura.develo4.passenger.reservation;
 
 import android.content.Intent;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.MenuItem;
 
 import com.froura.develo4.passenger.R;
+import com.froura.develo4.passenger.config.TaskConfig;
 import com.froura.develo4.passenger.libraries.SimpleDividerItemDecoration;
 import com.froura.develo4.passenger.object.PlaceAutocompleteObject;
 import com.froura.develo4.passenger.adapter.PlaceAutocompleteAdapter;
+import com.froura.develo4.passenger.tasks.SuperTask;
 import com.google.android.gms.location.places.AutocompleteFilter;
 import com.google.android.gms.location.places.GeoDataClient;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.PlaceBufferResponse;
 import com.google.android.gms.location.places.Places;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 
 import java.util.ArrayList;
 
@@ -48,14 +56,12 @@ public class TerminalActivity extends AppCompatActivity implements PlaceAutocomp
     @Override
     public void onPlaceClick(ArrayList<PlaceAutocompleteObject> mResultList, int position) {
         Intent intent = new Intent(TerminalActivity.this, DateTimeNoteActivity.class);
-        if(getIntent().getStringExtra("destinationName") != null) {
-            intent.putExtra("destinationName", getIntent().getStringExtra("destinationName"));
-            intent.putExtra("destinationLatLng", getIntent().getStringExtra("destinationLatLng"));
-            intent.putExtra("destinationLat", getIntent().getDoubleExtra("destinationLat", 0));
-            intent.putExtra("destinationLng", getIntent().getDoubleExtra("destinationLng", 0));
-        } else {
-            intent.putExtra("destinationPlaceId", getIntent().getStringExtra("destinationPlaceId"));
-        }
+        intent.putExtra("isPickup", getIntent().getBooleanExtra("isPickup", true));
+        intent.putExtra("destinationPlaceId", getIntent().getStringExtra("destinationPlaceId"));
+        intent.putExtra("destinationName", getIntent().getStringExtra("destinationName"));
+        intent.putExtra("destinationLat", getIntent().getDoubleExtra("destinationLat", 0));
+        intent.putExtra("destinationLng", getIntent().getDoubleExtra("destinationLng", 0));
+        intent.putExtra("fare", getIntent().getStringExtra("fare"));
         intent.putExtra("terminalId", mResultList.get(position).getPlaceId());
         startActivity(intent);
         finish();
@@ -75,13 +81,12 @@ public class TerminalActivity extends AppCompatActivity implements PlaceAutocomp
     public void onBackPressed() {
         super.onBackPressed();
         Intent intent = new Intent(TerminalActivity.this, TarrifCheckActivity.class);
-        if(getIntent().getStringExtra("destinationName") != null) {
+        if(getIntent().getStringExtra("destinationPlaceId") != null) {
+            intent.putExtra("destinationPlaceId", getIntent().getStringExtra("destinationPlaceId"));
+        } else {
             intent.putExtra("destinationName", getIntent().getStringExtra("destinationName"));
-            intent.putExtra("destinationLatLng", getIntent().getStringExtra("destinationLatLng"));
             intent.putExtra("destinationLat", getIntent().getDoubleExtra("destinationLat", 0));
             intent.putExtra("destinationLng", getIntent().getDoubleExtra("destinationLng", 0));
-        } else {
-            intent.putExtra("destinationPlaceId", getIntent().getStringExtra("destinationPlaceId"));
         }
         startActivity(intent);
         finish();
