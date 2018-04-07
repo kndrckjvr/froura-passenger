@@ -19,6 +19,7 @@ import android.widget.TextView;
 import com.froura.develo4.passenger.LandingActivity;
 import com.froura.develo4.passenger.R;
 import com.froura.develo4.passenger.config.TaskConfig;
+import com.froura.develo4.passenger.libraries.SnackBarCreator;
 import com.froura.develo4.passenger.object.CityObject;
 import com.froura.develo4.passenger.object.StateObject;
 import com.froura.develo4.passenger.tasks.SuperTask;
@@ -183,9 +184,13 @@ public class TarrifCheckActivity extends AppCompatActivity implements SuperTask.
                         public void onNothingSelected(AdapterView<?> adapterView) { }
                     });
 
+                    boolean stateFound = true;
+                    boolean cityFound = true;
+
                     if(stateArray.length() > 1) {
                         city_txt_vw.setText("");
                         city_spinner.setVisibility(View.VISIBLE);
+                        stateFound = false;
                     } else {
                         city_txt_vw.setText(state_list.get(0).getName());
                     }
@@ -194,11 +199,19 @@ public class TarrifCheckActivity extends AppCompatActivity implements SuperTask.
                         town_txt_vw.setText("");
                         town_spinner.setVisibility(View.VISIBLE);
                         price_txt_vw.setText("Php " + city_list.get(0).getPrice());
+                        cityFound = false;
                     } else {
                         town_txt_vw.setText(city_list.get(0).getName());
                         price_txt_vw.setText("Php " + city_list.get(0).getPrice());
                     }
                     progressDialog.dismiss();
+                    if(!stateFound && !cityFound) {
+                        SnackBarCreator.set("City and District/Town not found.");
+                        SnackBarCreator.show(proceed_btn);
+                    } else if(!cityFound) {
+                        SnackBarCreator.set("District/Town not found.");
+                        SnackBarCreator.show(proceed_btn);
+                    }
                     break;
             }
         } catch (Exception e) { Log.e(TaskConfig.TAG, e.getMessage()); }
