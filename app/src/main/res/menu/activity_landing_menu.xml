@@ -8,4 +8,11 @@
         app:showAsAction="always"
         android:visible="false"
         />
+    <item
+        android:id="@+id/reservation_list"
+        android:title="Reservation List"
+        android:icon="@drawable/ic_list_white_24dp"
+        app:showAsAction="always"
+        android:visible="false"
+        />
 </menu>

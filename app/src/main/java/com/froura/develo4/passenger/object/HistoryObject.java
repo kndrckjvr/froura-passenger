@@ -16,9 +16,10 @@ public class HistoryObject {
     private LatLng dropoffLoc;
     private String date;
     private String time;
+    private String service;
     private int driver_rating;
 
-    public HistoryObject(String history_id, String driver_id, String dropoffName, String pickupName, LatLng pickupLoc, LatLng dropoffLoc, String date, String time, int driver_rating) {
+    public HistoryObject(String history_id, String driver_id, String dropoffName, String pickupName, LatLng pickupLoc, LatLng dropoffLoc, String date, String time, int driver_rating, String service) {
         this.history_id = history_id;
         this.driver_id = driver_id;
         this.dropoffName = dropoffName;
@@ -27,6 +28,7 @@ public class HistoryObject {
         this.dropoffLoc = dropoffLoc;
         this.date = date;
         this.time = time;
+        this.service = service;
         this.driver_rating = driver_rating;
     }
 
@@ -64,5 +66,9 @@ public class HistoryObject {
 
     public int getDriver_rating() {
         return driver_rating;
+    }
+
+    public String getService() {
+        return service;
     }
 }

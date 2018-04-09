@@ -16,7 +16,7 @@ import android.widget.EditText;
 import com.froura.develo4.passenger.R;
 import com.froura.develo4.passenger.adapter.TrustedContactAdapter;
 import com.froura.develo4.passenger.libraries.DialogCreator;
-import com.froura.develo4.passenger.libraries.SimpleDividerItemDecoration;
+import com.froura.develo4.passenger.libraries.SimpleDividerItemLine;
 import com.froura.develo4.passenger.object.TrustedContactObject;
 
 import org.apache.commons.lang3.text.WordUtils;
@@ -53,7 +53,7 @@ public class TrustedContactActivity extends AppCompatActivity implements
         userList.setHasFixedSize(true);
         userList.setLayoutManager(new LinearLayoutManager(this));
         userList.setAdapter(mAdapter);
-        userList.addItemDecoration(new SimpleDividerItemDecoration(this));
+        userList.addItemDecoration(new SimpleDividerItemLine(this));
 
         search_edit_text = findViewById(R.id.search_edit_text);
         search_edit_text.addTextChangedListener(new TextWatcher() {
@@ -72,7 +72,7 @@ public class TrustedContactActivity extends AppCompatActivity implements
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.trusted_contact_menu, menu);
+        getMenuInflater().inflate(R.menu.activity_trusted_contact_menu, menu);
         return true;
     }
 

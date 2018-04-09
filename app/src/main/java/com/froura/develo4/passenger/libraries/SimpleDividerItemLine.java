@@ -14,11 +14,11 @@ import com.froura.develo4.passenger.R;
  * Created by KendrickAndrew on 11/02/2018.
  */
 
-public class SimpleDividerItemDecoration extends ItemDecoration {
+public class SimpleDividerItemLine extends ItemDecoration {
     private Drawable mDivider;
 
-    public SimpleDividerItemDecoration(Context context) {
-        mDivider = ContextCompat.getDrawable(context,R.drawable.line_divider);
+    public SimpleDividerItemLine(Context context) {
+        mDivider = ContextCompat.getDrawable(context,R.drawable.design_line);
     }
 
     @Override

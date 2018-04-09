@@ -238,7 +238,7 @@ public class PhoneRegistration extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.phone_reg, menu);
+        getMenuInflater().inflate(R.menu.activity_phone_registration, menu);
         return super.onCreateOptionsMenu(menu);
     }
 

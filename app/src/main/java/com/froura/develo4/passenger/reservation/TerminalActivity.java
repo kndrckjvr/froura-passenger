@@ -1,27 +1,19 @@
 package com.froura.develo4.passenger.reservation;
 
 import android.content.Intent;
-import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.MenuItem;
 
 import com.froura.develo4.passenger.R;
-import com.froura.develo4.passenger.config.TaskConfig;
-import com.froura.develo4.passenger.libraries.SimpleDividerItemDecoration;
+import com.froura.develo4.passenger.libraries.SimpleDividerItemLine;
 import com.froura.develo4.passenger.object.PlaceAutocompleteObject;
 import com.froura.develo4.passenger.adapter.PlaceAutocompleteAdapter;
-import com.froura.develo4.passenger.tasks.SuperTask;
 import com.google.android.gms.location.places.AutocompleteFilter;
 import com.google.android.gms.location.places.GeoDataClient;
-import com.google.android.gms.location.places.Place;
-import com.google.android.gms.location.places.PlaceBufferResponse;
 import com.google.android.gms.location.places.Places;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 
 import java.util.ArrayList;
 
@@ -42,7 +34,7 @@ public class TerminalActivity extends AppCompatActivity implements PlaceAutocomp
         listRecVw = findViewById(R.id.terminal_rec_vw);
         listRecVw.setHasFixedSize(true);
         listRecVw.setLayoutManager(new LinearLayoutManager(this));
-        listRecVw.addItemDecoration(new SimpleDividerItemDecoration(this));
+        listRecVw.addItemDecoration(new SimpleDividerItemLine(this));
         mGeoDataClient = Places.getGeoDataClient(this, null);
         AutocompleteFilter typeFilter = new AutocompleteFilter.Builder()
                 .setCountry("PH")
@@ -88,6 +80,9 @@ public class TerminalActivity extends AppCompatActivity implements PlaceAutocomp
             intent.putExtra("destinationLat", getIntent().getDoubleExtra("destinationLat", 0));
             intent.putExtra("destinationLng", getIntent().getDoubleExtra("destinationLng", 0));
         }
+        intent.putExtra("isPickup", getIntent().getBooleanExtra("isPickup", true));
+        intent.putExtra("cityPos", getIntent().getIntExtra("isPickup", -1));
+        intent.putExtra("townPos", getIntent().getIntExtra("isPickup", -1));
         startActivity(intent);
         finish();
     }

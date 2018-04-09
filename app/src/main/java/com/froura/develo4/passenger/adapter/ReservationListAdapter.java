@@ -9,61 +9,62 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.froura.develo4.passenger.R;
-import com.froura.develo4.passenger.object.HistoryObject;
+import com.froura.develo4.passenger.object.ReservationObject;
 
 import java.util.ArrayList;
 
 /**
- * Created by KendrickAndrew on 26/02/2018.
+ * Created by KendrickAndrew on 09/04/2018.
  */
 
-public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHolder> {
+public class ReservationListAdapter extends RecyclerView.Adapter<ReservationListAdapter.ViewHolder> {
 
     private Context context;
-    private HistoryAdapterListener listener;
-    public static ArrayList<HistoryObject> historyList = new ArrayList<>();
+    private ReservationListAdapterListener mListener;
+    private ArrayList<ReservationObject> mList = new ArrayList<>();
+    private String[] status = {"On Process", "Reserved", "On Trip"};
 
-    public interface HistoryAdapterListener {
-        public void onHistoryClick(ArrayList<HistoryObject> resultList, int position);
+    public interface ReservationListAdapterListener {
+        public void onReservationListClick(ArrayList<ReservationObject> resultList, int position);
     }
 
-    public HistoryAdapter(Context context, HistoryAdapterListener listener) {
+    public ReservationListAdapter(Context context, ReservationListAdapterListener mListener, ArrayList<ReservationObject> mList) {
         this.context = context;
-        this.listener = listener;
+        this.mListener = mListener;
+        this.mList = mList;
     }
 
     @Override
-    public HistoryAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LayoutInflater layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View convertView = layoutInflater.inflate(R.layout.adapter_history, parent, false);
+        View convertView = layoutInflater.inflate(R.layout.adapter_reservation_list, parent, false);
         ViewHolder mPredictionHolder = new ViewHolder(convertView);
         return mPredictionHolder;
     }
 
     @Override
-    public void onBindViewHolder(HistoryAdapter.ViewHolder holder, final int position) {
-        HistoryObject currentHistory = historyList.get(position);
+    public void onBindViewHolder(ViewHolder holder, final int position) {
+        holder.date_txt_vw.setText(mList.get(position).getDatetime());
+        holder.pickup_txt_vw.setText(mList.get(position).getPickup_name());
         holder.pickup_txt_vw.setSelected(true);
+        holder.dropoff_txt_vw.setText(mList.get(position).getDropoff_name());
         holder.dropoff_txt_vw.setSelected(true);
-        holder.pickup_txt_vw.setText(currentHistory.getPickupName());
-        holder.dropoff_txt_vw.setText(currentHistory.getDropoffName());
-        holder.date_txt_vw.setText(currentHistory.getDate() + ", " + currentHistory.getTime());
-        holder.service_type_txt_vw.setText(currentHistory.getService());
+        holder.status_txt_vw.setText(status[mList.get(position).getStatus()]);
         holder.row_layout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                listener.onHistoryClick(historyList, position);
+                mListener.onReservationListClick(mList, position);
             }
         });
     }
 
     @Override
     public int getItemCount() {
-        return historyList != null ? historyList.size() : 0;
+        return mList != null ? mList.size() : 0;
     }
 
     public void clearHistory() {
-        historyList.clear();
+        mList.clear();
         notifyDataSetChanged();
     }
 
@@ -71,7 +72,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
         public TextView pickup_txt_vw;
         public TextView dropoff_txt_vw;
         public TextView date_txt_vw;
-        public TextView service_type_txt_vw;
+        public TextView status_txt_vw;
         public LinearLayout row_layout;
         public ViewHolder(View itemView) {
             super(itemView);
@@ -79,7 +80,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
             dropoff_txt_vw = itemView.findViewById(R.id.dropoff_txt_vw);
             date_txt_vw = itemView.findViewById(R.id.date_txt_vw);
             row_layout = itemView.findViewById(R.id.row_layout);
-            service_type_txt_vw = itemView.findViewById(R.id.service_type_txt_vw);
+            status_txt_vw = itemView.findViewById(R.id.status_txt_vw);
         }
     }
 }

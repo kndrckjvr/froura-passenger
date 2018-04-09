@@ -41,6 +41,7 @@ import me.grantland.widget.AutofitHelper;
 public class TarrifCheckActivity extends AppCompatActivity implements SuperTask.TaskListener {
 
     private String destinationName;
+    private String destinationAddress;
     private ArrayList<StateObject> state_list = new ArrayList<>();
     private ArrayList<CityObject> city_list = new ArrayList<>();
     private ArrayList<String> state_name = new ArrayList<>();
@@ -59,6 +60,8 @@ public class TarrifCheckActivity extends AppCompatActivity implements SuperTask.
     private Button proceed_btn;
     private ArrayAdapter<String> town_adapter;
     private ArrayAdapter<String> city_adapter;
+    private int cityPos = 0;
+    private int townPos = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,6 +97,10 @@ public class TarrifCheckActivity extends AppCompatActivity implements SuperTask.
                     TaskConfig.CHECK_TARIFF_URL, "get_tariff");
         }
 
+        if(!getIntent().getBooleanExtra("isPickup", true)) {
+            dropoff_rbtn.setChecked(true);
+        }
+
         proceed_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -109,7 +116,8 @@ public class TarrifCheckActivity extends AppCompatActivity implements SuperTask.
                 if (task.isSuccessful()) {
                     PlaceBufferResponse places = task.getResult();
                     Place myPlace = places.get(0);
-                    destinationName = myPlace.getAddress().toString();
+                    destinationName = myPlace.getName().toString();
+                    destinationAddress = myPlace.getAddress().toString();
                     destinationLatLng = myPlace.getLatLng();
                     places.release();
 
@@ -128,6 +136,8 @@ public class TarrifCheckActivity extends AppCompatActivity implements SuperTask.
         intent.putExtra("destinationName", destinationName);
         intent.putExtra("destinationLat", destinationLatLng.latitude);
         intent.putExtra("destinationLng", destinationLatLng.longitude);
+        intent.putExtra("cityPos", cityPos);
+        intent.putExtra("townPos", townPos);
         startActivity(intent);
         finish();
     }
@@ -164,6 +174,7 @@ public class TarrifCheckActivity extends AppCompatActivity implements SuperTask.
                     town_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                         @Override
                         public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                            townPos = 0;
                             updatePrice(i);
                         }
 
@@ -177,12 +188,23 @@ public class TarrifCheckActivity extends AppCompatActivity implements SuperTask.
                     city_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                         @Override
                         public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                            cityPos = 0;
                             updateTown(i + 1);
                         }
 
                         @Override
                         public void onNothingSelected(AdapterView<?> adapterView) { }
                     });
+
+                    if(getIntent().getIntExtra("cityPos", -1) != -1) {
+                        city_spinner.setSelection(getIntent().getIntExtra("cityPos", -1));
+                        updateTown(getIntent().getIntExtra("cityPos", -1) + 1);
+                    }
+
+                    if(getIntent().getIntExtra("townPos", -1) != -1) {
+                        town_spinner.setSelection(getIntent().getIntExtra("townPos", -1));
+                        updatePrice(getIntent().getIntExtra("townPos", -1));
+                    }
 
                     boolean stateFound = true;
                     boolean cityFound = true;
@@ -241,7 +263,7 @@ public class TarrifCheckActivity extends AppCompatActivity implements SuperTask.
 
     @Override
     public ContentValues setRequestValues(ContentValues contentValues, String id) {
-        contentValues.put("place", destinationName);
+        contentValues.put("place", destinationAddress);
         return contentValues;
     }
 

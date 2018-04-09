@@ -17,7 +17,7 @@ import android.widget.RelativeLayout;
 import com.froura.develo4.passenger.LandingActivity;
 import com.froura.develo4.passenger.R;
 import com.froura.develo4.passenger.adapter.PlaceAutocompleteAdapter;
-import com.froura.develo4.passenger.libraries.SimpleDividerItemDecoration;
+import com.froura.develo4.passenger.libraries.SimpleDividerItemLine;
 import com.froura.develo4.passenger.object.PlaceAutocompleteObject;
 import com.google.android.gms.location.places.AutocompleteFilter;
 import com.google.android.gms.location.places.GeoDataClient;
@@ -71,7 +71,7 @@ public class SearchActivity extends AppCompatActivity implements PlaceAutocomple
         clearImgVw = findViewById(R.id.clearImgVw);
         listRecVw = findViewById(R.id.listRecVw);
         listRecVw.setHasFixedSize(true);
-        listRecVw.addItemDecoration(new SimpleDividerItemDecoration(this));
+        listRecVw.addItemDecoration(new SimpleDividerItemLine(this));
         listRecVw.setLayoutManager(new LinearLayoutManager(this));
         backImgVw = findViewById(R.id.backImgVw);
         openMap = findViewById(R.id.openMap);

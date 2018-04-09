@@ -380,7 +380,7 @@ public class DriverAcceptedActivity extends AppCompatActivity
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.driver_accepted_activity_menu, menu);
+        getMenuInflater().inflate(R.menu.activity_driver_accepted_menu, menu);
         return true;
     }
 

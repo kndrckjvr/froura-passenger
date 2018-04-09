@@ -107,7 +107,13 @@
         <activity
             android:name=".reservation.TerminalActivity"
             android:label="Choose a Terminal" />
-        <activity android:name=".reservation.DateTimeNoteActivity"></activity>
+        <activity
+            android:name=".reservation.DateTimeNoteActivity"
+            android:label="Add Date and Time" />
+        <activity
+            android:name=".reservation.ReservationListActivity"
+            android:label="Reservation List" />
+        <activity android:name=".reservation.SMSReservationActivity"></activity>
     </application>
 
 </manifest>
