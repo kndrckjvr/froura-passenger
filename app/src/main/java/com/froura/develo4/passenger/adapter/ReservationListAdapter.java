@@ -50,6 +50,7 @@ public class ReservationListAdapter extends RecyclerView.Adapter<ReservationList
         holder.dropoff_txt_vw.setText(mList.get(position).getDropoff_name());
         holder.dropoff_txt_vw.setSelected(true);
         holder.status_txt_vw.setText(status[mList.get(position).getStatus()]);
+        holder.fare_txt_vw.setText("Php " + mList.get(position).getPrice());
         holder.row_layout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -73,6 +74,7 @@ public class ReservationListAdapter extends RecyclerView.Adapter<ReservationList
         public TextView dropoff_txt_vw;
         public TextView date_txt_vw;
         public TextView status_txt_vw;
+        public TextView fare_txt_vw;
         public LinearLayout row_layout;
         public ViewHolder(View itemView) {
             super(itemView);
@@ -81,6 +83,7 @@ public class ReservationListAdapter extends RecyclerView.Adapter<ReservationList
             date_txt_vw = itemView.findViewById(R.id.date_txt_vw);
             row_layout = itemView.findViewById(R.id.row_layout);
             status_txt_vw = itemView.findViewById(R.id.status_txt_vw);
+            fare_txt_vw = itemView.findViewById(R.id.fare_txt_vw);
         }
     }
 }

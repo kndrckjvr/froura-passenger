@@ -2,6 +2,7 @@ package com.froura.develo4.passenger.profile;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -27,13 +28,20 @@ import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
+import com.froura.develo4.passenger.MainActivity;
 import com.froura.develo4.passenger.R;
+import com.froura.develo4.passenger.config.TaskConfig;
 import com.froura.develo4.passenger.libraries.SnackBarCreator;
+import com.froura.develo4.passenger.tasks.SuperTask;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -44,7 +52,7 @@ import org.json.JSONObject;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-public class UpdateAccountActivity extends AppCompatActivity {
+public class UpdateAccountActivity extends AppCompatActivity implements SuperTask.TaskListener {
 
     private TextView name_txt_vw;
     private EditText mobnum_edit_txt;
@@ -261,7 +269,8 @@ public class UpdateAccountActivity extends AppCompatActivity {
                 @Override
                 public void onFailure(@NonNull Exception e) {
                     progressDialog.dismiss();
-                    Toast.makeText(UpdateAccountActivity.this, "Error when uploading data.", Toast.LENGTH_SHORT).show();
+                    SnackBarCreator.set("Error when uploading data.");
+                    SnackBarCreator.show(submit_btn);
                     finish();
                 }
             });
@@ -337,7 +346,49 @@ public class UpdateAccountActivity extends AppCompatActivity {
                 "\"database_id\": \""+ database_id +"\"}";
         editor.putString(JSON_DETAILS_KEY, jsonDetails);
         editor.apply();
+        updateUserdetails();
         finish();
+    }
+
+    private void updateUserdetails() {
+        DatabaseReference dbRef = FirebaseDatabase.getInstance()
+                .getReference("users/passenger/"+FirebaseAuth.getInstance().getUid());
+        dbRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if(dataSnapshot != null) {
+                    for(DataSnapshot details : dataSnapshot.getChildren()) {
+                        if(details.getKey().equals("auth")) auth = details.getValue().toString();
+                        if(details.getKey().equals("email")) email = details.getValue().toString();
+                        if(details.getKey().equals("mobnum")) mobnum = details.getValue().toString();
+                        if(details.getKey().equals("name")) name = details.getValue().toString();
+                        if(details.getKey().equals("profile_pic")) profpic = details.getValue().toString();
+                        if(details.getKey().equals("trusted")) trusted_id = details.getValue().toString();
+                    }
+                    SuperTask.execute(UpdateAccountActivity.this,
+                            TaskConfig.REGISTER_USER_URL,
+                            "register");
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) { }
+        });
+
+    }
+
+    @Override
+    public void onTaskRespond(String json, String id) { }
+
+    @Override
+    public ContentValues setRequestValues(ContentValues contentValues, String id) {
+        contentValues.put("firebase_uid", FirebaseAuth.getInstance().getCurrentUser().getUid());
+        contentValues.put("name", name);
+        contentValues.put("email", email);
+        contentValues.put("contact", mobnum);
+        contentValues.put("img_path", profpic);
+        contentValues.put("token", FirebaseInstanceId.getInstance().getToken());
+        return contentValues;
     }
 
     @Override

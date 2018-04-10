@@ -47,8 +47,6 @@ public class MainActivity extends AppCompatActivity implements DialogCreator.Dia
         setContentView(R.layout.activity_main);
         ImageView imageView = findViewById(R.id.loader);
 
-        TaskConfig.CURRENT_TOKEN = FirebaseInstanceId.getInstance().getToken();
-
         Glide.with(this).load(getImage("loader")).into(imageView);
 
         mAuth = FirebaseAuth.getInstance();
@@ -165,7 +163,7 @@ public class MainActivity extends AppCompatActivity implements DialogCreator.Dia
                 contentValues.put("email", email);
                 contentValues.put("contact", mobnum);
                 contentValues.put("img_path", profpic);
-                contentValues.put("token", TaskConfig.CURRENT_TOKEN);
+                contentValues.put("token", FirebaseInstanceId.getInstance().getToken());
                 return contentValues;
         }
         return contentValues;

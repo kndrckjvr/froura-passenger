@@ -17,9 +17,10 @@ public class HistoryObject {
     private String date;
     private String time;
     private String service;
+    private String fare;
     private int driver_rating;
 
-    public HistoryObject(String history_id, String driver_id, String dropoffName, String pickupName, LatLng pickupLoc, LatLng dropoffLoc, String date, String time, int driver_rating, String service) {
+    public HistoryObject(String history_id, String driver_id, String dropoffName, String pickupName, LatLng pickupLoc, LatLng dropoffLoc, String date, String time, int driver_rating, String service, String fare) {
         this.history_id = history_id;
         this.driver_id = driver_id;
         this.dropoffName = dropoffName;
@@ -29,6 +30,7 @@ public class HistoryObject {
         this.date = date;
         this.time = time;
         this.service = service;
+        this.fare = fare;
         this.driver_rating = driver_rating;
     }
 
@@ -70,5 +72,9 @@ public class HistoryObject {
 
     public String getService() {
         return service;
+    }
+
+    public String getFare() {
+        return fare;
     }
 }

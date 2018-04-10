@@ -27,7 +27,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RatingBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
@@ -37,6 +36,7 @@ import com.froura.develo4.passenger.LandingActivity;
 import com.froura.develo4.passenger.R;
 import com.froura.develo4.passenger.config.TaskConfig;
 import com.froura.develo4.passenger.libraries.DialogCreator;
+import com.froura.develo4.passenger.libraries.SnackBarCreator;
 import com.froura.develo4.passenger.tasks.SuperTask;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -105,6 +105,7 @@ public class DriverAcceptedActivity extends AppCompatActivity
     private String user_trusted_id;
     private String user_trusted_name;
     private String user_reason = "";
+    private String user_message = "";
     private float rating = 0;
 
     private String dropoffName;
@@ -187,6 +188,11 @@ public class DriverAcceptedActivity extends AppCompatActivity
                     SuperTask.execute(DriverAcceptedActivity.this,
                             TaskConfig.SEND_NOTIFICATION,
                             "notification_dropoff");
+                    DialogCreator.create(DriverAcceptedActivity.this, "end")
+                            .setTitle("We need your feedback:")
+                            .setView(R.layout.dialog_feedback)
+                            .setPositiveButton("Send")
+                            .show();
                     endTrip.removeEventListener(this);
                 }
             }
@@ -265,8 +271,8 @@ public class DriverAcceptedActivity extends AppCompatActivity
                     alert_trusted_btn.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
-                            Toast.makeText(DriverAcceptedActivity.this,
-                                    "You don't have a Trusted Contact to alert.", Toast.LENGTH_SHORT).show();
+                            SnackBarCreator.set("You don't have a Trusted Contact to alert.");
+                            SnackBarCreator.show(cancel_btn);
                         }
                     });
                 } else {
@@ -287,21 +293,17 @@ public class DriverAcceptedActivity extends AppCompatActivity
     public void onTaskRespond(String json, String id) {
         try {
             JSONObject jsonObject = new JSONObject(json);
-            if(jsonObject.getInt("success") == 1) {
-                Toast.makeText(this, "We have sent your notification.",
-                        Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(this, "Something went wrong.",
-                        Toast.LENGTH_SHORT).show();
-            }
             switch (id) {
+                case "notification_alert":
+                case "notification_in_transit":
                 case "notification_dropoff":
-                    DialogCreator.create(this, "end")
-                            .setTitle("We need your feedback:")
-                            .setView(R.layout.dialog_feedback)
-                            .setPositiveButton("Send")
-                            .setNegativeButton("Cancel")
-                            .show();
+                    if(jsonObject.getInt("success") == 1) {
+                        SnackBarCreator.set("We have sent your notification.");
+                        SnackBarCreator.show(cancel_btn);
+                    } else {
+                        SnackBarCreator.set("Something went wrong.");
+                        SnackBarCreator.show(cancel_btn);
+                    }
                     break;
             }
         } catch (Exception e) { }
@@ -388,7 +390,12 @@ public class DriverAcceptedActivity extends AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.message:
-
+                DialogCreator.create(this, "message")
+                        .setTitle("Send a message:")
+                        .setView(R.layout.dialog_message)
+                        .setPositiveButton("Send")
+                        .setNegativeButton("Cancel")
+                        .show();
                 break;
         }
         return true;
@@ -581,8 +588,16 @@ public class DriverAcceptedActivity extends AppCompatActivity
                         TaskConfig.SEND_FEEDBACK,
                         "end");
                 intent  = new Intent(DriverAcceptedActivity.this, LandingActivity.class);
+                intent.putExtra("bookingFinish", true);
                 startActivity(intent);
                 finish();
+                break;
+            case "message":
+                DatabaseReference bookRef = FirebaseDatabase.getInstance()
+                        .getReference("services/booking/" + user_id + "/message");
+                bookRef.setValue(user_message);
+                SnackBarCreator.set("Message Sent!");
+                SnackBarCreator.show(cancel_btn);
                 break;
         }
     }
@@ -634,6 +649,21 @@ public class DriverAcceptedActivity extends AppCompatActivity
                     public void onRatingChanged(RatingBar ratingBar, float v, boolean b) {
                         rating = v;
                     }
+                });
+                break;
+            case "message":
+                final TextInputEditText message_et = view.findViewById(R.id.message_et);
+                message_et.addTextChangedListener(new TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) { }
+
+                    @Override
+                    public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                        user_message = message_et.getText().toString();
+                    }
+
+                    @Override
+                    public void afterTextChanged(Editable editable) { }
                 });
                 break;
         }

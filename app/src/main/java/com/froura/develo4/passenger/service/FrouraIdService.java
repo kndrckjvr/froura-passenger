@@ -16,18 +16,16 @@ public class FrouraIdService extends FirebaseInstanceIdService implements SuperT
     @Override
     public void onTokenRefresh() {
         super.onTokenRefresh();
-        TaskConfig.CURRENT_TOKEN = FirebaseInstanceId.getInstance().getToken();
         SuperTask.execute(this, TaskConfig.REGISTER_USER_URL, "refresh_token");
     }
 
     @Override
-    public void onTaskRespond(String json, String id) {
-
-    }
+    public void onTaskRespond(String json, String id) { }
 
     @Override
     public ContentValues setRequestValues(ContentValues contentValues, String id) {
-        contentValues.put("token", TaskConfig.CURRENT_TOKEN);
+        contentValues.put("android", 1);
+        contentValues.put("token", FirebaseInstanceId.getInstance().getToken());
         contentValues.put("uid", FirebaseAuth.getInstance().getUid());
         return contentValues;
     }

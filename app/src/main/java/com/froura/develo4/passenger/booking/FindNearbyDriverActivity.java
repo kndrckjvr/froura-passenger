@@ -201,6 +201,14 @@ public class FindNearbyDriverActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        //bookingRef.removeValue();
+        bookingRef.removeValue();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        bookingRef.removeValue();
+        timer.cancel();
+        searchTimer.cancel();
     }
 }

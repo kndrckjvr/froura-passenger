@@ -51,6 +51,12 @@ public class PhoneRegistration extends AppCompatActivity {
         nameTL = findViewById(R.id.nameTl);
         emailTL = findViewById(R.id.emailTL);
 
+        if(getIntent().getBooleanExtra("fromPhoneAuth", false)) {
+            mobET.setText(getIntent().getStringExtra("mobnum"));
+            nameET.setText(getIntent().getStringExtra("name"));
+            emailET.setText(getIntent().getStringExtra("email"));
+        }
+
         mobET.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {  }
@@ -211,8 +217,8 @@ public class PhoneRegistration extends AppCompatActivity {
                 intent.putExtra("name", name);
                 intent.putExtra("email", email);
                 intent.putExtra("phoneReg", true);
-                finish();
                 startActivity(intent);
+                finish();
                 break;
         }
         return true;

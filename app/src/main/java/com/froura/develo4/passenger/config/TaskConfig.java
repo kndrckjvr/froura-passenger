@@ -18,5 +18,4 @@ public final class TaskConfig {
     public static final String RESERVATION_URL = HTTP_HOST + "/execute/addreserve";
     public static final String RESERVATION_LIST_URL = HTTP_HOST + DIR_ACTION_URL + "get_reservations";
     public static final String TAG = "FROURA_LOG_TAG";
-    public static String CURRENT_TOKEN = "";
 }

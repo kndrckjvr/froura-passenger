@@ -15,7 +15,6 @@ import com.froura.develo4.passenger.LandingActivity;
 import com.froura.develo4.passenger.R;
 import com.froura.develo4.passenger.adapter.ReservationListAdapter;
 import com.froura.develo4.passenger.config.TaskConfig;
-import com.froura.develo4.passenger.libraries.SimpleDividerItemSpace;
 import com.froura.develo4.passenger.object.ReservationObject;
 import com.froura.develo4.passenger.tasks.SuperTask;
 import com.google.android.gms.maps.model.LatLng;
@@ -91,7 +90,18 @@ public class ReservationListActivity extends AppCompatActivity implements SuperT
 
     @Override
     public void onReservationListClick(ArrayList<ReservationObject> resultList, int position) {
-
+        Intent intent = new Intent(ReservationListActivity.this, ShowReservationDetailsActivity.class);
+        intent.putExtra("pickupName", resultList.get(position).getPickup_name());
+        intent.putExtra("pickupLat", resultList.get(position).getPickupLatLng().latitude);
+        intent.putExtra("pickupLng", resultList.get(position).getPickupLatLng().longitude);
+        intent.putExtra("dropoffName", resultList.get(position).getDropoff_name());
+        intent.putExtra("dropoffLat", resultList.get(position).getDropoffLatLng().latitude);
+        intent.putExtra("dropoffLng", resultList.get(position).getDropoffLatLng().longitude);
+        intent.putExtra("price", resultList.get(position).getPrice());
+        intent.putExtra("status", resultList.get(position).getStatus());
+        intent.putExtra("datetime", resultList.get(position).getDatetime());
+        intent.putExtra("database_id", resultList.get(position).getDatabase_id());
+        startActivity(intent);
     }
 
     @Override
@@ -129,6 +139,7 @@ public class ReservationListActivity extends AppCompatActivity implements SuperT
 
     @Override
     public ContentValues setRequestValues(ContentValues contentValues, String id) {
+        contentValues.put("android", 1);
         contentValues.put("type", "passenger");
         contentValues.put("id", FirebaseAuth.getInstance().getUid());
         return contentValues;

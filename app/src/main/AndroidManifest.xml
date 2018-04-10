@@ -13,7 +13,7 @@
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <service android:name=".service.FrouraMessagingService">
@@ -113,7 +113,13 @@
         <activity
             android:name=".reservation.ReservationListActivity"
             android:label="Reservation List" />
-        <activity android:name=".reservation.SMSReservationActivity"></activity>
+        <activity
+            android:name=".reservation.ShowReservationDetailsActivity"
+            android:label="Reservation" />
+        <activity
+            android:name=".history.HistorySingleActivity"
+            android:label=""/>
+        <activity android:name=".reservation.SMSReservationActivity" />
     </application>
 
 </manifest>

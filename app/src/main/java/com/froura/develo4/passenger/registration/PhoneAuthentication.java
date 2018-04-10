@@ -20,6 +20,7 @@ import com.froura.develo4.passenger.LandingActivity;
 import com.froura.develo4.passenger.MainActivity;
 import com.froura.develo4.passenger.R;
 import com.froura.develo4.passenger.config.TaskConfig;
+import com.froura.develo4.passenger.libraries.SnackBarCreator;
 import com.froura.develo4.passenger.tasks.SuperTask;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -34,6 +35,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.iid.FirebaseInstanceId;
 
 import org.apache.commons.lang3.text.WordUtils;
 import org.json.JSONObject;
@@ -50,7 +52,7 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
     private TextView mobnum_txt_vw;
     private Button edit_btn;
     private TextInputEditText verification_code_et;
-    private Button verifcation_btn;
+    private Button verification_btn;
     private TextView cntdwn_txt_vw;
     private Button resend_btn;
 
@@ -74,10 +76,11 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
         setContentView(R.layout.activity_phone_authentication);
 
         cntdwn_txt_vw = findViewById(R.id.cntdwn_txt_vw);
-        verifcation_btn = findViewById(R.id.verifcation_btn);
+        verification_btn = findViewById(R.id.verification_btn);
         verification_code_et = findViewById(R.id.verification_code_et);
         mobnum_txt_vw = findViewById(R.id.mobnum_txt_vw);
         resend_btn = findViewById(R.id.resend_btn);
+        edit_btn = findViewById(R.id.edit_btn);
 
         progressDialog = new ProgressDialog(this);
         progressDialog.setTitle("Login");
@@ -89,19 +92,33 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
         email = getIntent().getStringExtra("email");
         name = getIntent().getStringExtra("name");
         phoneReg = getIntent().getBooleanExtra("phoneReg", false);
+
+        edit_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(PhoneAuthentication.this, PhoneRegistration.class);
+                intent.putExtra("fromPhoneAuth", true);
+                intent.putExtra("mobnum", mobnum);
+                intent.putExtra("name", name);
+                intent.putExtra("email", email);
+                startActivity(intent);
+                finish();
+            }
+        });
         
         mAuth = FirebaseAuth.getInstance();
         mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 if(mAuth.getCurrentUser() != null) {
+                    Log.d(TaskConfig.TAG, "im logged in");
                     registerUser();
                     return;
                 }
             }
         };
 
-        verifcation_btn.setOnClickListener(new View.OnClickListener() {
+        verification_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 String mCode = verification_code_et.getText().toString();
@@ -202,9 +219,8 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
                     public void onVerificationFailed(FirebaseException e) {
                         Log.w(TAG, "onVerificationFailed", e);
                         if (e instanceof FirebaseTooManyRequestsException) {
-                            Toast.makeText(PhoneAuthentication.this,
-                                    "Server Overload! A request has been sent.",
-                                    Toast.LENGTH_SHORT).show();
+                            SnackBarCreator.set("Server Overload! A request has been sent.");
+                            SnackBarCreator.show(resend_btn);
                         }
                     }
 
@@ -222,7 +238,6 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
                 .child("passenger").child(user_id);
         dbRef.child("name").setValue(WordUtils.capitalize(name.toLowerCase()));
         dbRef.child("auth").setValue(auth);
-        dbRef.child("profile_pic").setValue(profpic);
         dbRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -238,6 +253,16 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
                         dbRef.child("mobnum").setValue(mobnum);
                     }
 
+                    if(value.get("profile_pic") != null) {
+                        if(!value.get("profile_pic").toString().equals("default")) {
+                            profpic = value.get("profile_pic").toString();
+                        } else {
+                            profpic = "default";
+                        }
+                    } else {
+                        dbRef.child("profile_pic").setValue("default");
+                    }
+
                     if(value.get("email") != null) {
                         if(!value.get("email").toString().equals("null")) {
                             email = value.get("email").toString();
@@ -247,6 +272,7 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
                     } else {
                         dbRef.child("email").setValue(email);
                     }
+
                     if(value.get("trusted") != null) {
                         if(!value.get("trusted").toString().equals("null")) {
                             trusted_id = value.get("trusted").toString();
@@ -299,6 +325,7 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
 
     @Override
     public ContentValues setRequestValues(ContentValues contentValues, String id) {
+        Log.d(TaskConfig.TAG, "im logged in");
         switch (id) {
             case "register":
                 contentValues.put("android", 1);
@@ -307,7 +334,8 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
                 contentValues.put("email", email);
                 contentValues.put("contact", mobnum);
                 contentValues.put("img_path", profpic);
-                contentValues.put("token", TaskConfig.CURRENT_TOKEN);
+                contentValues.put("token", FirebaseInstanceId.getInstance().getToken());
+                Log.d(TaskConfig.TAG, contentValues+"");
                 return contentValues;
             default:
                 return null;
@@ -317,7 +345,11 @@ public class PhoneAuthentication extends AppCompatActivity implements SuperTask.
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        Intent intent = new Intent(PhoneAuthentication.this, MainActivity.class);
+        Intent intent = new Intent(PhoneAuthentication.this, PhoneRegistration.class);
+        intent.putExtra("fromPhoneAuth", true);
+        intent.putExtra("mobnum", mobnum);
+        intent.putExtra("name", name);
+        intent.putExtra("email", email);
         startActivity(intent);
         finish();
     }

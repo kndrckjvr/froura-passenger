@@ -26,6 +26,7 @@ import com.bumptech.glide.request.RequestOptions;
 import com.froura.develo4.passenger.LandingActivity;
 import com.froura.develo4.passenger.R;
 import com.froura.develo4.passenger.config.TaskConfig;
+import com.froura.develo4.passenger.libraries.SnackBarCreator;
 import com.froura.develo4.passenger.tasks.SuperTask;
 import com.google.android.gms.location.places.GeoDataClient;
 import com.google.android.gms.location.places.Place;
@@ -106,9 +107,8 @@ public class DateTimeNoteActivity extends AppCompatActivity implements SuperTask
             @Override
             public void onDateSet(DatePicker datePicker, int year, int month, int day) {
                 if(year < currentYear || month < currentMonth || day <= currentDay) {
-                    Toast.makeText(DateTimeNoteActivity.this,
-                            "Reservation Dates must be a day after the current date.",
-                            Toast.LENGTH_SHORT).show();
+                    SnackBarCreator.set("Reservation Dates must be a day after the current date.");
+                    SnackBarCreator.show(proceed_btn);
                 } else {
                     date_txt_vw.setText(String.format(Locale.ENGLISH, "%s %02d, %04d",
                             monthNames[month], day, year));
@@ -229,6 +229,7 @@ public class DateTimeNoteActivity extends AppCompatActivity implements SuperTask
 
     @Override
     public ContentValues setRequestValues(ContentValues contentValues, String id) {
+        contentValues.put("android", 1);
         contentValues.put("userid", FirebaseAuth.getInstance().getUid());
         contentValues.put("database_id", user_database_id);
         contentValues.put("date", reservationDate);

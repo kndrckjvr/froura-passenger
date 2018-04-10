@@ -263,6 +263,7 @@ public class TarrifCheckActivity extends AppCompatActivity implements SuperTask.
 
     @Override
     public ContentValues setRequestValues(ContentValues contentValues, String id) {
+        contentValues.put("android", 1);
         contentValues.put("place", destinationAddress);
         return contentValues;
     }

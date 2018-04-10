@@ -24,7 +24,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -46,8 +45,8 @@ import com.froura.develo4.passenger.adapter.HistoryAdapter;
 import com.froura.develo4.passenger.booking.DriverAcceptedActivity;
 import com.froura.develo4.passenger.booking.FindNearbyDriverActivity;
 import com.froura.develo4.passenger.config.TaskConfig;
+import com.froura.develo4.passenger.history.HistorySingleActivity;
 import com.froura.develo4.passenger.libraries.DialogCreator;
-import com.froura.develo4.passenger.libraries.SimpleDividerItemSpace;
 import com.froura.develo4.passenger.libraries.SnackBarCreator;
 import com.froura.develo4.passenger.mapping.SearchActivity;
 import com.froura.develo4.passenger.object.HistoryObject;
@@ -156,7 +155,7 @@ public class LandingActivity extends AppCompatActivity
     private String user_name;
     private String user_mobnum;
     private String user_email;
-    private String user_pic;
+    private String user_pic = "default";
     private String user_trusted_id;
     private String user_trusted_name;
     private String user_database_id;
@@ -265,7 +264,7 @@ public class LandingActivity extends AppCompatActivity
         distance_details_txt_vw.setText(distance);
         duration_details_txt_vw.setText(duration);
 
-        if (!locationEnabled())
+        if(!locationEnabled())
             DialogCreator.create(this, "requestLocation")
                     .setTitle("Access Location")
                     .setMessage("Turn on your location settings to be able to get location data.")
@@ -277,7 +276,7 @@ public class LandingActivity extends AppCompatActivity
         hasDestination = getIntent().getIntExtra("hasDestination", -1);
         noDriver = getIntent().getIntExtra("noDriver", -1);
 
-        if (noDriver == 1) {
+        if(noDriver == 1) {
             DialogCreator.create(this, "noDriverFound")
                     .setTitle("No Driver Found")
                     .setMessage("Drivers are currently busy right now. Please try again later.")
@@ -285,7 +284,12 @@ public class LandingActivity extends AppCompatActivity
                     .show();
         }
 
-        if (hasDestination == 1 || getIntent().getBooleanExtra("reservationComplete", false)) {
+        if(getIntent().getBooleanExtra("bookingFinish", false)) {
+            SnackBarCreator.set("Thank you for giving your feedback!");
+            SnackBarCreator.show(booking_btn);
+        }
+
+        if(hasDestination == 1 || getIntent().getBooleanExtra("reservationComplete", false)) {
             navigationView.getMenu().getItem(1).setChecked(true);
             setReservation();
         } else {
@@ -305,7 +309,7 @@ public class LandingActivity extends AppCompatActivity
                 }
             }
 
-            if (getIntent().getStringExtra("dropoffName") != null) {
+            if(getIntent().getStringExtra("dropoffName") != null) {
                 setText(dropoff_txt_vw, dropoffName = getIntent().getStringExtra("dropoffName"));
                 dropoffLocation = new LatLng(getIntent().getDoubleExtra("dropoffLat", 0),
                         getIntent().getDoubleExtra("dropoffLng", 0));
@@ -319,7 +323,7 @@ public class LandingActivity extends AppCompatActivity
                 changeBookBtn();
             }
 
-            if (hasPickup == 1 && hasDropoff == 1) {
+            if(hasPickup == 1 && hasDropoff == 1) {
                 if (getIntent().getStringExtra("pickupName") != null || getIntent().getStringExtra("dropoffName") != null) {
                     SuperTask.execute(this,
                             TaskConfig.CREATE_TAXI_FARE_URL,
@@ -619,7 +623,6 @@ public class LandingActivity extends AppCompatActivity
         history_rec_vw.setAdapter(historyAdapter);
         history_rec_vw.setHasFixedSize(true);
         history_rec_vw.setLayoutManager(new LinearLayoutManager(this));
-        history_rec_vw.addItemDecoration(new SimpleDividerItemSpace(this));
         history_rec_vw.setVisibility(View.GONE);
         loading_view.setVisibility(View.VISIBLE);
         historyRef = FirebaseDatabase.getInstance().getReference("history/" + uid);
@@ -639,6 +642,7 @@ public class LandingActivity extends AppCompatActivity
                         String date = "";
                         String time = "";
                         String service = "";
+                        String fare = "";
                         double lat = 0;
                         double lng = 0;
                         for (DataSnapshot userHistory : historyIds.getChildren()) {
@@ -697,11 +701,14 @@ public class LandingActivity extends AppCompatActivity
                                 case "service":
                                     service = userHistory.getValue().toString();
                                     break;
+                                case "price":
+                                    fare = userHistory.getValue().toString();
+                                    break;
                             }
                         }
                         HistoryAdapter.historyList.add(new HistoryObject(history_id,
                                 driver_id, dropoff_name, pickup_name,
-                                pickup_location, dropoff_location, date, time, driver_rating, service));
+                                pickup_location, dropoff_location, date, time, driver_rating, service, fare));
                         historyAdapter.notifyDataSetChanged();
                         blank_view.setVisibility(View.GONE);
                     }
@@ -763,7 +770,19 @@ public class LandingActivity extends AppCompatActivity
 
     @Override
     public void onHistoryClick(ArrayList<HistoryObject> resultList, int position) {
-        //new activity
+        Intent intent = new Intent(LandingActivity.this, HistorySingleActivity.class);
+        intent.putExtra("pickupName", resultList.get(position).getPickupName());
+        intent.putExtra("pickupLat", resultList.get(position).getPickupLoc().latitude);
+        intent.putExtra("pickupLng", resultList.get(position).getPickupLoc().longitude);
+        intent.putExtra("dropoffName", resultList.get(position).getDropoffName());
+        intent.putExtra("dropoffLat", resultList.get(position).getDropoffLoc().latitude);
+        intent.putExtra("dropoffLng", resultList.get(position).getDropoffLoc().longitude);
+        intent.putExtra("price", resultList.get(position).getFare());
+        intent.putExtra("service", resultList.get(position).getService());
+        intent.putExtra("datetime", resultList.get(position).getDate() + ", "
+                + resultList.get(position).getTime());
+        intent.putExtra("database_id", resultList.get(position).getHistory_id());
+        startActivity(intent);
     }
 
     private void showOptionsMenu(int id) {
@@ -787,7 +806,7 @@ public class LandingActivity extends AppCompatActivity
             case R.id.booking:
                 bookingmapFragment = (SupportMapFragment) getSupportFragmentManager()
                         .findFragmentById(R.id.map);
-
+                changeBookBtn();
                 bookingmapFragment.getMapAsync(this);
                 viewFlipper.setDisplayedChild(0);
                 toolbar.setTitle("Booking");
@@ -804,8 +823,6 @@ public class LandingActivity extends AppCompatActivity
             case R.id.settings:
                 viewFlipper.setDisplayedChild(4);
                 toolbar.setTitle("Settings");
-                EditText token_et = findViewById(R.id.token_et);
-                token_et.setText(TaskConfig.CURRENT_TOKEN);
                 break;
             case R.id.logout:
                 String providerid = "";
@@ -859,7 +876,7 @@ public class LandingActivity extends AppCompatActivity
         Button update = findViewById(R.id.update_btn);
 
         Glide.with(this)
-                .load(user_pic)
+                .load((user_pic.equals("default") ? getImage("placeholder") : user_pic))
                 .apply(RequestOptions.circleCropTransform())
                 .into(profpicImgVw);
 
@@ -1206,8 +1223,7 @@ public class LandingActivity extends AppCompatActivity
             googleMap.setMapStyle(
                     MapStyleOptions.loadRawResourceStyle(
                             this, R.raw.mapstyle));
-        } catch (Resources.NotFoundException e) {
-        }
+        } catch (Resources.NotFoundException e) { }
         mMap = googleMap;
         mMap.getUiSettings().setMapToolbarEnabled(false);
         mMap.getUiSettings().setZoomControlsEnabled(false);

@@ -21,7 +21,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:visibility="gone"
-            android:background="#FFFFFF" />
+            android:background="#F3F3F3" />
 
         <RelativeLayout
             android:id="@+id/loading_view"

@@ -49,6 +49,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
         holder.dropoff_txt_vw.setText(currentHistory.getDropoffName());
         holder.date_txt_vw.setText(currentHistory.getDate() + ", " + currentHistory.getTime());
         holder.service_type_txt_vw.setText(currentHistory.getService());
+        holder.fare_txt_vw.setText(currentHistory.getFare());
         holder.row_layout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -72,6 +73,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
         public TextView dropoff_txt_vw;
         public TextView date_txt_vw;
         public TextView service_type_txt_vw;
+        public TextView fare_txt_vw;
         public LinearLayout row_layout;
         public ViewHolder(View itemView) {
             super(itemView);
@@ -80,6 +82,7 @@ public class HistoryAdapter extends RecyclerView.Adapter<HistoryAdapter.ViewHold
             date_txt_vw = itemView.findViewById(R.id.date_txt_vw);
             row_layout = itemView.findViewById(R.id.row_layout);
             service_type_txt_vw = itemView.findViewById(R.id.service_type_txt_vw);
+            fare_txt_vw = itemView.findViewById(R.id.fare_txt_vw);
         }
     }
 }

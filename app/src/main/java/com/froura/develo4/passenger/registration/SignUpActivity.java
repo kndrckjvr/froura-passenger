@@ -209,7 +209,6 @@ public class SignUpActivity extends AppCompatActivity implements SuperTask.TaskL
         dbRef.child("name").setValue(WordUtils.capitalize(name.toLowerCase()));
         dbRef.child("auth").setValue(auth);
         dbRef.child("profile_pic").setValue(profpic);
-        dbRef.child("token").setValue(FirebaseInstanceId.getInstance().getToken());
         dbRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -280,7 +279,7 @@ public class SignUpActivity extends AppCompatActivity implements SuperTask.TaskL
                 contentValues.put("email", email);
                 contentValues.put("contact", mobnum);
                 contentValues.put("img_path", profpic);
-                contentValues.put("token", TaskConfig.CURRENT_TOKEN);
+                contentValues.put("token", FirebaseInstanceId.getInstance().getToken());
                 return contentValues;
             default:
                 return null;

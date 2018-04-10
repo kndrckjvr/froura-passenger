@@ -111,7 +111,7 @@
                 android:background="@drawable/background_border_sharp"
                 android:layout_below="@+id/point_name_layout"
                 android:textSize="23sp"
-                android:text="BOOK"
+                android:text="Select"
                 android:fontFamily="@font/fjalla_one_regular"/>
         </RelativeLayout>
 
