@@ -29,6 +29,7 @@ public class FindNearbyDriverActivity extends AppCompatActivity {
     private String uid;
     private DatabaseReference bookingRef;
     private DatabaseReference acceptedRef;
+    private boolean bookingAccepted = false;
 
     private Button btnCancel;
 
@@ -90,6 +91,7 @@ public class FindNearbyDriverActivity extends AppCompatActivity {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if(dataSnapshot.getValue() != null) {
                     searchTimer.cancel();
+                    bookingAccepted = true;
                     Intent intent = new Intent(FindNearbyDriverActivity.this, DriverAcceptedActivity.class);
                     intent.putExtra("driver_id",dataSnapshot.getValue().toString());
                     startActivity(intent);
@@ -199,15 +201,9 @@ public class FindNearbyDriverActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
-        bookingRef.removeValue();
-    }
-
-    @Override
     protected void onDestroy() {
         super.onDestroy();
-        bookingRef.removeValue();
+        if(!bookingAccepted) bookingRef.removeValue();
         timer.cancel();
         searchTimer.cancel();
     }

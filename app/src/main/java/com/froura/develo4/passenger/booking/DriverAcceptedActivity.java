@@ -19,6 +19,7 @@ import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -29,8 +30,12 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.SimpleTarget;
+import com.bumptech.glide.request.target.Target;
 import com.bumptech.glide.request.transition.Transition;
 import com.froura.develo4.passenger.LandingActivity;
 import com.froura.develo4.passenger.R;
@@ -167,11 +172,31 @@ public class DriverAcceptedActivity extends AppCompatActivity
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if(dataSnapshot.exists()) {
+                    Log.d(TaskConfig.TAG, "in-transit");
                     toolbar.setTitle("In-transit");
                     SuperTask.execute(DriverAcceptedActivity.this,
                             TaskConfig.SEND_NOTIFICATION,
                             "notification_in_transit");
                     inTransit.removeEventListener(this);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) { }
+        });
+
+        final DatabaseReference cancelled = FirebaseDatabase.getInstance()
+                .getReference("services/booking/"+user_id+"/cancelled_by");
+        cancelled.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if(dataSnapshot.exists()) {
+                    Log.d(TaskConfig.TAG, "cancelled");
+                    Intent intent = new Intent(DriverAcceptedActivity.this, LandingActivity.class);
+                    intent.putExtra("driverCancelled", true);
+                    startActivity(intent);
+                    finish();
+                    cancelled.removeEventListener(this);
                 }
             }
 
@@ -185,6 +210,7 @@ public class DriverAcceptedActivity extends AppCompatActivity
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if(dataSnapshot.exists()) {
+                    Log.d(TaskConfig.TAG, "end");
                     SuperTask.execute(DriverAcceptedActivity.this,
                             TaskConfig.SEND_NOTIFICATION,
                             "notification_dropoff");
@@ -446,35 +472,36 @@ public class DriverAcceptedActivity extends AppCompatActivity
     }
 
     private void loadMarkerIcon(final Marker marker) {
-        if(driver_profpic.equals("default"))
-            Glide.with(getApplicationContext()).asBitmap()
-                    .load(getImage("placeholder"))
-                    .apply(RequestOptions.circleCropTransform())
-                    .into(new SimpleTarget<Bitmap>(150,150) {
-                        @Override
-                        public void onResourceReady(@NonNull Bitmap resource,
-                                                    @Nullable Transition<? super Bitmap> transition) {
-                            BitmapDescriptor icon = BitmapDescriptorFactory.fromBitmap(resource);
-                            marker.setIcon(icon);
-                        }
-                    });
-        else
-            Glide.with(getApplicationContext()).asBitmap()
-                .load(driver_profpic)
-                .apply(RequestOptions.circleCropTransform())
-                .into(new SimpleTarget<Bitmap>(100,100) {
-            @Override
-            public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
-                    BitmapDescriptor icon = BitmapDescriptorFactory.fromBitmap(resource);
-                    marker.setIcon(icon);
-                }
-            });
+        if(mMap != null) {
+            if(driver_profpic.equals("default"))
+                Glide.with(getApplicationContext()).asBitmap()
+                        .load(getImage("placeholder"))
+                        .apply(RequestOptions.circleCropTransform())
+                        .into(new SimpleTarget<Bitmap>(150,150) {
+                            @Override
+                            public void onResourceReady(@NonNull Bitmap resource,
+                                                        @Nullable Transition<? super Bitmap> transition) {
+                                BitmapDescriptor icon = BitmapDescriptorFactory.fromBitmap(resource);
+                                marker.setIcon(icon);
+                            }
+                        });
+            else
+                Glide.with(getApplicationContext()).asBitmap()
+                        .load(driver_profpic)
+                        .apply(RequestOptions.circleCropTransform())
+                        .into(new SimpleTarget<Bitmap>(100,100) {
+                            @Override
+                            public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
+                                BitmapDescriptor icon = BitmapDescriptorFactory.fromBitmap(resource);
+                                marker.setIcon(icon);
+                            }
+                        });
+        }
     }
 
     public int getImage(String imageName) {
-        int drawableResourceId = this.getResources()
+        return this.getResources()
                 .getIdentifier(imageName, "drawable", this.getPackageName());
-        return drawableResourceId;
     }
 
     @Override

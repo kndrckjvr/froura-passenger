@@ -284,6 +284,14 @@ public class LandingActivity extends AppCompatActivity
                     .show();
         }
 
+        if(getIntent().getBooleanExtra("driverCancelled", false)) {
+            DialogCreator.create(this, "noDriverFound")
+                    .setTitle("Driver Cancelled")
+                    .setMessage("Driver has cancelled this booking.")
+                    .setPositiveButton("OK")
+                    .show();
+        }
+
         if(getIntent().getBooleanExtra("bookingFinish", false)) {
             SnackBarCreator.set("Thank you for giving your feedback!");
             SnackBarCreator.show(booking_btn);
