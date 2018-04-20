@@ -234,7 +234,6 @@ public class LandingActivity extends AppCompatActivity
             public void onClick(View view) {
                 setAccountProfile();
                 drawer.closeDrawer(GravityCompat.START);
-                drawer = findViewById(R.id.drawer_layout);
                 navigationView.getMenu().getItem(3).setChecked(true);
             }
         });

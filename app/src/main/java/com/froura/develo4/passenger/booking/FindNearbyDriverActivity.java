@@ -112,15 +112,29 @@ public class FindNearbyDriverActivity extends AppCompatActivity {
         DatabaseReference drvAvailable = FirebaseDatabase.getInstance().getReference().child("available_drivers");
 
         GeoFire geoFire = new GeoFire(drvAvailable);
-        geoQuery = geoFire.queryAtLocation(new GeoLocation(getIntent().getDoubleExtra("pickupLat", 0), getIntent().getDoubleExtra("pickupLng", 0)), radius);
+        geoQuery = geoFire.queryAtLocation(new GeoLocation(getIntent().getDoubleExtra("pickupLat", 0),
+                getIntent().getDoubleExtra("pickupLng", 0)), radius);
         geoQuery.removeAllListeners();
 
         geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
             @Override
             public void onKeyEntered(String key, GeoLocation location) {
                 if(driverFound) return;
-                bookingRef.child("nearest_driver").setValue(key);
-                driverFound = true;
+                final String driver_id = key;
+                DatabaseReference driver = FirebaseDatabase.getInstance()
+                        .getReference("available_drivers/"+key +"/nearest_passenger");
+                driver.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if(!dataSnapshot.exists()) {
+                            bookingRef.child("nearest_driver").setValue(driver_id);
+                            driverFound = true;
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) { }
+                });
             }
 
             @Override
@@ -157,7 +171,8 @@ public class FindNearbyDriverActivity extends AppCompatActivity {
             intent.putExtra("pickupPlaceId", getIntent().getStringExtra("pickupPlaceId"));
         else {
             intent.putExtra("pickupName", getIntent().getStringExtra("pickupName"));
-            intent.putExtra("pickupLatLng", getIntent().getDoubleExtra("pickupLat", 0) + "," + getIntent().getDoubleExtra("pickupLng", 0));
+            intent.putExtra("pickupLatLng", getIntent().getDoubleExtra("pickupLat", 0)
+                    + "," + getIntent().getDoubleExtra("pickupLng", 0));
             intent.putExtra("pickupLat", getIntent().getDoubleExtra("pickupLat", 0));
             intent.putExtra("pickupLng", getIntent().getDoubleExtra("pickupLng", 0));
         }
@@ -165,7 +180,8 @@ public class FindNearbyDriverActivity extends AppCompatActivity {
             intent.putExtra("dropoffPlaceId", getIntent().getStringExtra("dropoffPlaceId"));
         else {
             intent.putExtra("dropoffName", getIntent().getStringExtra("dropoffName"));
-            intent.putExtra("dropoffLatLng", getIntent().getDoubleExtra("dropoffLat", 0) + "," + getIntent().getDoubleExtra("dropoffLng", 0));
+            intent.putExtra("dropoffLatLng", getIntent().getDoubleExtra("dropoffLat", 0)
+                    + "," + getIntent().getDoubleExtra("dropoffLng", 0));
             intent.putExtra("dropoffLat", getIntent().getDoubleExtra("dropoffLat", 0));
             intent.putExtra("dropoffLng", getIntent().getDoubleExtra("dropoffLng", 0));
         }
@@ -184,7 +200,8 @@ public class FindNearbyDriverActivity extends AppCompatActivity {
             intent.putExtra("pickupPlaceId", getIntent().getStringExtra("pickupPlaceId"));
         else {
             intent.putExtra("pickupName", getIntent().getStringExtra("pickupName"));
-            intent.putExtra("pickupLatLng", getIntent().getDoubleExtra("pickupLat", 0) + "," + getIntent().getDoubleExtra("pickupLng", 0));
+            intent.putExtra("pickupLatLng", getIntent().getDoubleExtra("pickupLat", 0)
+                    + "," + getIntent().getDoubleExtra("pickupLng", 0));
             intent.putExtra("pickupLat", getIntent().getDoubleExtra("pickupLat", 0));
             intent.putExtra("pickupLng", getIntent().getDoubleExtra("pickupLng", 0));
         }
@@ -192,7 +209,8 @@ public class FindNearbyDriverActivity extends AppCompatActivity {
             intent.putExtra("dropoffPlaceId", getIntent().getStringExtra("dropoffPlaceId"));
         else {
             intent.putExtra("dropoffName", getIntent().getStringExtra("dropoffName"));
-            intent.putExtra("dropoffLatLng", getIntent().getDoubleExtra("dropoffLat", 0) + "," + getIntent().getDoubleExtra("dropoffLng", 0));
+            intent.putExtra("dropoffLatLng", getIntent().getDoubleExtra("dropoffLat", 0)
+                    + "," + getIntent().getDoubleExtra("dropoffLng", 0));
             intent.putExtra("dropoffLat", getIntent().getDoubleExtra("dropoffLat", 0));
             intent.putExtra("dropoffLng", getIntent().getDoubleExtra("dropoffLng", 0));
         }

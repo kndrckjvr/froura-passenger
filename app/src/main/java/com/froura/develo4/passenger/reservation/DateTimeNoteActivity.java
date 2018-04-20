@@ -216,6 +216,7 @@ public class DateTimeNoteActivity extends AppCompatActivity implements SuperTask
 
     @Override
     public void onTaskRespond(String json, String id) {
+        Log.d(TaskConfig.TAG, json+"");
         try {
             JSONObject jsonObject = new JSONObject(json);
             if(jsonObject.getBoolean("success")) {
