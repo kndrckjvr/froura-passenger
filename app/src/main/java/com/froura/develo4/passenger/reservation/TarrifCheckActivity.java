@@ -236,7 +236,7 @@ public class TarrifCheckActivity extends AppCompatActivity implements SuperTask.
                     }
                     break;
             }
-        } catch (Exception e) { Log.e(TaskConfig.TAG, e.getMessage()); }
+        } catch (Exception e) { e.printStackTrace(); Log.e(TaskConfig.TAG, e.getMessage()); }
     }
 
     private void updateTown(int i) {

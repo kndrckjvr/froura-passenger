@@ -225,7 +225,7 @@ public class DateTimeNoteActivity extends AppCompatActivity implements SuperTask
                 startActivity(intent);
                 finish();
             }
-        } catch (JSONException e) { }
+        } catch (Exception e) { }
     }
 
     @Override
@@ -251,8 +251,8 @@ public class DateTimeNoteActivity extends AppCompatActivity implements SuperTask
         contentValues.put("end_lat", getIntent().getDoubleExtra("destinationLat", 0.0));
         contentValues.put("end_lng", getIntent().getDoubleExtra("destinationLng", 0.0));
         contentValues.put("fare", getIntent().getStringExtra("fare"));
-        contentValues.put("origin_state", 1);
-        contentValues.put("origin_city", 1);
+        contentValues.put("origin_state", 0);
+        contentValues.put("origin_city", 0);
         Log.d(TaskConfig.TAG, "setReq: "+contentValues);
         return contentValues;
     }
