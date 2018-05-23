@@ -24,6 +24,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -163,6 +164,7 @@ public class LandingActivity extends AppCompatActivity
     private String duration = "0KM";
     private String distance = "0M";
     private String destinationAddress;
+    private String driver_id = "";
     private ViewFlipper viewFlipper;
     private Toolbar toolbar;
     final int LOCATION_REQUEST_CODE = 1;
@@ -196,6 +198,7 @@ public class LandingActivity extends AppCompatActivity
 
                     if(driver_id.isEmpty()) {
                         cancelled = true;
+                        bookRef.removeValue();
                     }
                 }
 

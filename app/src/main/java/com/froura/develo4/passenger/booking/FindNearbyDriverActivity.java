@@ -29,9 +29,11 @@ public class FindNearbyDriverActivity extends AppCompatActivity {
     private String uid;
     private DatabaseReference bookingRef;
     private DatabaseReference acceptedRef;
+    private DatabaseReference driver;
     private boolean bookingAccepted = false;
 
     private Button btnCancel;
+    private String driver_id;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +68,9 @@ public class FindNearbyDriverActivity extends AppCompatActivity {
 
             @Override
             public void onFinish() {
+                DatabaseReference ref = FirebaseDatabase.getInstance()
+                        .getReference("users/driver/"+driver_id+"/nearest_passenger");
+                ref.removeValue();
                 bookingRef.removeValue();
                 noDriverNearby();
             }
@@ -109,7 +114,7 @@ public class FindNearbyDriverActivity extends AppCompatActivity {
     private GeoQuery geoQuery;
     private boolean driverFound = false;
     private void findNearbyDriver() {
-        DatabaseReference drvAvailable = FirebaseDatabase.getInstance().getReference().child("available_drivers");
+        final DatabaseReference drvAvailable = FirebaseDatabase.getInstance().getReference().child("working_drivers");
 
         GeoFire geoFire = new GeoFire(drvAvailable);
         geoQuery = geoFire.queryAtLocation(new GeoLocation(getIntent().getDoubleExtra("pickupLat", 0),
@@ -120,14 +125,16 @@ public class FindNearbyDriverActivity extends AppCompatActivity {
             @Override
             public void onKeyEntered(String key, GeoLocation location) {
                 if(driverFound) return;
-                final String driver_id = key;
-                DatabaseReference driver = FirebaseDatabase.getInstance()
-                        .getReference("available_drivers/"+key +"/nearest_passenger");
+                driver_id = key;
+                drvAvailable.child(key).child("nearest_passenger").setValue(uid);
+                driver = FirebaseDatabase.getInstance()
+                        .getReference("users/driver/"+key +"/nearest_passenger");
                 driver.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         if(!dataSnapshot.exists()) {
                             bookingRef.child("nearest_driver").setValue(driver_id);
+                            driver.setValue(uid);
                             driverFound = true;
                         }
                     }
@@ -165,6 +172,7 @@ public class FindNearbyDriverActivity extends AppCompatActivity {
     private void noDriverNearby() {
         Intent intent = new Intent(this, LandingActivity.class);
         intent.putExtra("noDriver", 1);
+        intent.putExtra("driverId", driver_id);
         intent.putExtra("hasPickup", 1);
         intent.putExtra("hasDropoff", 1);
         if(getIntent().getStringExtra("pickupPlaceId") != null)
@@ -219,8 +227,8 @@ public class FindNearbyDriverActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
+    protected void onStop() {
+        super.onStop();
         if(!bookingAccepted) bookingRef.removeValue();
         timer.cancel();
         searchTimer.cancel();
