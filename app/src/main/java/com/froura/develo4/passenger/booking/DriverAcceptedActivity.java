@@ -14,6 +14,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.TextInputEditText;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -47,6 +48,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
@@ -69,6 +71,8 @@ import org.json.JSONObject;
 import java.util.List;
 import java.util.Map;
 
+import static java.security.AccessController.getContext;
+
 public class DriverAcceptedActivity extends AppCompatActivity
         implements
         OnMapReadyCallback,
@@ -90,6 +94,7 @@ public class DriverAcceptedActivity extends AppCompatActivity
     private LinearLayout informationLayout;
     private ProgressDialog progressDialog;
     private FloatingActionButton alert_trusted_btn;
+    private FloatingActionButton lock_driver_btn;
 
     private ImageView driver_prof_pic;
     private TextView driver_name_txt_vw;
@@ -120,6 +125,8 @@ public class DriverAcceptedActivity extends AppCompatActivity
     private String pickupLat;
     private String pickupLng;
 
+    private boolean cameraLock = true;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -136,6 +143,7 @@ public class DriverAcceptedActivity extends AppCompatActivity
         setBookingDetails();
         informationLayout = findViewById(R.id.information_layout);
         alert_trusted_btn = findViewById(R.id.alert_trusted_btn);
+        lock_driver_btn = findViewById(R.id.lock_driver_btn);
         user_id = FirebaseAuth.getInstance().getCurrentUser().getUid();
         driverId = getIntent().getStringExtra("driver_id");
 
@@ -225,6 +233,16 @@ public class DriverAcceptedActivity extends AppCompatActivity
 
             @Override
             public void onCancelled(DatabaseError databaseError) { }
+        });
+
+        lock_driver_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                cameraLock = cameraLock ? true : false;
+                mMap.getUiSettings().setScrollGesturesEnabled(cameraLock);
+                lock_driver_btn.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(),
+                        (cameraLock ? R.drawable.ic_lock_closed_white_24dp : R.drawable.ic_lock_open_white_24dp)));
+            }
         });
     }
 
@@ -464,6 +482,15 @@ public class DriverAcceptedActivity extends AppCompatActivity
 
                 if(progressDialog.isShowing())
                     progressDialog.dismiss();
+
+                if(cameraLock) {
+                    cameraPosition = new CameraPosition.Builder()
+                            .target(drvLatLng)
+                            .zoom(14)
+                            .bearing(0)
+                            .build();
+                    mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+                }
             }
 
             @Override
