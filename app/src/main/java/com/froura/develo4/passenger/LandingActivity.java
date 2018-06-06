@@ -13,6 +13,7 @@ import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.GravityCompat;
@@ -122,6 +123,9 @@ public class LandingActivity extends AppCompatActivity
     private ImageButton show_traffic;
     private LinearLayout pickup_layout;
     private LinearLayout dropoff_layout;
+    private ConstraintLayout profile_layout;
+    private RelativeLayout profile_blank_view;
+    private RelativeLayout profile_loading_view;
     private MenuItem clear_history;
     private MenuItem reservation_list;
     private GoogleMap mMap;
@@ -872,12 +876,10 @@ public class LandingActivity extends AppCompatActivity
 
     private void setAccountProfile() {
         setDetails();
-        final ProgressDialog progressDialog = new ProgressDialog(this);
-        progressDialog.setCancelable(false);
-        progressDialog.setMessage("Fetching Data...");
-        progressDialog.setIndeterminate(false);
-        progressDialog.setCancelable(false);
-        progressDialog.show();
+        profile_layout = findViewById(R.id.profile_layout);
+        profile_loading_view = findViewById(R.id.profile_loading_view);
+
+        profile_loading_view.setVisibility(View.VISIBLE);
         final TextView nameTxtVw = findViewById(R.id.name_txt_vw);
         final TextView emailTxtVw = findViewById(R.id.email_edit_txt);
         final TextView mobnumTxtVw = findViewById(R.id.mobnum_edit_txt);
@@ -909,7 +911,8 @@ public class LandingActivity extends AppCompatActivity
                     trustedTxtVw.setText(user_trusted_name);
                     viewFlipper.setDisplayedChild(3);
                     toolbar.setTitle("Profile");
-                    progressDialog.dismiss();
+                    profile_loading_view.setVisibility(View.GONE);
+                    profile_layout.setVisibility(View.VISIBLE);
                 }
 
                 @Override
@@ -920,7 +923,8 @@ public class LandingActivity extends AppCompatActivity
             trustedTxtVw.setText(user_trusted_id);
             viewFlipper.setDisplayedChild(3);
             toolbar.setTitle("Profile");
-            progressDialog.dismiss();
+            profile_loading_view.setVisibility(View.GONE);
+            profile_layout.setVisibility(View.VISIBLE);
         }
         nameTxtVw.setText(user_name);
         emailTxtVw.setText(user_email);

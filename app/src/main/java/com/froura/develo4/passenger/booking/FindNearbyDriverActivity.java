@@ -88,7 +88,6 @@ public class FindNearbyDriverActivity extends AppCompatActivity {
         bookingRef.child("dropoff").child("lat").setValue(getIntent().getDoubleExtra("dropoffLat", 0));
         bookingRef.child("dropoff").child("lng").setValue(getIntent().getDoubleExtra("dropoffLng", 0));
         bookingRef.child("fare").setValue(getIntent().getStringExtra("fare"));
-        findNearbyDriver();
 
         acceptedRef = FirebaseDatabase.getInstance().getReference("services/booking/"+uid+"/accepted_by");
         acceptedRef.addValueEventListener(new ValueEventListener() {
@@ -107,65 +106,6 @@ public class FindNearbyDriverActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(DatabaseError databaseError) { }
-        });
-    }
-
-    private int radius = 1;
-    private GeoQuery geoQuery;
-    private boolean driverFound = false;
-    private void findNearbyDriver() {
-        final DatabaseReference drvAvailable = FirebaseDatabase.getInstance().getReference().child("working_drivers");
-
-        GeoFire geoFire = new GeoFire(drvAvailable);
-        geoQuery = geoFire.queryAtLocation(new GeoLocation(getIntent().getDoubleExtra("pickupLat", 0),
-                getIntent().getDoubleExtra("pickupLng", 0)), radius);
-        geoQuery.removeAllListeners();
-
-        geoQuery.addGeoQueryEventListener(new GeoQueryEventListener() {
-            @Override
-            public void onKeyEntered(String key, GeoLocation location) {
-                if(driverFound) return;
-                driver_id = key;
-                drvAvailable.child(key).child("nearest_passenger").setValue(uid);
-                driver = FirebaseDatabase.getInstance()
-                        .getReference("users/driver/"+key +"/nearest_passenger");
-                driver.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        if(!dataSnapshot.exists()) {
-                            bookingRef.child("nearest_driver").setValue(driver_id);
-                            driver.setValue(uid);
-                            driverFound = true;
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) { }
-                });
-            }
-
-            @Override
-            public void onKeyExited(String key) {
-
-            }
-
-            @Override
-            public void onKeyMoved(String key, GeoLocation location) {
-
-            }
-
-            @Override
-            public void onGeoQueryReady() {
-                if(!driverFound) {
-                    radius++;
-                    findNearbyDriver();
-                }
-            }
-
-            @Override
-            public void onGeoQueryError(DatabaseError error) {
-
-            }
         });
     }
 
