@@ -1441,8 +1441,6 @@ public class LandingActivity extends AppCompatActivity
         if(from_update_activity) {
             setAccountProfile();
             from_update_activity = false;
-        } else {
-            onCreate(null);
         }
     }
 

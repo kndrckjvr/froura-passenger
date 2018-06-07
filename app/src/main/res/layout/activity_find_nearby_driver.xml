@@ -7,6 +7,44 @@
     android:background="@color/colorPrimaryDark"
     tools:context="com.froura.develo4.passenger.booking.FindNearbyDriverActivity">
 
+    <RelativeLayout
+        android:id="@+id/loading_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/textView14"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/progressBar2"
+            android:layout_centerHorizontal="true"
+            android:textColor="#000000"
+            android:textSize="21sp"
+            android:text="Finding you a Driver." />
+
+
+        <TextView
+            android:id="@+id/textView17"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/textView14"
+            android:layout_centerHorizontal="true"
+            android:textColor="#000000"
+            android:textSize="16sp"
+            android:text="Please Wait..." />
+
+        <ProgressBar
+            android:id="@+id/progressBar2"
+            style="?android:attr/progressBarStyle"
+            android:layout_width="170dp"
+            android:layout_height="170dp"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:layout_marginTop="219dp" />
+    </RelativeLayout>
+
     <Button
         android:id="@+id/btnCancel"
         style="@style/Widget.AppCompat.Button.Colored"

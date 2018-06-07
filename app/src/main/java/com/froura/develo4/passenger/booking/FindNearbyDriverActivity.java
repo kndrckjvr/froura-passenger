@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.firebase.geofire.GeoFire;
@@ -32,6 +33,7 @@ public class FindNearbyDriverActivity extends AppCompatActivity {
     private DatabaseReference driver;
     private boolean bookingAccepted = false;
 
+    private RelativeLayout loading_view;
     private Button btnCancel;
     private String driver_id;
 
@@ -43,6 +45,7 @@ public class FindNearbyDriverActivity extends AppCompatActivity {
         uid = FirebaseAuth.getInstance().getUid();
         cntDwnTxtVw = findViewById(R.id.cntDwnTxtVw);
         btnCancel = findViewById(R.id.btnCancel);
+        loading_view = findViewById(R.id.loading_view);
         btnCancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -81,6 +84,7 @@ public class FindNearbyDriverActivity extends AppCompatActivity {
         searchTimer.start();
         cntDwnTxtVw.setVisibility(View.GONE);
         btnCancel.setVisibility(View.GONE);
+        loading_view.setVisibility(View.VISIBLE);
         bookingRef.child("pickup").child("name").setValue(getIntent().getStringExtra("pickupName"));
         bookingRef.child("pickup").child("lat").setValue(getIntent().getDoubleExtra("pickupLat", 0));
         bookingRef.child("pickup").child("lng").setValue(getIntent().getDoubleExtra("pickupLng", 0));

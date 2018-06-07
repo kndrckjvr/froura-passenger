@@ -29,6 +29,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RatingBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.DataSource;
@@ -125,6 +126,8 @@ public class DriverAcceptedActivity extends AppCompatActivity
     private String pickupLat;
     private String pickupLng;
 
+    private DatabaseReference driverLoc;
+    private ValueEventListener driverEvent;
     private boolean cameraLock = true;
 
     @Override
@@ -238,8 +241,9 @@ public class DriverAcceptedActivity extends AppCompatActivity
         lock_driver_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                cameraLock = cameraLock ? true : false;
-                mMap.getUiSettings().setScrollGesturesEnabled(cameraLock);
+                cameraLock = !cameraLock;
+                Toast.makeText(DriverAcceptedActivity.this, cameraLock+"", Toast.LENGTH_SHORT).show();
+                mMap.getUiSettings().setScrollGesturesEnabled(!cameraLock);
                 lock_driver_btn.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(),
                         (cameraLock ? R.drawable.ic_lock_closed_white_24dp : R.drawable.ic_lock_open_white_24dp)));
             }
@@ -425,12 +429,6 @@ public class DriverAcceptedActivity extends AppCompatActivity
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.activity_driver_accepted_menu, menu);
-        return true;
-    }
-
-    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.message:
@@ -446,8 +444,8 @@ public class DriverAcceptedActivity extends AppCompatActivity
     }
 
     private void showDriverLocation() {
-        final DatabaseReference driverLoc = FirebaseDatabase.getInstance().getReference("available_drivers/" + driverId + "/l");
-        driverLoc.addValueEventListener(new ValueEventListener() {
+        driverLoc = FirebaseDatabase.getInstance().getReference("working_drivers/" + driverId + "/l");
+        driverLoc.addValueEventListener(driverEvent = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 List<Object> map = (List<Object>) dataSnapshot.getValue();
@@ -482,6 +480,8 @@ public class DriverAcceptedActivity extends AppCompatActivity
 
                 if(progressDialog.isShowing())
                     progressDialog.dismiss();
+
+                Log.d(TaskConfig.TAG, drvLatLng+"");
 
                 if(cameraLock) {
                     cameraPosition = new CameraPosition.Builder()
@@ -549,6 +549,7 @@ public class DriverAcceptedActivity extends AppCompatActivity
         mMap.getUiSettings().setMapToolbarEnabled(false);
         mMap.getUiSettings().setZoomControlsEnabled(false);
         mMap.getUiSettings().setMyLocationButtonEnabled(true);
+        mMap.getUiSettings().setScrollGesturesEnabled(false);
         mMap.setPadding(0,0,0,informationLayout.getLayoutParams().height);
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED &&
@@ -600,6 +601,7 @@ public class DriverAcceptedActivity extends AppCompatActivity
         if(mGoogleApiClient != null) {
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
         }
+        driverLoc.removeEventListener(driverEvent);
     }
 
     @Override
